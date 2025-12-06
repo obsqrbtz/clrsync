@@ -11,6 +11,18 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/core/version.hpp.in
+    ${CMAKE_SOURCE_DIR}/src/core/version.hpp
+    @ONLY
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/PKGBUILD.in
+    ${CMAKE_SOURCE_DIR}/PKGBUILD
+    @ONLY
+)
+
 find_package(OpenGL REQUIRED)
 
 if(WIN32)

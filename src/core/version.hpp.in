@@ -1,0 +1,17 @@
+#ifndef CLRSYNC_CORE_VERSION_HPP
+#define CLRSYNC_CORE_VERSION_HPP
+
+#include <cstdint>
+#include <string>
+
+namespace clrsync::core
+{
+
+constexpr uint8_t VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
+constexpr uint8_t VERSION_MINOR = @PROJECT_VERSION_MINOR@;
+constexpr uint8_t VERSION_PATCH = @PROJECT_VERSION_PATCH@;
+
+const std::string version_string();
+} // namespace clrsync::core
+
+#endif // CLRSYNC_CORE_VERSION_HPP
