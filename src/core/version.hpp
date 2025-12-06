@@ -9,7 +9,7 @@ namespace clrsync::core
 
 constexpr uint8_t VERSION_MAJOR = 0;
 constexpr uint8_t VERSION_MINOR = 1;
-constexpr uint8_t VERSION_PATCH = 0;
+constexpr uint8_t VERSION_PATCH = 1;
 
 const std::string version_string();
 } // namespace clrsync::core
