@@ -1,6 +1,6 @@
 # Maintainer: Daniel Dada <dan@binarygoose.dev>
 pkgname=clrsync
-pkgver=0.1.1
+pkgver=0.1.2
 pkgrel=1
 pkgdesc="Color scheme manager"
 arch=('x86_64')

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(clrsync VERSION 0.1.1 LANGUAGES CXX)
+project(clrsync VERSION 0.1.2 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
@@ -143,7 +143,7 @@ install(DIRECTORY example_config/palettes
 )
 
 if(UNIX AND NOT APPLE)
-    install(FILES resources/colorsync.desktop
+    install(FILES resources/clrsync.desktop
         DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
     )
 endif()
