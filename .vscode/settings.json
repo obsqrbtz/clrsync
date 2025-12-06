@@ -1,9 +1,0 @@
-{
-    "C_Cpp.default.compileCommands": "/home/dan/src/clrsync/builddir/compile_commands.json",
-    "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
-    "clangd.arguments": [
-        "--compile-commands-dir=${workspaceFolder}/builddir",
-        "--completion-style=detailed",
-        "--header-insertion=never"
-    ],
-}
