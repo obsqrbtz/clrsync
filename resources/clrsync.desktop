@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=clrsync
+GenericName=Color Scheme Manager
+Comment=Manage and apply color schemes across applications
+Exec=clrsync_gui
+Icon=colorsync
+Terminal=false
+Type=Application
+Categories=Graphics;Utility;
+Keywords=color;theme;palette;scheme;
+StartupNotify=true

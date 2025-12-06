@@ -14,6 +14,10 @@ out
 /subprojects/libpng-*
 /subprojects/packagecache
 
+*.log
+*tar.zst
+*tar.gz
+
 *.swp
 *.bak
 *.tmp

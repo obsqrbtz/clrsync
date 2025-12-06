@@ -141,3 +141,9 @@ install(DIRECTORY example_config/palettes
         DESTINATION ${CMAKE_INSTALL_DATADIR}/clrsync
         FILES_MATCHING PATTERN "*.toml"
 )
+
+if(UNIX AND NOT APPLE)
+    install(FILES resources/colorsync.desktop
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+    )
+endif()
