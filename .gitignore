@@ -4,15 +4,7 @@
 out
 
 /build
-/builddir
 /build-*
-
-/subprojects/glfw-*
-/subprojects/imgui-*
-/subprojects/sdl2-*
-/subprojects/freetype-*
-/subprojects/libpng-*
-/subprojects/packagecache
 
 *.log
 *tar.zst
