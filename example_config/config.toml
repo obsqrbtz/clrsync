@@ -1,0 +1,22 @@
+[general]
+default_theme = 'dark'
+palettes_path = '~/.config/clrsync/palettes'
+font = 'JetBrainsMono Nerd Font Mono'
+font_size = 14
+
+[templates.formats-demo]
+enabled = true
+input_path = '~/.config/clrsync/templates/formats-demo'
+output_path = '~/.config/clrsync/formats-demo'
+
+[templates.kitty]
+enabled = true
+input_path = '~/.config/clrsync/templates/kitty.conf'
+output_path = '~/.config/kitty/kitty_test.conf'
+reload_cmd = 'pkill -SIGUSR1 kitty'
+
+[templates.nvim]
+enabled = true
+input_path = '~/.config/clrsync/templates/nvim.lua'
+output_path = '~/.config/nvim/colors/clrsync.lua'
+reload_cmd = ''

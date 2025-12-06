@@ -1,0 +1,39 @@
+# Maintainer: Daniel Dada <dan@binarygoose.dev>
+pkgname=clrsync
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Color scheme manager"
+arch=('x86_64')
+url="https://github.com/obsqrbtz/clrsync"
+license=('MIT')
+depends=(
+    glfw-x11
+    freetype2
+    fontconfig
+    libx11
+    libxrandr
+    libxi
+    mesa
+    libglvnd
+    libxinerama
+    libxcursor
+)
+makedepends=('cmake' 'git')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/obsqrbtz/clrsync/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$pkgname-$pkgver"
+
+    cmake -B build -S . \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr
+
+    cmake --build build
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+
+    DESTDIR="$pkgdir" cmake --install build
+}
