@@ -56,6 +56,7 @@ set(CORE_SOURCES
     src/core/theme/theme_template.cpp
 )
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 add_library(clrsync_core SHARED ${CORE_SOURCES})
 target_include_directories(clrsync_core PUBLIC src SYSTEM lib)
 target_compile_definitions(clrsync_core PRIVATE
@@ -79,9 +80,13 @@ set(GUI_SOURCES
     src/gui/settings_window.cpp
     src/gui/font_loader.cpp
 )
-
 add_executable(clrsync_gui ${GUI_SOURCES})
 target_include_directories(clrsync_gui PRIVATE src SYSTEM lib)
+if(WIN32)
+    set_target_properties(clrsync_gui PROPERTIES
+        LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
+    )
+endif()
 
 if(WIN32)
     target_link_libraries(clrsync_gui PRIVATE clrsync_core glfw freetype imgui OpenGL::GL)

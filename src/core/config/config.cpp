@@ -25,9 +25,9 @@ std::filesystem::path config::get_user_config_dir()
 {
 #ifdef _WIN32
     if (const char *appdata = std::getenv("APPDATA"))
-        return fs::path(appdata) / "clrsync";
+        return std::filesystem::path(appdata) / "clrsync";
     else
-        return fs::path("C:/clrsync");
+        return std::filesystem::path("C:/clrsync");
 #else
     if (const char *xdg = std::getenv("XDG_CONFIG_HOME"))
         return std::filesystem::path(xdg) / "clrsync";
