@@ -5,6 +5,10 @@
 #include <filesystem>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include "windows.h"
+#endif
+
 namespace clrsync::core
 {
 config &config::instance()
@@ -33,10 +37,22 @@ std::filesystem::path config::get_user_config_dir()
 #endif
 }
 
+std::filesystem::path config::get_data_dir() {
+#ifdef _WIN32
+    char buffer[MAX_PATH];
+    GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+    std::filesystem::path exe_path(buffer);
+    std::filesystem::path data_dir = exe_path.parent_path().parent_path() / "share" / "clrsync";
+    return data_dir;
+#else
+    return {CLRSYNC_DATADIR};
+#endif
+}
+
 void config::copy_default_configs()
 {
     std::filesystem::path user_config = get_user_config_dir();
-    std::filesystem::path default_dir = CLRSYNC_DATADIR;
+    std::filesystem::path default_dir = get_data_dir();
 
     if (!std::filesystem::exists(user_config))
     {

@@ -28,7 +28,7 @@ void palette_controller::select_palette(const std::string& name)
 
 void palette_controller::create_palette(const std::string& name)
 {
-    clrsync::core::palette new_palette = m_palette_manager.load_palette_from_file(std::string(CLRSYNC_DATADIR) + "/palettes/cursed.toml");
+    clrsync::core::palette new_palette = m_palette_manager.load_palette_from_file(clrsync::core::config::get_data_dir().string() + "/palettes/cursed.toml");
     new_palette.set_name(name);
         
     auto dir = clrsync::core::config::instance().palettes_path();

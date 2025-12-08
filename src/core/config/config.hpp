@@ -32,6 +32,7 @@ class config
 
     void update_template(const std::string &key,
                          const clrsync::core::theme_template &theme_template);
+    static std::filesystem::path get_data_dir();
 
   private:
     config() = default;
