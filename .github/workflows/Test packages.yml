@@ -1,0 +1,100 @@
+name: Test DEB and RPM Packages
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test-deb:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y cmake build-essential \
+          libgl1-mesa-dev libglu1-mesa-dev \
+          libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+          libglfw3-dev libfreetype6-dev
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: cmake --build build --config Release
+    
+    - name: Package DEB
+      run: |
+        cd build
+        cpack -G DEB
+    
+    - name: Install DEB
+      run: |
+        dpkg -i build/*.deb || true
+        apt-get install -f -y
+    
+    - name: Test installation
+      run: |
+        clrsync_cli --help
+        dpkg -L $(dpkg -l | grep clrsync | awk '{print $2}')
+    
+    - name: Upload DEB artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: deb-package
+        path: build/*.deb
+
+  test-rpm:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    
+    steps:
+    - name: Install dependencies
+      run: |
+        dnf install -y cmake gcc gcc-c++ make rpm-build git \
+          mesa-libGL-devel mesa-libGLU-devel \
+          libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel libXi-devel \
+          glfw-devel freetype-devel
+    
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Configure CMake
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+    
+    - name: Build
+      run: cmake --build build --config Release
+    
+    - name: Package RPM
+      run: |
+        cd build
+        cpack -G RPM
+    
+    - name: Install RPM
+      run: |
+        dnf install -y build/*.rpm
+    
+    - name: Test installation
+      run: |
+        clrsync_cli --help
+        rpm -ql $(rpm -qa | grep clrsync)
+    
+    - name: Upload RPM artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: rpm-fedora
+        path: build/*.rpm
