@@ -33,8 +33,13 @@ template_editor::template_editor()
 void template_editor::apply_current_palette(const clrsync::core::palette& pal)
 {
     auto colors = pal.colors();
-    auto get_color_u32 = [&](const std::string &key) -> uint32_t {
+    auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
         auto it = colors.find(key);
+        if (it == colors.end() && !fallback.empty())
+        {
+            it = colors.find(fallback);
+        }
+        
         if (it != colors.end())
         {
             const auto &col = it->second;
@@ -51,32 +56,32 @@ void template_editor::apply_current_palette(const clrsync::core::palette& pal)
     
     auto palette = m_editor.GetPalette();
     
-    palette[int(TextEditor::PaletteIndex::Default)] = get_color_u32("text_main");
-    palette[int(TextEditor::PaletteIndex::Keyword)] = get_color_u32("syntax_keyword");
-    palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("text_warning");
-    palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("text_string");
-    palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("text_string");
-    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("text_main");
-    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("syntax_special_keyword");
-    palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("text_main");
-    palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("text_link");
-    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("text_link");
+    palette[int(TextEditor::PaletteIndex::Default)] = get_color_u32("editor_main", "foreground");
+    palette[int(TextEditor::PaletteIndex::Keyword)] = get_color_u32("editor_command", "accent");
+    palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("editor_warning", "warning");
+    palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("editor_string", "success");
+    palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("editor_string", "success");
+    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("editor_main", "foreground");
+    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("editor_emphasis", "accent");
+    palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("editor_main", "foreground");
+    palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("editor_link", "info");
+    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("editor_link", "info");
     
-    palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("text_comment");
-    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("text_comment");
+    palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("editor_comment", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("editor_comment", "editor_inactive");
     
-    palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32("editor_background");
-    palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("cursor");
+    palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32("editor_background", "background");
+    palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("cursor", "accent");
     
-    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("text_selected");
-    palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("syntax_error");
-    palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("syntax_error");
+    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("editor_selected", "surface_variant");
+    palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("editor_error", "error");
+    palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("editor_error", "error");
     
-    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("text_line_number");
+    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("editor_line_number", "editor_inactive");
     palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32("surface_variant");
     palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32("surface");
     
-    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_emphasized");
+    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_focused", "border");
     
     m_editor.SetPalette(palette);
 }

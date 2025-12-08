@@ -3,33 +3,39 @@ vim.cmd("syntax reset")
 vim.g.colors_name = "clrsync"
 
 local palette = {
-    -- TextEditor
-    Default                 = "{text_main.hex}",
-    Keyword                 = "{syntax_keyword.hex}",
-    Number                  = "{text_warning.hex}",
-    String                  = "{text_string.hex}",
-    CharLiteral             = "{text_string.hex}",
-    Punctuation             = "{text_main.hex}",
-    Preprocessor            = "{syntax_special_keyword.hex}",
-    Identifier              = "{text_main.hex}",
-    KnownIdentifier         = "{text_link.hex}",
-    PreprocIdentifier       = "{text_link.hex}",
+    -- Editor colors
+    Default                 = "{editor_main.hex}",
+    Keyword                 = "{editor_command.hex}",
+    Number                  = "{editor_warning.hex}",
+    String                  = "{editor_string.hex}",
+    CharLiteral             = "{editor_string.hex}",
+    Punctuation             = "{editor_main.hex}",
+    Preprocessor            = "{editor_emphasis.hex}",
+    Identifier              = "{editor_main.hex}",
+    KnownIdentifier         = "{editor_link.hex}",
+    PreprocIdentifier       = "{editor_link.hex}",
 
-    Comment                 = "{text_comment.hex}",
-    MultiLineComment        = "{text_comment.hex}",
+    Comment                 = "{editor_comment.hex}",
+    MultiLineComment        = "{editor_comment.hex}",
 
     Background              = "{editor_background.hex}",
     Cursor                  = "{cursor.hex}",
 
-    Selection               = "{text_selected.hex}",
-    ErrorMarker             = "{syntax_error.hex}",
-    Breakpoint              = "{syntax_error.hex}",
+    Selection               = "{editor_selected.hex}",
+    ErrorMarker             = "{editor_error.hex}",
+    Breakpoint              = "{editor_error.hex}",
 
-    LineNumber              = "{text_line_number.hex}",
+    LineNumber              = "{editor_line_number.hex}",
     CurrentLineFill         = "{surface_variant.hex}",
     CurrentLineFillInactive = "{surface.hex}",
 
-    CurrentLineEdge         = "{border_emphasized.hex}",
+    CurrentLineEdge         = "{border_focused.hex}",
+    
+    -- Semantic colors
+    Success                 = "{success.hex}",
+    Warning                 = "{warning.hex}",
+    Error                   = "{error.hex}",
+    Info                    = "{info.hex}",
 }
 
 -- Helper function to set highlights in Neovim
@@ -59,7 +65,7 @@ set_hl("Type", { fg = palette.Keyword })
 set_hl("Special", { fg = palette.PreprocIdentifier })
 set_hl("Underlined", { fg = palette.KnownIdentifier })
 set_hl("Error", { fg = palette.ErrorMarker, bg = palette.Background })
-set_hl("Todo", { fg = palette.Text, bg = palette.Keyword })
+set_hl("Todo", { fg = palette.Default, bg = palette.Keyword })
 
 -- Floating windows
 set_hl("NormalFloat", { bg = palette.Background })
@@ -70,12 +76,12 @@ set_hl("Pmenu", { bg = palette.Background })
 set_hl("PmenuSel", { bg = palette.Keyword, fg = palette.Background })
 
 -- Git and diagnostic highlights
-set_hl("DiffAdd", { fg = palette.Success or palette.Default, bg = palette.Background })
+set_hl("DiffAdd", { fg = palette.Success, bg = palette.Background })
 set_hl("DiffChange", { fg = palette.Keyword, bg = palette.Background })
 set_hl("DiffDelete", { fg = palette.ErrorMarker, bg = palette.Background })
-set_hl("DiagnosticError", { fg = palette.ErrorMarker })
-set_hl("DiagnosticWarn", { fg = palette.Number })
-set_hl("DiagnosticInfo", { fg = palette.Keyword })
+set_hl("DiagnosticError", { fg = palette.Error })
+set_hl("DiagnosticWarn", { fg = palette.Warning })
+set_hl("DiagnosticInfo", { fg = palette.Info })
 set_hl("DiagnosticHint", { fg = palette.PreprocIdentifier })
 
 -- Treesitter links

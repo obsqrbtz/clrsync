@@ -1,0 +1,67 @@
+[colors]
+# General
+background = "#f5f5f5FF"
+on_background = "#3d3d2fFF"
+
+surface = "#e8e8e8FF"
+on_surface = "#3d3d2fFF"
+
+surface_variant = "#d0d0c8FF"
+on_surface_varuant = "#3d3d2fFF"
+
+border_focused = "#c9a305FF"
+border = "#d0d0c8FF"
+
+foreground = "#3d3d2fFF"
+
+cursor = "#c9a305FF"
+accent = "#b44242FF"
+
+# Terminal
+base00 = "#f5f5f5FF"
+base01 = "#b44242FF"
+base02 = "#95a328FF"
+base03 = "#c9a305FF"
+base04 = "#60928fFF"
+base05 = "#7c435aFF"
+base06 = "#a48b4aFF"
+base07 = "#3d3d2fFF"
+base08 = "#c0c0b8FF"
+base09 = "#dc7671FF"
+base0A = "#d4d430FF"
+base0B = "#9e9052FF"
+base0C = "#76c39bFF"
+base0D = "#86596cFF"
+base0E = "#b89a1fFF"
+base0F = "#4f4f48FF"
+
+# Semantic
+success = "#95a328FF"
+info = "#60928fFF"
+warning = "#c9a305FF"
+error = "#b44242FF"
+
+on_success = "#f5f5f5FF"
+on_info = "#f5f5f5FF"
+on_warning = "#f5f5f5FF"
+on_error = "#f5f5f5FF"
+
+# Code editor
+editor_background = "#f5f5f5FF"
+editor_command = "#b89a1fFF"
+editor_comment = "#a0a098FF"
+editor_disabled = "#c0c0b8FF"
+editor_emphasis = "#dc7671FF"
+editor_error = "#b44242FF"
+editor_inactive = "#a0a098FF"
+editor_line_number = "#86596cFF"
+editor_link = "#60928fFF"
+editor_main = "#3d3d2fFF"
+editor_selected = "#d0d0c8FF"
+editor_selection_inactive = "#e0e0d8FF"
+editor_string = "#5fa37bFF"
+editor_success = "#95a328FF"
+editor_warning = "#c9a305FF"
+
+[general]
+name = 'cursed-light'

@@ -5,50 +5,71 @@
 
 namespace clrsync::core
 {
-constexpr const char *COLOR_KEYS[] = {
-    // UI / Surfaces
-    "background",           // main window / editor background
-    "surface",              // panels, cards
-    "surface_variant",      // alternate rows, subtle panels
-    "foreground",           // main text
-    "foreground_secondary", // secondary text / hints
-    "accent",               // buttons, highlights, selection
-    "outline",              // borders, outlines
-    "shadow",               // drop shadows / depth
-    "cursor",               // caret / text cursor
+constexpr const char* COLOR_KEYS[] = {
+    // General UI
+    "background",
+    "on_background",
 
-    // Editor-specific surfaces
-    "editor_background", "sidebar_background", "popup_background", "floating_window_background",
-    "menu_option_background",
+    "surface",
+    "on_surface",
 
-    // Editor text roles
-    "text_main", "text_emphasis", "text_command", "text_inactive", "text_disabled",
-    "text_line_number", "text_selected", "text_selection_inactive",
+    "surface_variant",
+    "on_surface_varuant",
 
-    // Editor / Window borders
-    "border_window", "border_focused", "border_emphasized",
+    "border_focused",
+    "border",
 
-    // Syntax highlighting
-    "syntax_function", "syntax_error", "syntax_keyword", "syntax_special_keyword",
-    "syntax_operator",
+    "foreground",
 
-    // Semantic text colors
-    "text_error", "text_warning", "text_link", "text_comment", "text_string", "text_success",
-    "warning_emphasis", "foreground_emphasis",
+    "cursor",
+    "accent",
 
-    // Extra
-    "terminal_gray",
+    // Semantic
+    "success",
+    "info",
+    "warning",
+    "error",
 
-    // Semantic / Status
-    "error", "warning", "success", "info",
+    "on_success",
+    "on_info",
+    "on_warning",
+    "on_error",
 
-    // Terminal colors (normal)
-    "term_black", "term_red", "term_green", "term_yellow", "term_blue", "term_magenta", "term_cyan",
-    "term_white",
+    // Editor
+    "editor_background",
+    "editor_command",
+    "editor_comment",
+    "editor_disabled",
+    "editor_emphasis",
+    "editor_error",
+    "editor_inactive",
+    "editor_line_number",
+    "editor_link",
+    "editor_main",
+    "editor_selected",
+    "editor_selection_inactive",
+    "editor_string",
+    "editor_success",
+    "editor_warning",
 
-    // Terminal colors (bright)
-    "term_black_bright", "term_red_bright", "term_green_bright", "term_yellow_bright",
-    "term_blue_bright", "term_magenta_bright", "term_cyan_bright", "term_white_bright"};
+    // Terminal
+    "base00",
+    "base01",
+    "base02",
+    "base03",
+    "base04",
+    "base05",
+    "base06",
+    "base07",
+    "base08",
+    "base09",
+    "base0A",
+    "base0B",
+    "base0C",
+    "base0D",
+    "base0E",
+    "base0F",
+};
 
 constexpr size_t NUM_COLOR_KEYS = std::size(COLOR_KEYS);
 } // namespace clrsync::core

@@ -2,6 +2,7 @@
 #include "template_editor.hpp"
 #include "color_text_edit/TextEditor.h"
 #include "imgui.h"
+#include <iostream>
 #include <ranges>
 
 color_scheme_editor::color_scheme_editor()
@@ -71,8 +72,20 @@ int main()
 })");
 
     m_editor.SetShowWhitespaces(false);
-    apply_palette_to_imgui();
-    apply_palette_to_editor();
+    
+    const auto &palettes = m_controller.palettes();
+    
+    const auto &current = m_controller.current_palette();
+    
+    if (!current.colors().empty())
+    {
+        apply_palette_to_imgui();
+        apply_palette_to_editor();
+    }
+    else
+    {
+        std::cout << "WARNING: No palette loaded, skipping theme application\n";
+    }
 }
 
 void color_scheme_editor::notify_palette_changed()
@@ -290,34 +303,25 @@ void color_scheme_editor::render_color_table()
         ImGui::Spacing();
     };
 
-    draw_table("UI / Surfaces", {"background", "surface", "surface_variant", "foreground",
-                                 "foreground_secondary", "accent", "outline", "shadow", "cursor"});
+    draw_table("General UI", {"background", "on_background", "surface", "on_surface",
+                              "surface_variant", "on_surface_varuant", "foreground",
+                              "cursor", "accent"});
 
-    draw_table("Editor Surfaces", {"editor_background", "sidebar_background", "popup_background",
-                                   "floating_window_background", "menu_option_background"});
+    draw_table("Borders", {"border_focused", "border"});
 
-    draw_table("Editor Text",
-               {"text_main", "text_emphasis", "text_command", "text_inactive", "text_disabled",
-                "text_line_number", "text_selected", "text_selection_inactive"});
+    draw_table("Semantic Colors", {"success", "info", "warning", "error",
+                                   "on_success", "on_info", "on_warning", "on_error"});
 
-    draw_table("Window Borders", {"border_window", "border_focused", "border_emphasized"});
+    draw_table("Editor", {"editor_background", "editor_command", "editor_comment",
+                          "editor_disabled", "editor_emphasis", "editor_error",
+                          "editor_inactive", "editor_line_number", "editor_link",
+                          "editor_main", "editor_selected", "editor_selection_inactive",
+                          "editor_string", "editor_success", "editor_warning"});
 
-    draw_table("Syntax Highlighting", {"syntax_function", "syntax_error", "syntax_keyword",
-                                       "syntax_special_keyword", "syntax_operator"});
-
-    draw_table("Semantic Text",
-               {"text_error", "text_warning", "text_link", "text_comment", "text_string",
-                "text_success", "warning_emphasis", "foreground_emphasis"});
-
-    draw_table("Extra", {"terminal_gray"});
-
-    draw_table("Status Colors", {"error", "warning", "success", "info"});
-
-    draw_table("Terminal Colors",
-               {"term_black", "term_red", "term_green", "term_yellow", "term_blue", "term_magenta",
-                "term_cyan", "term_white", "term_black_bright", "term_red_bright",
-                "term_green_bright", "term_yellow_bright", "term_blue_bright",
-                "term_magenta_bright", "term_cyan_bright", "term_white_bright"});
+    draw_table("Terminal (Base16)", {"base00", "base01", "base02", "base03",
+                                     "base04", "base05", "base06", "base07",
+                                     "base08", "base09", "base0A", "base0B",
+                                     "base0C", "base0D", "base0E", "base0F"});
 }
 
 void color_scheme_editor::render_preview_content()
@@ -339,7 +343,7 @@ void color_scheme_editor::render_preview_content()
     const ImVec4 editor_bg = get_color("editor_background");
     const ImVec4 fg = get_color("foreground");
     const ImVec4 accent = get_color("accent");
-    const ImVec4 outline = get_color("outline");
+    const ImVec4 border = get_color("border");
     const ImVec4 error = get_color("error");
     const ImVec4 warning = get_color("warning");
     const ImVec4 success = get_color("success");
@@ -357,7 +361,7 @@ void color_scheme_editor::render_preview_content()
     
     ImGui::PushStyleColor(ImGuiCol_ChildBg, editor_bg);
     ImGui::BeginChild("TerminalPreview", ImVec2(0, 0), true);
-    ImGui::PushStyleColor(ImGuiCol_Border, outline);
+    ImGui::PushStyleColor(ImGuiCol_Border, border);
 
     struct term_line
     {
@@ -386,8 +390,13 @@ void color_scheme_editor::apply_palette_to_editor()
 {
     const auto &current = m_controller.current_palette();
 
-    auto get_color_u32 = [&](const std::string &key) -> uint32_t {
+    auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
         auto it = current.colors().find(key);
+        if (it == current.colors().end() && !fallback.empty())
+        {
+            it = current.colors().find(fallback);
+        }
+        
         if (it != current.colors().end())
         {
             const auto &col = it->second;
@@ -404,32 +413,32 @@ void color_scheme_editor::apply_palette_to_editor()
 
     auto palette = m_editor.GetPalette();
 
-    palette[int(TextEditor::PaletteIndex::Default)] = get_color_u32("text_main");
-    palette[int(TextEditor::PaletteIndex::Keyword)] = get_color_u32("syntax_keyword");
-    palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("text_warning");
-    palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("text_string");
-    palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("text_string");
-    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("text_main");
-    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("syntax_special_keyword");
-    palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("text_main");
-    palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("text_link");
-    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("text_link");
+    palette[int(TextEditor::PaletteIndex::Default)] = get_color_u32("editor_main");
+    palette[int(TextEditor::PaletteIndex::Keyword)] = get_color_u32("editor_command");
+    palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("editor_warning");
+    palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("editor_string");
+    palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("editor_string");
+    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("editor_main");
+    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("editor_emphasis");
+    palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("editor_main");
+    palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("editor_link");
+    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("editor_link");
 
-    palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("text_comment");
-    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("text_comment");
+    palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("editor_comment");
+    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("editor_comment");
 
     palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32("editor_background");
     palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("cursor");
 
-    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("text_selected");
-    palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("syntax_error");
-    palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("syntax_error");
+    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("editor_selected");
+    palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("editor_error");
+    palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("editor_error");
 
-    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("text_line_number");
+    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("editor_line_number");
     palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32("surface_variant");
     palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32("surface");
 
-    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_emphasized");
+    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_focused");
 
     m_editor.SetPalette(palette);
 }
@@ -437,44 +446,44 @@ void color_scheme_editor::apply_palette_to_editor()
 void color_scheme_editor::apply_palette_to_imgui() const
 {
     const auto &current = m_controller.current_palette();
-
-    auto getColor = [&](const std::string &key) -> ImVec4 {
+    
+    auto getColor = [&](const std::string &key, const std::string &fallback = "") -> ImVec4 {
         auto it = current.colors().find(key);
+        if (it == current.colors().end() && !fallback.empty())
+        {
+            it = current.colors().find(fallback);
+        }
+        
         if (it != current.colors().end())
         {
             const uint32_t hex = it->second.hex();
             return {((hex >> 24) & 0xFF) / 255.0f, ((hex >> 16) & 0xFF) / 255.0f,
                     ((hex >> 8) & 0xFF) / 255.0f, ((hex) & 0xFF) / 255.0f};
         }
+        
+        std::cout << "WARNING: Color key '" << key << "' not found!\n";
         return {1, 1, 1, 1};
     };
 
     ImGuiStyle &style = ImGui::GetStyle();
 
-    const ImVec4 bg = getColor("editor_background");
-    const ImVec4 sidebar = getColor("sidebar_background");
-    const ImVec4 popup = getColor("popup_background");
-    const ImVec4 menuOpt = getColor("menu_option_background");
-
+    const ImVec4 bg = getColor("background");
     const ImVec4 surface = getColor("surface");
     const ImVec4 surfaceVariant = getColor("surface_variant");
-
-    const ImVec4 fg = getColor("text_main");
-    const ImVec4 fgSecondary = getColor("text_inactive");
-
+    const ImVec4 fg = getColor("foreground");
+    const ImVec4 fgInactive = getColor("editor_inactive");
     const ImVec4 accent = getColor("accent");
-
-    const ImVec4 border = getColor("border_window");
+    const ImVec4 border = getColor("border");
 
     style.Colors[ImGuiCol_WindowBg] = bg;
     style.Colors[ImGuiCol_ChildBg] = surface;
-    style.Colors[ImGuiCol_PopupBg] = popup;
+    style.Colors[ImGuiCol_PopupBg] = surface;
 
     style.Colors[ImGuiCol_Border] = border;
     style.Colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
 
     style.Colors[ImGuiCol_Text] = fg;
-    style.Colors[ImGuiCol_TextDisabled] = fgSecondary;
+    style.Colors[ImGuiCol_TextDisabled] = fgInactive;
 
     style.Colors[ImGuiCol_Header] = surfaceVariant;
     style.Colors[ImGuiCol_HeaderHovered] = ImVec4(accent.x, accent.y, accent.z, 0.8f);
@@ -490,9 +499,9 @@ void color_scheme_editor::apply_palette_to_imgui() const
     style.Colors[ImGuiCol_FrameBgActive] =
         ImVec4(surfaceVariant.x * 1.2f, surfaceVariant.y * 1.2f, surfaceVariant.z * 1.2f, 1.0f);
 
-    style.Colors[ImGuiCol_TitleBg] = sidebar;
+    style.Colors[ImGuiCol_TitleBg] = surface;
     style.Colors[ImGuiCol_TitleBgActive] = surfaceVariant;
-    style.Colors[ImGuiCol_TitleBgCollapsed] = sidebar;
+    style.Colors[ImGuiCol_TitleBgCollapsed] = surface;
 
     style.Colors[ImGuiCol_ScrollbarBg] = surface;
     style.Colors[ImGuiCol_ScrollbarGrab] = surfaceVariant;
@@ -513,6 +522,7 @@ void color_scheme_editor::apply_palette_to_imgui() const
     style.Colors[ImGuiCol_TabActive] = surfaceVariant;
     style.Colors[ImGuiCol_TabUnfocused] = surface;
     style.Colors[ImGuiCol_TabUnfocusedActive] = surfaceVariant;
+    style.Colors[ImGuiCol_TabSelectedOverline] = accent;
 
     style.Colors[ImGuiCol_TableHeaderBg] = surfaceVariant;
     style.Colors[ImGuiCol_TableBorderStrong] = border;
@@ -526,7 +536,7 @@ void color_scheme_editor::apply_palette_to_imgui() const
     style.Colors[ImGuiCol_SeparatorHovered] = accent;
     style.Colors[ImGuiCol_SeparatorActive] = accent;
 
-    style.Colors[ImGuiCol_MenuBarBg] = menuOpt;
+    style.Colors[ImGuiCol_MenuBarBg] = surface;
 
     style.Colors[ImGuiCol_DockingPreview] = ImVec4(accent.x, accent.y, accent.z, 0.7f);
     style.Colors[ImGuiCol_DockingEmptyBg] = bg;

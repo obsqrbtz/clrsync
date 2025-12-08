@@ -82,11 +82,11 @@ set(GUI_SOURCES
 )
 add_executable(clrsync_gui ${GUI_SOURCES})
 target_include_directories(clrsync_gui PRIVATE src SYSTEM lib)
-if(WIN32)
-    set_target_properties(clrsync_gui PROPERTIES
-        LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
-    )
-endif()
+# if(WIN32)
+#     set_target_properties(clrsync_gui PROPERTIES
+#         LINK_FLAGS "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
+#     )
+# endif()
 
 if(WIN32)
     target_link_libraries(clrsync_gui PRIVATE clrsync_core glfw freetype imgui OpenGL::GL)
