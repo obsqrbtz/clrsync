@@ -33,6 +33,8 @@ template_editor::template_editor() : m_template_name("new_template")
 void template_editor::apply_current_palette(const clrsync::core::palette &pal)
 {
     auto colors = pal.colors();
+    if (colors.empty())
+        return;
     auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
         auto it = colors.find(key);
         if (it == colors.end() && !fallback.empty())

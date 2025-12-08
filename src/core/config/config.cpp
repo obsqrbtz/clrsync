@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "core/utils.hpp"
 
 #include <core/palette/color.hpp>
 #include <filesystem>
@@ -23,35 +24,34 @@ void config::initialize(std::unique_ptr<clrsync::core::io::file> file)
 
 std::filesystem::path config::get_user_config_dir()
 {
+    auto home = expand_user("~");
 #ifdef _WIN32
-    if (const char *appdata = std::getenv("APPDATA"))
-        return std::filesystem::path(appdata) / "clrsync";
-    else
-        return std::filesystem::path("C:/clrsync");
+    return home + "\\.config\\clrsync";
+
 #else
-    if (const char *xdg = std::getenv("XDG_CONFIG_HOME"))
-        return std::filesystem::path(xdg) / "clrsync";
-    else if (const char *home = std::getenv("HOME"))
-        return std::filesystem::path(home) / ".config/clrsync";
-    else
-        return std::filesystem::path("/tmp/clrsync");
+    return home + "/.config/clrsync";
 #endif
 }
 
 void config::copy_default_configs()
 {
     std::filesystem::path user_config = get_user_config_dir();
+    std::filesystem::path default_dir = CLRSYNC_DATADIR;
 
     if (!std::filesystem::exists(user_config))
     {
         std::filesystem::create_directories(user_config);
 
-        std::filesystem::path default_dir = CLRSYNC_DATADIR;
         std::filesystem::copy(default_dir / "config.toml", user_config / "config.toml");
         std::filesystem::copy(default_dir / "templates", user_config / "templates",
                               std::filesystem::copy_options::recursive);
         std::filesystem::copy(default_dir / "palettes", user_config / "palettes",
                               std::filesystem::copy_options::recursive);
+        return;
+    }
+    if (!std::filesystem::exists(user_config / "config.toml"))
+    {
+        std::filesystem::copy(default_dir / "config.toml", user_config / "config.toml");
     }
 }
 

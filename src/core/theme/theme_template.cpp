@@ -1,8 +1,8 @@
 #include "theme_template.hpp"
 #include "core/utils.hpp"
 #include <filesystem>
-#include <format>
 #include <fstream>
+#include <iostream>
 
 namespace clrsync::core
 {
@@ -45,6 +45,11 @@ void theme_template::set_output_path(const std::string &path)
 
 void theme_template::load_template()
 {
+    if (!std::filesystem::exists(m_template_path))
+    {
+        std::cerr << "Template file '" << m_template_path << "' is missing\n";
+        return;
+    }
     std::ifstream input(m_template_path, std::ios::binary);
     if (!input)
         throw std::runtime_error("Failed to open template file: " + m_template_path);

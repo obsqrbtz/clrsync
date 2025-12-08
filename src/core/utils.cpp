@@ -13,16 +13,12 @@ void print_color_keys()
 
 std::string get_default_config_path()
 {
+    auto home = expand_user("~");
 #ifdef _WIN32
-    const char *appdata = std::getenv("APPDATA"); // "C:\Users\<User>\AppData\Roaming"
-    if (!appdata)
-        throw std::runtime_error("APPDATA environment variable not set");
-    return std::string(appdata) + "\\clrsync\\config.toml";
+    return home + "\\.config\\clrsync\\config.toml";
+
 #else
-    const char *home = std::getenv("HOME");
-    if (!home)
-        throw std::runtime_error("HOME environment variable not set");
-    return std::string(home) + "/.config/clrsync/config.toml";
+    return home + "/.config/clrsync/config.toml";
 #endif
 }
 

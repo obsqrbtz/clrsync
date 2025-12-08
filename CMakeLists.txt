@@ -59,7 +59,7 @@ set(CORE_SOURCES
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 add_library(clrsync_core SHARED ${CORE_SOURCES})
 target_include_directories(clrsync_core PUBLIC src SYSTEM lib)
-target_compile_definitions(clrsync_core PRIVATE
+target_compile_definitions(clrsync_core PUBLIC
     CLRSYNC_DATADIR=\"${CMAKE_INSTALL_FULL_DATADIR}/clrsync\"
 )
 

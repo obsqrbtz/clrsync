@@ -172,6 +172,7 @@ void color_scheme_editor::render_controls()
                 apply_palette_to_imgui();
                 apply_palette_to_editor();
                 notify_palette_changed();
+                m_controller.select_palette(new_palette_name_buf);
                 new_palette_name_buf[0] = 0;
             }
             ImGui::CloseCurrentPopup();
@@ -328,6 +329,12 @@ void color_scheme_editor::render_preview_content()
 {
     const auto &current = m_controller.current_palette();
 
+    if (current.colors().empty())
+    {
+        ImGui::TextColored(ImVec4(1.0f, 0.3f, 0.3f, 1.0f), "Current palette is empty");
+        return;
+    }
+
     auto get_color = [&](const std::string &key) -> ImVec4 {
         auto it = current.colors().find(key);
         if (it != current.colors().end())
@@ -389,6 +396,8 @@ void color_scheme_editor::render_preview_content()
 void color_scheme_editor::apply_palette_to_editor()
 {
     const auto &current = m_controller.current_palette();
+    if (current.colors().empty())
+        return;
 
     auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
         auto it = current.colors().find(key);
@@ -446,6 +455,9 @@ void color_scheme_editor::apply_palette_to_editor()
 void color_scheme_editor::apply_palette_to_imgui() const
 {
     const auto &current = m_controller.current_palette();
+
+    if (current.colors().empty())
+        return;
     
     auto getColor = [&](const std::string &key, const std::string &fallback = "") -> ImVec4 {
         auto it = current.colors().find(key);
