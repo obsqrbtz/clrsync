@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 #ifdef _WIN32
-#include "windows.h"
+#include "libloaderapi.h"
 #endif
 
 namespace clrsync::core
