@@ -87,15 +87,16 @@ void setup_main_dockspace(bool& first_time)
     ImGui::SetNextWindowViewport(viewport->ID);
 
     constexpr ImGuiWindowFlags flags =
-        // ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoCollapse |
         ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove |
         ImGuiWindowFlags_NoBringToFrontOnFocus |
-        ImGuiWindowFlags_NoNavFocus;
+        ImGuiWindowFlags_NoNavFocus |
+        ImGuiWindowFlags_MenuBar;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 1.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
     ImGui::Begin("MainDockSpace", nullptr, flags);
     ImGui::PopStyleVar(3);
@@ -110,20 +111,23 @@ void setup_main_dockspace(bool& first_time)
         ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
         ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-        ImGuiID left, right;
-        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.45f, &left, &right);
+        ImGuiID center, right;
+        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.5f, &right, &center);
 
-        ImGuiID right_top, right_bottom;
-        ImGui::DockBuilderSplitNode(right, ImGuiDir_Up, 0.6f, &right_top, &right_bottom);
+        ImGuiDockNode* center_node = ImGui::DockBuilderGetNode(center);
+        if (center_node)
+        {
+            center_node->LocalFlags |= ImGuiDockNodeFlags_CentralNode;
+        }
 
-        ImGui::DockBuilderDockWindow("Templates", left);
-        ImGui::DockBuilderDockWindow("Color Schemes", right_top);
-        ImGui::DockBuilderDockWindow("Color Preview", right_bottom);
+        ImGui::DockBuilderDockWindow("Color Schemes", right);
+        ImGui::DockBuilderDockWindow("Templates", center);
+        ImGui::DockBuilderDockWindow("Color Preview", center);
         
         ImGui::DockBuilderFinish(dockspace_id);
     }
 
-    ImGui::DockSpace(dockspace_id, ImVec2{0,0});
+    ImGui::DockSpace(dockspace_id, ImVec2{0,0}, ImGuiDockNodeFlags_None);
     ImGui::End();
 }
 
