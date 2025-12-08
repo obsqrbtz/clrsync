@@ -26,8 +26,8 @@ configure_file(
 )
 
 configure_file(
-    ${CMAKE_SOURCE_DIR}/PKGBUILD.in
-    ${CMAKE_SOURCE_DIR}/PKGBUILD
+    ${CMAKE_SOURCE_DIR}/AUR/PKGBUILD.in
+    ${CMAKE_SOURCE_DIR}/AUR/PKGBUILD
     @ONLY
 )
 
