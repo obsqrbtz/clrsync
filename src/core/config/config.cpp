@@ -37,7 +37,10 @@ std::filesystem::path config::get_user_config_dir()
 #endif
 }
 
-std::filesystem::path config::get_data_dir() {
+std::filesystem::path config::get_data_dir()
+{
+    if (std::filesystem::exists(CLRSYNC_DATADIR))
+        return {CLRSYNC_DATADIR};
 #ifdef _WIN32
     char buffer[MAX_PATH];
     GetModuleFileNameA(nullptr, buffer, MAX_PATH);
@@ -45,7 +48,11 @@ std::filesystem::path config::get_data_dir() {
     std::filesystem::path data_dir = exe_path.parent_path().parent_path() / "share" / "clrsync";
     return data_dir;
 #else
-    return {CLRSYNC_DATADIR};
+    if (std::filesystem::exists("/usr/share/clrsync"))
+        return {"/usr/share/clrsync"};
+    if (std::filesystem::exists("/usr/local/share/clrsync"))
+        return {"/usr/local/share/clrsync"};
+    return {};
 #endif
 }
 
