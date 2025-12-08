@@ -6,31 +6,31 @@
 #include <fstream>
 #include <ranges>
 
-template_editor::template_editor()
-    : m_template_name("new_template")
+template_editor::template_editor() : m_template_name("new_template")
 {
     TextEditor::LanguageDefinition lang;
     lang.mName = "Template";
-    
+
     lang.mCommentStart = "/*";
     lang.mCommentEnd = "*/";
     lang.mSingleLineComment = "#";
-    
+
     lang.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>(
-        "\\{[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)?\\}", 
+        "\\{[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)?\\}",
         TextEditor::PaletteIndex::KnownIdentifier));
-    
+
     lang.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>(
         "\"([^\"]*)\"", TextEditor::PaletteIndex::String));
     lang.mTokenRegexStrings.push_back(std::make_pair<std::string, TextEditor::PaletteIndex>(
         "'([^']*)'", TextEditor::PaletteIndex::String));
-    
+
     m_editor.SetLanguageDefinition(lang);
-    m_editor.SetText("# Enter your template here\n# Use {color_key} for color variables\n# Examples: {color.hex}, {color.rgb}, {color.r}\n\n");
+    m_editor.SetText("# Enter your template here\n# Use {color_key} for color variables\n# "
+                     "Examples: {color.hex}, {color.rgb}, {color.r}\n\n");
     m_editor.SetShowWhitespaces(false);
 }
 
-void template_editor::apply_current_palette(const clrsync::core::palette& pal)
+void template_editor::apply_current_palette(const clrsync::core::palette &pal)
 {
     auto colors = pal.colors();
     auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
@@ -39,7 +39,7 @@ void template_editor::apply_current_palette(const clrsync::core::palette& pal)
         {
             it = colors.find(fallback);
         }
-        
+
         if (it != colors.end())
         {
             const auto &col = it->second;
@@ -53,36 +53,45 @@ void template_editor::apply_current_palette(const clrsync::core::palette& pal)
         }
         return 0xFFFFFFFF;
     };
-    
+
     auto palette = m_editor.GetPalette();
-    
+
     palette[int(TextEditor::PaletteIndex::Default)] = get_color_u32("editor_main", "foreground");
     palette[int(TextEditor::PaletteIndex::Keyword)] = get_color_u32("editor_command", "accent");
     palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("editor_warning", "warning");
     palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("editor_string", "success");
     palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("editor_string", "success");
-    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("editor_main", "foreground");
-    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("editor_emphasis", "accent");
+    palette[int(TextEditor::PaletteIndex::Punctuation)] =
+        get_color_u32("editor_main", "foreground");
+    palette[int(TextEditor::PaletteIndex::Preprocessor)] =
+        get_color_u32("editor_emphasis", "accent");
     palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("editor_main", "foreground");
     palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("editor_link", "info");
-    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("editor_link", "info");
-    
-    palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("editor_comment", "editor_inactive");
-    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("editor_comment", "editor_inactive");
-    
-    palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32("editor_background", "background");
+    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] =
+        get_color_u32("editor_link", "info");
+
+    palette[int(TextEditor::PaletteIndex::Comment)] =
+        get_color_u32("editor_comment", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::MultiLineComment)] =
+        get_color_u32("editor_comment", "editor_inactive");
+
+    palette[int(TextEditor::PaletteIndex::Background)] =
+        get_color_u32("editor_background", "background");
     palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("cursor", "accent");
-    
-    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("editor_selected", "surface_variant");
+
+    palette[int(TextEditor::PaletteIndex::Selection)] =
+        get_color_u32("editor_selected", "surface_variant");
     palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("editor_error", "error");
     palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("editor_error", "error");
-    
-    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("editor_line_number", "editor_inactive");
+
+    palette[int(TextEditor::PaletteIndex::LineNumber)] =
+        get_color_u32("editor_line_number", "editor_inactive");
     palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32("surface_variant");
     palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32("surface");
-    
-    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_focused", "border");
-    
+
+    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] =
+        get_color_u32("border_focused", "border");
+
     m_editor.SetPalette(palette);
 }
 
@@ -115,6 +124,12 @@ void template_editor::render_controls()
     if (ImGui::Button("New Template"))
     {
         new_template();
+    }
+
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+        ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_S))
+    {
+        save_template();
     }
 
     ImGui::SameLine();
@@ -197,7 +212,23 @@ void template_editor::render_editor()
     }
     else
     {
-        ImGui::Text("Editing: %s", m_template_name.c_str());
+        ImGui::Text("%s", m_template_name.c_str());
+        auto trim_right = [](const std::string &s) -> std::string {
+            size_t end = s.find_last_not_of("\r\n");
+            return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+        };
+
+        std::string current_content = trim_right(m_editor.GetText());
+        std::string saved_content = trim_right(m_saved_content);
+
+        m_has_unsaved_changes = (current_content != saved_content);
+        if (m_has_unsaved_changes)
+        {
+            ImGui::SameLine();
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.6f, 0.2f, 1.0f));
+            ImGui::Text("●");
+            ImGui::PopStyleColor();
+        }
     }
 
     ImGui::Separator();
@@ -351,6 +382,8 @@ void template_editor::save_template()
         m_template_name = trimmed_name;
         m_output_path = trimmed_path;
         m_is_editing_existing = true;
+        m_saved_content = m_editor.GetText();
+        m_has_unsaved_changes = false;
 
         refresh_templates();
     }
@@ -387,8 +420,10 @@ void template_editor::load_template(const std::string &name)
                     content += line + "\n";
                 }
                 in.close();
-                
+
                 m_editor.SetText(content);
+                m_saved_content = content;
+                m_has_unsaved_changes = false;
             }
         }
         catch (const std::exception &e)
@@ -401,12 +436,17 @@ void template_editor::load_template(const std::string &name)
 void template_editor::new_template()
 {
     m_template_name = "new_template";
-    m_editor.SetText("# Enter your template here\n# Use {color_key} for color variables\n# Examples: {color.hex}, {color.rgb}, {color.r}\n\n");
+    std::string default_content =
+        "# Enter your template here\n# Use {color_key} for color variables\n# "
+        "Examples: {color.hex}, {color.rgb}, {color.r}\n\n";
+    m_editor.SetText(default_content);
+    m_saved_content = default_content;
     m_output_path = "";
     m_reload_command = "";
     m_enabled = true;
     m_is_editing_existing = false;
     m_validation_error = "";
+    m_has_unsaved_changes = false;
 }
 
 void template_editor::refresh_templates()

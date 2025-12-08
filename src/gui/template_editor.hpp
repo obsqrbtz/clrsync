@@ -32,6 +32,8 @@ private:
     std::string m_output_path;
     std::string m_reload_command;
     std::string m_validation_error;
+    std::string m_saved_content;
+    bool m_has_unsaved_changes = false;
     
     bool m_enabled{true};
     bool m_is_editing_existing{false};
