@@ -1,6 +1,9 @@
 # clrsync
 
-A theme management tool for synchronizing color schemes across multiple applications. clrsync allows you to define color palettes once and apply them consistently to all your terminal emulators, editors, and other configurable applications.
+**Notice:** This application is not yet released and is subject to change.  
+Deb, RPM, and AUR packages, as well as a Windows installer, will be available soon.
+
+A theme management tool for synchronizing color schemes across multiple applications. clrsync allows to define color palettes once and apply them consistently to all configurable applications.
 
 ![Preview](assets/screenshot.png)
 
@@ -17,10 +20,13 @@ A theme management tool for synchronizing color schemes across multiple applicat
 ### Prerequisites
 
 - C++20 compatible compiler (GCC, Clang, or MSVC)
-- CMake or Meson
+- CMake
 - OpenGL
+- glfw
+- fontconfig
+- freetype
 
-### Using CMake
+### With CMake
 
 ```bash
 mkdir build && cd build
@@ -28,29 +34,21 @@ cmake ..
 cmake --build .
 ```
 
-### Using Meson
-
-```bash
-meson setup builddir
-meson compile -C builddir
-```
-
 ## Installation
 
-After building, you'll have:
-
-- `clrsync_cli` - CLI
-- `clrsync_gui` - GUI
-- `libclrsync_core` - Shared lib
+```bash
+cd build
+cmake --install .
+```
 
 ## Configuration
 
-Create a configuration file at `~/.config/clrsync/config.toml`:
+Edit or create a configuration file at `~/.config/clrsync/config.toml`:
 
 ```toml
 [general]
 palettes_path = "~/.config/clrsync/palettes"
-default_theme = "dark"
+default_theme = "cursed"
 
 [templates.kitty]
 input_path = "~/.config/clrsync/templates/kitty.conf"
@@ -66,73 +64,95 @@ Create palette files in your `palettes_path` directory:
 ```toml
 # ~/.config/clrsync/palettes/dark.toml
 [general]
-name = "dark"
+name = 'cursed'
 
 [colors]
-background = "#111318FF"
-surface = "#1E1F25FF"
-surface_variant = "#282A2FFF"
-
-foreground = "#E2E2E9FF"
-foreground_secondary = "#A8ABB3FF"
-
-accent = "#00AA56FF"
-outline = "#44474FFF"
-shadow = "#00000080"
-cursor = "#FFFFFFFF"
-
-error = "#FF5F5FFF"
-warning = "#FFC966FF"
-success = "#6AD68BFF"
-info = "#5DB2FFFF"
-
-term_black   = "#111318FF"
-term_red     = "#FF5F5FFF"
-term_green   = "#00AA56FF"
-term_yellow  = "#FFC966FF"
-term_blue    = "#5DB2FFFF"
-term_magenta = "#DEBCDFFF"
-term_cyan    = "#86C9FFFF"
-term_white   = "#E2E2E9FF"
-
-term_black_bright   = "#33353AFF"
-term_red_bright     = "#FFB780FF"
-term_green_bright   = "#00CC6AFF"
-term_yellow_bright  = "#FFD580FF"
-term_blue_bright    = "#86C9FFFF"
-term_magenta_bright = "#F0D6F0FF"
-term_cyan_bright    = "#BFEFFFFF"
-term_white_bright   = "#FFFFFFFF"
+accent = '#B44242FF'
+background = '#151515FF'
+base00 = '#151515FF'
+base01 = '#B44242FF'
+base02 = '#95A328FF'
+base03 = '#E1C135FF'
+base04 = '#60928FFF'
+base05 = '#7C435AFF'
+base06 = '#A48B4AFF'
+base07 = '#C2C2B0FF'
+base08 = '#3F3639FF'
+base09 = '#DC7671FF'
+base0A = '#E8E85AFF'
+base0B = '#9E9052FF'
+base0C = '#76C39BFF'
+base0D = '#86596CFF'
+base0E = '#CEB34FFF'
+base0F = '#B0AFA8FF'
+border = '#3F3639FF'
+border_focused = '#E1C135FF'
+cursor = '#E1C135FF'
+editor_background = '#151515FF'
+editor_command = '#CEB34FFF'
+editor_comment = '#3F3639FF'
+editor_disabled = '#3F3639FF'
+editor_emphasis = '#DC7671FF'
+editor_error = '#B44242FF'
+editor_inactive = '#3F3639FF'
+editor_line_number = '#86596CFF'
+editor_link = '#60928FFF'
+editor_main = '#C2C2B0FF'
+editor_selected = '#3F3639FF'
+editor_selection_inactive = '#2A2A2AFF'
+editor_string = '#76C39BFF'
+editor_success = '#95A328FF'
+editor_warning = '#E1C135FF'
+error = '#B44242FF'
+foreground = '#C2C2B0FF'
+info = '#60928FFF'
+on_background = '#C2C2B0FF'
+on_error = '#151515FF'
+on_info = '#151515FF'
+on_success = '#151515FF'
+on_surface = '#C2C2B0FF'
+on_surface_varuant = '#C2C2B0FF'
+on_warning = '#151515FF'
+success = '#95A328FF'
+surface = '#1C1C1CFF'
+surface_variant = '#1C1C1CFF'
+warning = '#E1C135FF'
 ```
 
 ### Template Files
 
-Create template files using color variables with flexible format specifiers:
+Create template files at `~/.config/clrsync/templates` using color variables:
 
 ```conf
 # ~/.config/clrsync/templates/kitty.conf
-cursor              {foreground}
+cursor              {cursor}
 cursor_text_color   {background}
-
 foreground            {foreground}
 background            {background}
-selection_foreground  {foreground_secondary}
+selection_foreground  {on_surface}
 selection_background  {surface}
 url_color             {accent}
-
-color0      {background}
-color1      {term_red}
-color2      {term_green}
-color3      {term_yellow}
-color4      {term_blue}
-color5      {term_magenta}
-color6      {term_cyan}
-color7      {term_white}
+color0      {base00}
+color8      {base08}
+color1      {base01}
+color9      {base09}
+color2      {base02}
+color10     {base0A}
+color3      {base03}
+color11     {base0B}
+color4      {base04}
+color12     {base0C}
+color5      {base05}
+color13     {base0D}
+color6      {base06}
+color14     {base0E}
+color7      {base07}
+color15     {base0F}
 ```
 
 #### Color Format Specifiers
 
-Access color components using dot notation:
+Format colors using dot notation:
 
 ```conf
 # HEX formats
@@ -182,7 +202,7 @@ clrsync_cli --apply
 Apply a specific theme:
 
 ```bash
-clrsync_cli --apply --theme rose-pine
+clrsync_cli --apply --theme cursed
 ```
 
 Apply a theme from a file path:
@@ -226,3 +246,7 @@ This project uses the following open-source libraries:
 - **[toml++](https://github.com/marzer/tomlplusplus)** - Header-only TOML config file parser and serializer for C++17
 - **[argparse](https://github.com/p-ranav/argparse)** - Argument Parser for Modern C++
 - **[ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit)** - Syntax highlighting text editor for ImGui
+
+And colorschemes:
+
+- **cursed** by **[pyratebeard](https://pyratebeard.net)**
