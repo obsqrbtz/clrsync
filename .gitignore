@@ -6,6 +6,10 @@ out
 /build
 /build-*
 
+/AUR/clrsync-git
+/AUR/pkg
+/AUR/src
+
 *.log
 *tar.zst
 *tar.gz

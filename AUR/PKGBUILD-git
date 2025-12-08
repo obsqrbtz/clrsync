@@ -1,6 +1,6 @@
 # Maintainer: Daniel Dada <dan@binarygoose.dev>
 pkgname=clrsync-git
-pkgver=r21.5dafb6c
+pkgver=r22.d8baae2
 pkgrel=1
 pkgdesc="Color scheme manager (git version)"
 arch=('x86_64')
