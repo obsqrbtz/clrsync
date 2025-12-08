@@ -2,6 +2,8 @@
 
 A theme management tool for synchronizing color schemes across multiple applications. clrsync allows you to define color palettes once and apply them consistently to all your terminal emulators, editors, and other configurable applications.
 
+![Preview](assets/screenshot.png)
+
 ## Features
 
 - **Unified Color Management**: Define color palettes in TOML format and apply them across multiple applications
@@ -36,6 +38,7 @@ meson compile -C builddir
 ## Installation
 
 After building, you'll have:
+
 - `clrsync_cli` - CLI
 - `clrsync_gui` - GUI
 - `libclrsync_core` - Shared lib
@@ -165,31 +168,37 @@ Access color components using dot notation:
 ### CLI
 
 List available themes:
+
 ```bash
 clrsync_cli --list-themes
 ```
 
 Apply the default theme:
+
 ```bash
 clrsync_cli --apply
 ```
 
 Apply a specific theme:
+
 ```bash
 clrsync_cli --apply --theme rose-pine
 ```
 
 Apply a theme from a file path:
+
 ```bash
 clrsync_cli --apply --path /path/to/theme.toml
 ```
 
 Show available color variables:
+
 ```bash
 clrsync_cli --show-vars
 ```
 
 Use a custom config file:
+
 ```bash
 clrsync_cli --config /path/to/config.toml --apply
 ```
@@ -197,25 +206,16 @@ clrsync_cli --config /path/to/config.toml --apply
 ### GUI
 
 Launch the graphical editor:
+
 ```bash
 clrsync_gui
 ```
 
 The GUI provides:
+
 - **Color Scheme Editor**: Visual palette editor with color pickers
 - **Template Editor**: Edit template files
 - **Live Preview**: See changes in real-time
-
-## Example Themes
-
-The project includes several pre-configured themes in `example_config/palettes/`:
-- `dark.toml`
-- `light.toml`
-- `flexoki.toml`
-- `flexoki-light.toml`
-- `rose-pine.toml`
-- `rose-pine-moon.toml`
-- `rose-pine-dawn.toml`
 
 ## Acknowledgments
 
@@ -226,8 +226,3 @@ This project uses the following open-source libraries:
 - **[toml++](https://github.com/marzer/tomlplusplus)** - Header-only TOML config file parser and serializer for C++17
 - **[argparse](https://github.com/p-ranav/argparse)** - Argument Parser for Modern C++
 - **[ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit)** - Syntax highlighting text editor for ImGui
-
-Special thanks to the creators of the included color schemes:
-- **[Flexoki](https://stephango.com/flexoki)** by Steph Ango
-- **[Rosé Pine](https://rosepinetheme.com/)** by the Rosé Pine team
-
