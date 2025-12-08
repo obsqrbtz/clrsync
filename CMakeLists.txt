@@ -208,11 +208,13 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Daniel Dada <dan@binarygoose.dev>")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.31), libglfw3, libfreetype6")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 
 set(CPACK_RPM_PACKAGE_LICENSE "MIT")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/System")
 set(CPACK_RPM_PACKAGE_URL "https://github.com/obsqrbtz/clrsync")
 set(CPACK_RPM_PACKAGE_REQUIRES "freetype, glfw, fontconfig")
+
 
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "CMAKE_INSTALL_FULL_DATADIR: ${CMAKE_INSTALL_FULL_DATADIR}")
