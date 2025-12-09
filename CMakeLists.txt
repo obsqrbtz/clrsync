@@ -5,6 +5,9 @@ include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(USE_SYSTEM_GLFW "Use system-installed GLFW instead of fetching it statically" OFF)
+message(STATUS "USE_SYSTEM_GLFW: ${USE_SYSTEM_GLFW}")
+
 # -----------------------------
 # Platform-specific install dirs
 # -----------------------------
@@ -52,16 +55,6 @@ if(WIN32)
         URL https://download.savannah.gnu.org/releases/freetype/freetype-2.14.1.tar.gz
     )
     FetchContent_MakeAvailable(freetype)
-
-    FetchContent_Declare(
-        glfw
-        GIT_REPOSITORY https://github.com/glfw/glfw.git
-        GIT_TAG 3.4
-    )
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(glfw)
 else()
     find_package(Freetype REQUIRED)
     find_package(PkgConfig REQUIRED)
@@ -74,10 +67,31 @@ else()
     find_library(BROTLICOMMON_LIBRARY NAMES brotlicommon)
 
     pkg_check_modules(HARFBUZZ harfbuzz)
-    pkg_check_modules(GLFW REQUIRED glfw3)
     pkg_check_modules(WAYLAND_CLIENT wayland-client)
     pkg_check_modules(WAYLAND_EGL wayland-egl)
 
+endif()
+
+
+if(USE_SYSTEM_GLFW)
+    pkg_check_modules(GLFW REQUIRED glfw3)
+else()
+    include(FetchContent)
+    FetchContent_Declare(
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.4
+    )
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+    
+    FetchContent_MakeAvailable(glfw)
+    set(GLFW_FOUND TRUE)
+    set(GLFW_INCLUDE_DIRS ${glfw_SOURCE_DIR}/include)
+    set(GLFW_LIBRARIES glfw)
 endif()
 
 # -----------------------------

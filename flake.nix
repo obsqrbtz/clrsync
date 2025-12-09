@@ -47,6 +47,7 @@
 
         cmakeFlags = [
           "-DCMAKE_BUILD_TYPE=Release"
+          "-DUSE_SYSTEM_GLFW=ON"
         ];
 
         installPhase = ''

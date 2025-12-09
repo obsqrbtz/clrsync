@@ -35,6 +35,7 @@ build() {
     cd "$pkgname-$pkgver"
     cmake -B build -S . \
         -DCMAKE_BUILD_TYPE=Release \
+        -DUSE_SYSTEM_GLFW=ON \
         -DCMAKE_INSTALL_PREFIX=/usr
     cmake --build build
 }
