@@ -1,0 +1,32 @@
+name: Test flake.nix
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build clrsync package
+        run: |
+          nix --extra-experimental-features "flakes nix-command" build .#packages.x86_64-linux.clrsync
+
+      - name: Enter devShell
+        run: |
+          nix --extra-experimental-features "flakes nix-command" develop .#default --command true
+
+      - name: Test clrsync CLI
+        run: |
+          nix --extra-experimental-features "flakes nix-command" run .#clrsync-cli -- --help
