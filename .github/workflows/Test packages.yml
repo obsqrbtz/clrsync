@@ -25,7 +25,7 @@ jobs:
           libglfw3-dev libfreetype6-dev libfontconfig1-dev \
           libx11-dev libxrandr-dev libxi-dev \
           mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev \
-          libxinerama-dev libxcursor-dev
+          libxinerama-dev libxcursor-dev libxkbcommon-dev
     
     - name: Configure CMake
       run: |
