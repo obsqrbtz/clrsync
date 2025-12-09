@@ -186,12 +186,14 @@ target_compile_definitions(imgui PUBLIC IMGUI_ENABLE_FREETYPE)
 
 if(WIN32)
     target_include_directories(imgui PUBLIC ${GLFW_INCLUDE_DIRS} ${freetype_SOURCE_DIR}/include)
-    target_link_libraries(clrsync_gui PRIVATE clrsync_core glfw freetype imgui OpenGL::GL)
+    target_link_libraries(imgui PUBLIC freetype)
+    target_link_libraries(clrsync_gui PRIVATE clrsync_core glfw imgui OpenGL::GL)
 else()
     target_include_directories(imgui PUBLIC ${GLFW_INCLUDE_DIRS} ${FREETYPE_INCLUDE_DIRS})
+    target_link_libraries(imgui PRIVATE Freetype::Freetype Freetype::Freetype ${FREETYPE_EXTRA_LIBS}
+        ZLIB::ZLIB BZip2::BZip2 PNG::PNG)
     target_link_libraries(clrsync_gui PRIVATE
-        clrsync_core imgui Freetype::Freetype ${FREETYPE_EXTRA_LIBS}
-        ZLIB::ZLIB BZip2::BZip2 PNG::PNG
+        clrsync_core imgui
         ${GLFW_LIBRARIES} ${WAYLAND_LIBS}
         X11 Xrandr Xi Fontconfig::Fontconfig OpenGL::GL
     )
