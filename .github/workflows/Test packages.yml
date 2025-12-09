@@ -67,7 +67,8 @@ jobs:
           glfw-devel freetype-devel fontconfig-devel \
           libX11-devel libXrandr-devel libXi-devel \
           mesa-libGL-devel mesa-libGLU-devel \
-          libXinerama-devel libXcursor-devel
+          libXinerama-devel libXcursor-devel \
+          wayland-devel wayland-protocols-devel
     
     - name: Checkout
       uses: actions/checkout@v4
