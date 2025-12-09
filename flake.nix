@@ -10,15 +10,11 @@
     pkgs = nixpkgs.legacyPackages.${system};
   in {
     packages.${system} = rec {
-      clrsync-git = pkgs.stdenv.mkDerivation rec {
-        pname = "clrsync-git";
+      clrsync = pkgs.stdenv.mkDerivation rec {
+        pname = "clrsync";
         version = "unstable";
 
-        src = pkgs.fetchgit {
-          url = "https://github.com/obsqrbtz/clrsync.git";
-          rev = "HEAD";
-          sha256 = "sha256-znRtdLfdEmfdSGeiQA0v6hcZBFsQzgQtPY5uN98lwjo=";
-        };
+        src = self;
 
         nativeBuildInputs = [
           pkgs.cmake
@@ -67,18 +63,18 @@
         };
       };
 
-      default = clrsync-git;
+      default = clrsync;
     };
 
     apps.${system} = {
       clrsync-gui = {
         type = "app";
-        program = "${self.packages.${system}.clrsync-git}/bin/clrsync_gui";
+        program = "${self.packages.${system}.clrsync}/bin/clrsync_gui";
       };
       
       clrsync-cli = {
         type = "app";
-        program = "${self.packages.${system}.clrsync-git}/bin/clrsync_cli";
+        program = "${self.packages.${system}.clrsync}/bin/clrsync_cli";
       };
       
       default = self.apps.${system}.clrsync-gui;
