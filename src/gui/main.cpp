@@ -1,6 +1,10 @@
 #include <memory>
 
+#define GLFW_EXPOSE_NATIVE_X11
+#define GLFW_EXPOSE_NATIVE_WAYLAND
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
 
 #include "core/config/config.hpp"
 #include "core/io/toml_file.hpp"
@@ -26,6 +30,8 @@ int main(int, char**)
 
     GLFWwindow* window = init_glfw();
     if (!window) return 1;
+
+    printf("Using backend: %s\n", glfwGetVersionString());
 
     init_imgui(window, ini_path);
 
