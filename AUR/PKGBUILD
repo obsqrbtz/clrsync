@@ -6,6 +6,7 @@ pkgdesc="Color scheme manager"
 arch=('x86_64')
 url="https://github.com/obsqrbtz/clrsync"
 license=('MIT')
+
 depends=(
     glfw
     freetype2
@@ -14,7 +15,19 @@ depends=(
     libglvnd
     libxcursor
 )
-makedepends=('cmake')
+
+makedepends=(
+  cmake
+  glfw
+  libx11
+  libxrandr
+  libxi
+  libxinerama
+  libxcursor
+  wayland
+  wayland-protocols
+)
+
 source=("$pkgname-$pkgver.tar.gz::https://github.com/obsqrbtz/clrsync/archive/refs/tags/v$pkgver.tar.gz")
 sha256sums=('SKIP')
 
