@@ -42,6 +42,8 @@ class config
     std::string m_palettes_dir{};
     std::unique_ptr<io::file> m_file;
     std::unordered_map<std::string, theme_template> m_themes{};
+    static void copy_file(const std::filesystem::path& src, const std::filesystem::path& dst);
+    static void copy_dir(const std::filesystem::path& src, const std::filesystem::path& dst);
     void copy_default_configs();
 };
 } // namespace clrsync::core

@@ -3,6 +3,7 @@
 
 #include <core/palette/color.hpp>
 #include <filesystem>
+#include <fstream>
 #include <stdexcept>
 
 #ifdef _WIN32
@@ -56,25 +57,66 @@ std::filesystem::path config::get_data_dir()
 #endif
 }
 
+void config::copy_file(const std::filesystem::path &src, const std::filesystem::path &dst)
+{
+    if (std::filesystem::exists(dst))
+        return;
+
+    std::ifstream in(src, std::ios::binary);
+    std::ofstream out(dst, std::ios::binary);
+    out << in.rdbuf();
+}
+
+void config::copy_dir(const std::filesystem::path &src, const std::filesystem::path &dst)
+{
+    for (auto const &entry : std::filesystem::recursive_directory_iterator(src))
+    {
+        auto rel = std::filesystem::relative(entry.path(), src);
+        auto out = dst / rel;
+
+        if (entry.is_directory())
+        {
+            std::filesystem::create_directories(out);
+        }
+        else if (entry.is_regular_file())
+        {
+            copy_file(entry.path(), out);
+        }
+    }
+}
+
 void config::copy_default_configs()
 {
-    std::filesystem::path user_config = get_user_config_dir();
-    std::filesystem::path default_dir = get_data_dir();
+    std::filesystem::path user_dir = get_user_config_dir();
+    std::filesystem::path system_dir = get_data_dir();
 
-    if (!std::filesystem::exists(user_config))
+    std::filesystem::create_directories(user_dir);
+
     {
-        std::filesystem::create_directories(user_config);
-
-        std::filesystem::copy(default_dir / "config.toml", user_config / "config.toml");
-        std::filesystem::copy(default_dir / "templates", user_config / "templates",
-                              std::filesystem::copy_options::recursive);
-        std::filesystem::copy(default_dir / "palettes", user_config / "palettes",
-                              std::filesystem::copy_options::recursive);
-        return;
+        auto src = system_dir / "config.toml";
+        auto dst = user_dir / "config.toml";
+        if (!std::filesystem::exists(dst))
+            copy_file(src, dst);
     }
-    if (!std::filesystem::exists(user_config / "config.toml"))
+
     {
-        std::filesystem::copy(default_dir / "config.toml", user_config / "config.toml");
+        auto src = system_dir / "templates";
+        auto dst = user_dir / "templates";
+
+        if (!std::filesystem::exists(dst))
+            std::filesystem::create_directories(dst);
+
+        copy_dir(src, dst);
+    }
+
+    {
+        auto src = system_dir / "palettes";
+        auto dst = user_dir / "palettes";
+
+        if (!std::filesystem::exists(dst))
+            std::filesystem::create_directories(dst);
+
+        copy_dir(src, dst);
     }
 }
 
