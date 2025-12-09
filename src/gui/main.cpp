@@ -1,7 +1,5 @@
 #include <memory>
 
-#define GLFW_EXPOSE_NATIVE_X11
-#define GLFW_EXPOSE_NATIVE_WAYLAND
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
@@ -31,7 +29,17 @@ int main(int, char**)
     GLFWwindow* window = init_glfw();
     if (!window) return 1;
 
-    printf("Using backend: %s\n", glfwGetVersionString());
+    printf("GLFV Version: %s\n", glfwGetVersionString());
+
+    std::cout << "GLFW runtime platform: ";
+    switch (glfwGetPlatform()) {
+        case GLFW_PLATFORM_WAYLAND: std::cout << "Wayland\n"; break;
+        case GLFW_PLATFORM_X11: std::cout << "X11\n"; break;
+        case GLFW_PLATFORM_COCOA: std::cout << "Cocoa\n"; break;
+        case GLFW_PLATFORM_WIN32: std::cout << "Win32\n"; break;
+        default: std::cout << "Unknown\n";
+    }
+
 
     init_imgui(window, ini_path);
 

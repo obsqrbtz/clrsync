@@ -7,15 +7,11 @@ arch=('x86_64')
 url="https://github.com/obsqrbtz/clrsync"
 license=('MIT')
 depends=(
-    glfw-x11
+    glfw
     freetype2
     fontconfig
-    libx11
-    libxrandr
-    libxi
     mesa
     libglvnd
-    libxinerama
     libxcursor
 )
 makedepends=('cmake')
