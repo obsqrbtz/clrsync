@@ -15,6 +15,123 @@ A theme management tool for synchronizing color schemes across multiple applicat
 - **Flexible Color Formats**: Support for HEX, RGB, HSL with multi-component access (e.g., `{color.r}`, `{color.hex}`, `{color.hsl}`)
 - **Pre-built Themes**: Includes popular themes
 
+## Installation
+
+### NixOS
+
+#### Home Manager Module
+
+1. Add clrsync to your flake inputs
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    
+    clrsync.url = "github:obsqrbtz/clrsync";
+  };
+}
+```
+
+2. Import the Home Manager module
+
+In your flake outputs:
+
+```nix
+outputs = { self, nixpkgs, home-manager, clrsync, ... }: {
+  homeConfigurations."username" = home-manager.lib.homeManagerConfiguration {
+    pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    
+    modules = [
+      clrsync.homeManagerModules.default
+      {
+        programs.clrsync.package = clrsync.packages.x86_64-linux.default;
+      }
+        # ...
+    ];
+  };
+};
+```
+
+3. Configure in your home manager
+
+```nix
+programs.clrsync = {
+  enable = true;
+  
+  defaultTheme = "dark";
+  palettesPath = "~/.config/clrsync/palettes";
+  font = "JetBrainsMono Nerd Font Mono";
+  fontSize = 14;
+  applyTheme = true;
+
+  templates = {
+    kitty = {
+      enabled = true;
+      inputPath = "~/.config/clrsync/templates/kitty.conf";
+      outputPath = "~/.config/kitty/clrsync.conf";
+      reloadCmd = "pkill -SIGUSR1 kitty";
+    };
+    
+    rofi = {
+      enabled = true;
+      inputPath = "~/.config/clrsync/templates/rofi.rasi";
+      outputPath = "~/.config/rofi/clrsync.rasi";
+    };
+  };
+};
+```
+4. Rebuild
+
+```nix
+home-manager switch --flake .
+```
+
+#### Package (For non-declarative configurations)
+
+1. Add clrsync to your flake inputs
+
+```nix
+{
+  inputs = {
+    clrsync.url = "github:obsqrbtz/clrsync";
+  };
+}
+```
+
+2. Install the package
+
+```nix
+# In NixOS configuration.nix:
+environment.systemPackages = [
+  inputs.clrsync.packages.x86_64-linux.default
+];
+
+# Or in Home Manager:
+home.packages = [
+  inputs.clrsync.packages.x86_64-linux.default
+];
+```
+
+3. Use the app manually
+
+```shell
+clrsync_gui
+
+# or
+clrsync_cli --apply --theme dark
+```
+
+### Other systems
+
+Follow the steps from Building section then install with cmake:
+
+```bash
+cd build
+cmake --install .
+```
+
 ## Building
 
 ### Prerequisites
@@ -32,13 +149,6 @@ A theme management tool for synchronizing color schemes across multiple applicat
 mkdir build && cd build
 cmake ..
 cmake --build .
-```
-
-## Installation
-
-```bash
-cd build
-cmake --install .
 ```
 
 ## Configuration
