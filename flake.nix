@@ -70,6 +70,9 @@
         default = clrsync;
       };
 
+      homeManagerModules.default = import ./home-manager-module.nix;
+      homeManagerModules.clrsync = self.homeManagerModules.default;
+
       apps.${system} = {
         clrsync-gui = {
           type = "app";
