@@ -1,3 +1,6 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Nix Flake](https://img.shields.io/badge/Nix-Flake-blue.svg)](https://nixos.wiki/wiki/Flakes)
+
 # clrsync
 
 **Notice:** This application is not yet released and is subject to change.  
@@ -54,7 +57,7 @@ outputs = { self, nixpkgs, home-manager, clrsync, ... }: {
 };
 ```
 
-3. Configure in your home manager
+3. Configure in home manager
 
 ```nix
 programs.clrsync = {
