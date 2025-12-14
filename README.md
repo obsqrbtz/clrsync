@@ -39,22 +39,12 @@ A theme management tool for synchronizing color schemes across multiple applicat
 
 2. Import the Home Manager module
 
-In your flake outputs:
+In home.nix:
 
 ```nix
-outputs = { self, nixpkgs, home-manager, clrsync, ... }: {
-  homeConfigurations."username" = home-manager.lib.homeManagerConfiguration {
-    pkgs = nixpkgs.legacyPackages.x86_64-linux;
-    
-    modules = [
-      clrsync.homeManagerModules.default
-      {
-        programs.clrsync.package = clrsync.packages.x86_64-linux.default;
-      }
-        # ...
-    ];
-  };
-};
+  imports = [
+    inputs.clrsync.homemanagermodules.default
+  ];
 ```
 
 3. Configure in home manager
@@ -62,7 +52,7 @@ outputs = { self, nixpkgs, home-manager, clrsync, ... }: {
 ```nix
 programs.clrsync = {
   enable = true;
-  
+  package = inputs.clrsync.packages.x86_64-linux.default;  
   defaultTheme = "dark";
   palettesPath = "~/.config/clrsync/palettes";
   font = "JetBrainsMono Nerd Font Mono";
