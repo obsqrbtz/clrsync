@@ -1,3 +1,6 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Nix Flake](https://img.shields.io/badge/Nix-Flake-blue.svg)](https://nixos.wiki/wiki/Flakes)
+
 # clrsync
 
 **Notice:** This application is not yet released and is subject to change.  
@@ -54,7 +57,7 @@ outputs = { self, nixpkgs, home-manager, clrsync, ... }: {
 };
 ```
 
-3. Configure in your home manager
+3. Configure in home manager
 
 ```nix
 programs.clrsync = {
@@ -349,14 +352,10 @@ The GUI provides:
 
 ## Acknowledgments
 
-This project uses the following open-source libraries:
-
+- **[matugen](https://github.com/InioX/matugen)** - A material you color generation tool
 - **[Dear ImGui](https://github.com/ocornut/imgui)** - Bloat-free graphical user interface library for C++
 - **[GLFW](https://www.glfw.org/)** - Multi-platform library for OpenGL, OpenGL ES and Vulkan development
 - **[toml++](https://github.com/marzer/tomlplusplus)** - Header-only TOML config file parser and serializer for C++17
 - **[argparse](https://github.com/p-ranav/argparse)** - Argument Parser for Modern C++
 - **[ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit)** - Syntax highlighting text editor for ImGui
-
-And colorschemes:
-
-- **cursed** by **[pyratebeard](https://pyratebeard.net)**
+- **cursed** by **[pyratebeard](https://pyratebeard.net)** - Color scheme
