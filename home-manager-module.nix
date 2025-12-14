@@ -7,6 +7,12 @@
 with lib;
 let
   cfg = config.programs.clrsync;
+
+  defaultPackage = 
+    if args ? inputs && args.inputs ? clrsync
+    then args.inputs.clrsync.packages.${pkgs.system}.default or null
+    else null;
+    
   templateType = types.submodule {
     options = {
       enabled = mkOption {
@@ -49,7 +55,8 @@ in
   options.programs.clrsync = {
     enable = mkEnableOption "clrsync color synchronization";
     package = mkOption {
-      type = types.package;
+      type = types.nullOr types.package;
+      default = defaultPackage;
       defaultText = literalExpression "inputs.clrsync.packages.\${pkgs.system}.default";
       description = "The clrsync package to use.";
     };
@@ -104,7 +111,15 @@ in
       assertions = [
         {
           assertion = cfg.package != null;
-          message = "programs.clrsync.package must be set. Add clrsync as a flake input and set: programs.clrsync.package = inputs.clrsync.packages.\${pkgs.system}.default;";
+          message = ''
+          programs.clrsync.package could not be automatically determined.
+          Please add clrsync to your flake inputs and pass it via extraSpecialArgs:
+          
+            home-manager.extraSpecialArgs = { inherit inputs; };
+          
+          Or manually set:
+            programs.clrsync.package = inputs.clrsync.packages.''${pkgs.system}.default;
+        '';
         }
       ];
     }
