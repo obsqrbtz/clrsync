@@ -7,7 +7,7 @@ surface = "#e8e8e8FF"
 on_surface = "#3d3d2fFF"
 
 surface_variant = "#d0d0c8FF"
-on_surface_varuant = "#3d3d2fFF"
+on_surface_variant = "#3d3d2fFF"
 
 border_focused = "#c9a305FF"
 border = "#d0d0c8FF"

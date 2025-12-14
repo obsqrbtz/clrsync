@@ -13,6 +13,8 @@ out
 /result
 /result-*
 
+/.direnv
+
 *.log
 *tar.zst
 *tar.gz

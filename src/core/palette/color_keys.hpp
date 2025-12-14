@@ -14,7 +14,7 @@ constexpr const char* COLOR_KEYS[] = {
     "on_surface",
 
     "surface_variant",
-    "on_surface_varuant",
+    "on_surface_variant",
 
     "border_focused",
     "border",

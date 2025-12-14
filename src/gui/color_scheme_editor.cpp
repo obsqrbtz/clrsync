@@ -305,7 +305,7 @@ void color_scheme_editor::render_color_table()
     };
 
     draw_table("General UI", {"background", "on_background", "surface", "on_surface",
-                              "surface_variant", "on_surface_varuant", "foreground",
+                              "surface_variant", "on_surface_variant", "foreground",
                               "cursor", "accent"});
 
     draw_table("Borders", {"border_focused", "border"});
