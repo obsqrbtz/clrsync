@@ -1,0 +1,77 @@
+name: Build Packages and Publish Release
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-packages:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, fedora-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Windows Build
+        if: matrix.os == 'windows-latest'
+        run: choco install nsis --no-progress -y
+
+      - name: Setup MSVC
+        if: matrix.os == 'windows-latest'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install Ubuntu dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential git \
+            libglfw3-dev libfreetype6-dev libfontconfig1-dev \
+            libx11-dev libxrandr-dev libxi-dev \
+            mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libxinerama-dev libxcursor-dev libxkbcommon-dev
+
+      - name: Install Fedora dependencies
+        if: matrix.os == 'fedora-latest'
+        run: |
+          dnf install -y cmake gcc gcc-c++ make rpm-build git \
+            glfw-devel freetype-devel fontconfig-devel \
+            libX11-devel libXrandr-devel libXi-devel \
+            mesa-libGL-devel mesa-libGLU-devel \
+            libXinerama-devel libXcursor-devel \
+            wayland-devel wayland-protocols-devel
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -S . ${{ matrix.os == 'windows-latest' && '-A x64' || '-DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_GLFW=ON' }}
+
+      - name: Build project
+        run: cmake --build build --config Release
+
+      - name: Package NSIS
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd build
+          cpack -G NSIS
+
+      - name: Package DEB
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd build
+          cpack -G DEB
+
+      - name: Package RPM
+        if: matrix.os == 'fedora-latest'
+        run: |
+          cd build
+          cpack -G RPM
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.os }}-package
+          path: build/*.{exe,deb,rpm}
