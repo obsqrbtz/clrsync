@@ -14,12 +14,12 @@
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
 
-      baseVersion = "0.1.4";
+      baseVersion = nixpkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
 
-semver = 
-  if self ? rev 
-  then "${baseVersion}+${toString self.revCount}.git.${builtins.substring 0 7 self.rev}"
-  else "${baseVersion}+dev";  # Accept that local builds show "+dev"
+      semver = 
+        if self ? rev 
+        then "${baseVersion}+git.${builtins.substring 0 7 self.rev}"
+        else "${baseVersion}+dev";
     in
     {
       packages = forAllSystems (

@@ -31,27 +31,27 @@ if(DEFINED CLRSYNC_SEMVER)
 else()
   find_package(Git QUIET)
 
-  if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     execute_process(
-      COMMAND git describe --tags --long --always
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      OUTPUT_VARIABLE GIT_DESCRIBE
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET
+        COMMAND git describe --tags --long --always
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_DESCRIBE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
     )
-  endif()
+    endif()
 
-  if(GIT_DESCRIBE MATCHES "^[vV]?[0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+-g[0-9a-f]+")
+    if(GIT_DESCRIBE MATCHES "^[vV]?[0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+-g[0-9a-f]+")
     string(REGEX REPLACE
-      "^[vV]?([0-9]+\\.[0-9]+\\.[0-9]+)-([0-9]+)-g([0-9a-f]+)"
-      "\\1+\\2.git.g\\3"
-      SEMVER "${GIT_DESCRIBE}"
+        "^[vV]?([0-9]+\\.[0-9]+\\.[0-9]+)-([0-9]+)-g([0-9a-f]+)"
+        "\\1+git.g\\3"
+        SEMVER "${GIT_DESCRIBE}"
     )
-  elseif(GIT_DESCRIBE)
-    set(SEMVER "${PROJECT_VERSION}+0.git.${GIT_DESCRIBE}")
-  else()
+    elseif(GIT_DESCRIBE)
+    set(SEMVER "${PROJECT_VERSION}.git.${GIT_DESCRIBE}")
+    else()
     set(SEMVER "${PROJECT_VERSION}")
-  endif()
+    endif()
 endif()
 
 message(STATUS "clrsync version: ${SEMVER}")
@@ -59,6 +59,12 @@ message(STATUS "clrsync version: ${SEMVER}")
 configure_file(
     ${CMAKE_SOURCE_DIR}/src/core/version.hpp.in
     ${CMAKE_SOURCE_DIR}/src/core/version.hpp
+    @ONLY
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/VERSION.in
+    ${CMAKE_SOURCE_DIR}/VERSION
     @ONLY
 )
 
