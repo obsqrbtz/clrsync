@@ -81,7 +81,7 @@ outputs =
       extraSpecialArgs = { inherit inputs; };
       modules = [
         ./home.nix
-        clrsync.homeManagerModules.default
+        clrsync.homeModules.default
       ];
     };
   };
