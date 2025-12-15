@@ -1,32 +1,49 @@
-name: Build Packages and Publish Release
+name: Build and Release Packages
 
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches:
-      - master
 
 jobs:
-  build-packages:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, fedora-latest]
+  build-windows:
+    runs-on: windows-latest
+    outputs:
+      artifact-path: ${{ steps.upload.outputs.artifact-path }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Setup Windows Build
-        if: matrix.os == 'windows-latest'
+      - name: Install NSIS
         run: choco install nsis --no-progress -y
 
       - name: Setup MSVC
-        if: matrix.os == 'windows-latest'
         uses: microsoft/setup-msbuild@v2
 
-      - name: Install Ubuntu dependencies
-        if: matrix.os == 'ubuntu-latest'
+      - name: Configure project
+        run: cmake -B build -S . -A x64
+
+      - name: Build project
+        run: cmake --build build --config Release
+
+      - name: Generate NSIS installer
+        run: cd build && cpack -G NSIS
+
+      - name: Upload installer
+        id: upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: windows-installer
+          path: build/*.exe
+
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-path: ${{ steps.upload.outputs.artifact-path }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake build-essential git \
@@ -35,8 +52,33 @@ jobs:
             mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev \
             libxinerama-dev libxcursor-dev libxkbcommon-dev
 
-      - name: Install Fedora dependencies
-        if: matrix.os == 'fedora-latest'
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_GLFW=OFF
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Package DEB
+        run: cd build && cpack -G DEB
+
+      - name: Upload DEB
+        id: upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: deb-package
+          path: build/*.deb
+
+  build-fedora:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    outputs:
+      artifact-path: ${{ steps.upload.outputs.artifact-path }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
         run: |
           dnf install -y cmake gcc gcc-c++ make rpm-build git \
             glfw-devel freetype-devel fontconfig-devel \
@@ -46,32 +88,74 @@ jobs:
             wayland-devel wayland-protocols-devel
 
       - name: Configure CMake
-        run: |
-          cmake -B build -S . ${{ matrix.os == 'windows-latest' && '-A x64' || '-DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_GLFW=ON' }}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_GLFW=ON
 
-      - name: Build project
+      - name: Build
         run: cmake --build build --config Release
 
-      - name: Package NSIS
-        if: matrix.os == 'windows-latest'
-        run: |
-          cd build
-          cpack -G NSIS
-
-      - name: Package DEB
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          cd build
-          cpack -G DEB
-
       - name: Package RPM
-        if: matrix.os == 'fedora-latest'
-        run: |
-          cd build
-          cpack -G RPM
+        run: cd build && cpack -G RPM
 
-      - name: Upload artifacts
+      - name: Upload RPM
+        id: upload
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ matrix.os }}-package
-          path: build/*.{exe,deb,rpm}
+          name: rpm-package
+          path: build/*.rpm
+
+  release:
+    needs: [build-windows, build-ubuntu, build-fedora]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: windows-installer
+          path: artifacts/
+
+      - name: Download DEB artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: deb-package
+          path: artifacts/
+
+      - name: Download RPM artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: rpm-package
+          path: artifacts/
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows installer to release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/*.exe
+          asset_name: clrsync-windows.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload DEB to release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/*.deb
+          asset_name: clrsync-linux.deb
+          asset_content_type: application/octet-stream
+
+      - name: Upload RPM to release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts/*.rpm
+          asset_name: clrsync-linux.rpm
+          asset_content_type: application/octet-stream
