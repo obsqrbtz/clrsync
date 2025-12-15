@@ -7,9 +7,7 @@
 namespace clrsync::core
 {
 
-constexpr uint8_t VERSION_MAJOR = @PROJECT_VERSION_MAJOR@;
-constexpr uint8_t VERSION_MINOR = @PROJECT_VERSION_MINOR@;
-constexpr uint8_t VERSION_PATCH = @PROJECT_VERSION_PATCH@;
+const std::string GIT_SEMVER = "@SEMVER@";
 
 const std::string version_string();
 } // namespace clrsync::core

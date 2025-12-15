@@ -26,6 +26,28 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set(CMAKE_INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
+find_package(Git)
+
+execute_process(
+  COMMAND git describe --tags --long --always
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_DESCRIBE
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET
+)
+
+if(GIT_DESCRIBE MATCHES "^[vV]?[0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+-g[0-9a-f]+")
+  string(REGEX REPLACE
+    "^[vV]?([0-9]+\\.[0-9]+\\.[0-9]+)-([0-9]+)-g([0-9a-f]+)"
+    "\\1+\\2.git.g\\3"
+    SEMVER "${GIT_DESCRIBE}"
+  )
+elseif(GIT_DESCRIBE)
+  set(SEMVER "${PROJECT_VERSION}+0.git.${GIT_DESCRIBE}")
+else()
+  set(SEMVER "${PROJECT_VERSION}")
+endif()
+
 configure_file(
     ${CMAKE_SOURCE_DIR}/src/core/version.hpp.in
     ${CMAKE_SOURCE_DIR}/src/core/version.hpp
