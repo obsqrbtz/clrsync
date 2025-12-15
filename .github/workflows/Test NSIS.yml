@@ -29,8 +29,7 @@ jobs:
         run: cmake --build build --config Release
 
       - name: Generate NSIS installer
-        run: cmake --build build --config Release \
-             cd build \\
+        run: cd build && \\
              cpack -G NSIS
 
       - name: Upload installer
