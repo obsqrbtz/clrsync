@@ -26,8 +26,7 @@ jobs:
         run: cmake --build build --config Release
 
       - name: Generate NSIS installer
-        run: cd build && \
-             cpack -G NSIS
+        run: cd build && cpack -G NSIS
 
       - name: Upload installer
         uses: actions/upload-artifact@v6
