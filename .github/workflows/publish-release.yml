@@ -125,37 +125,12 @@ jobs:
           name: rpm-package
           path: artifacts/
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create Release and Upload Assets
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows installer to release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/*.exe
-          asset_name: clrsync-windows.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload DEB to release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/*.deb
-          asset_name: clrsync-linux.deb
-          asset_content_type: application/octet-stream
-
-      - name: Upload RPM to release
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/*.rpm
-          asset_name: clrsync-linux.rpm
-          asset_content_type: application/octet-stream
+          tag: v${{ github.run_number }}
+          name: Release ${{ github.run_number }}
+          artifacts: |
+            artifacts/*.exe
+            artifacts/*.deb
+            artifacts/*.rpm
