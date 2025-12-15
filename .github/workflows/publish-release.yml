@@ -2,7 +2,8 @@ name: Build and Release Packages
 
 on:
   push:
-    branches: [ "master" ]
+    tags:
+      - 'v*'
 
 jobs:
   build-windows:
@@ -130,8 +131,8 @@ jobs:
       - name: Create Release and Upload Assets
         uses: ncipollo/release-action@v1
         with:
-          tag: v${{ github.run_number }}
-          name: Release ${{ github.run_number }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           artifacts: |
             artifacts/*.exe
             artifacts/*.deb

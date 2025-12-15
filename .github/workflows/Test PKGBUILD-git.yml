@@ -1,8 +1,8 @@
 name: Test PKGBUILD-git
 
 on:
-  # push:
-  #   branch: master
+  push:
+    branch: master
   pull_request:
     branches: master
 

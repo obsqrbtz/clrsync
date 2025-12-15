@@ -15,6 +15,7 @@
   libxkbcommon,
   zlib,
   bzip2,
+  wayland-scanner,
 }:
 
 stdenv.mkDerivation rec {
@@ -23,11 +24,13 @@ stdenv.mkDerivation rec {
 
   src = lib.cleanSourceWith {
     src = ./.;
-    filter = path: type:
+    filter =
+      path: type:
       let
         baseName = baseNameOf path;
       in
-      ! (lib.hasSuffix ".o" baseName
+      !(
+        lib.hasSuffix ".o" baseName
         || lib.hasSuffix ".a" baseName
         || baseName == "build"
         || baseName == "CMakeCache.txt"
@@ -57,6 +60,7 @@ stdenv.mkDerivation rec {
     xorg.libXi
     xorg.libXinerama
     wayland
+    wayland-scanner
     wayland-protocols
     libxkbcommon
     zlib
@@ -75,7 +79,7 @@ stdenv.mkDerivation rec {
 
     wrapProgram $out/bin/clrsync_gui \
       --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath buildInputs}
-    
+
     wrapProgram $out/bin/clrsync_cli \
       --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath buildInputs}
 
