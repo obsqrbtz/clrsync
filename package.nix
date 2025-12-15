@@ -20,7 +20,14 @@
 
 stdenv.mkDerivation rec {
   pname = "clrsync";
-  version = "unstable-2024-12-15";
+
+  baseVersion = "0.1.4";
+
+  version =
+    if src ? rev then
+      "${baseVersion}+${toString src.revCount}.git.${lib.substring 0 7 src.rev}"
+    else
+      baseVersion;
 
   src = lib.cleanSourceWith {
     src = ./.;
@@ -70,6 +77,7 @@ stdenv.mkDerivation rec {
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
     "-DUSE_SYSTEM_GLFW=ON"
+    "-DCLRSYNC_SEMVER=${version}"
   ];
 
   installPhase = ''
