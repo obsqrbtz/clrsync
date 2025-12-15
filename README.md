@@ -4,7 +4,6 @@
 # clrsync
 
 **Notice:** This application is not yet released and is subject to change.  
-Deb, RPM, and AUR packages, as well as a Windows installer, will be available soon.
 
 A theme management tool for synchronizing color schemes across multiple applications. clrsync allows to define color palettes once and apply them consistently to all configurable applications.
 
@@ -12,13 +11,18 @@ A theme management tool for synchronizing color schemes across multiple applicat
 
 ## Table of Contents
 
+
 - [Features](#features)
 - [Installation](#installation)
-  - [NixOS](#nixos)
-    - [Home Manager Module](#home-manager-module)
-    - [Package](#package)
-    - [Install to profile](#install-to-profile)
-    - [Run without installing](#run-without-installing)
+  - [Linux](#linux)
+    - [Ubuntu](#ubuntu)
+    - [Fedora](#fedora)
+    - [NixOS](#nixos)
+      - [Home Manager Module](#home-manager-module)
+      - [Package](#package)
+      - [Install to profile](#install-to-profile)
+      - [Run without installing](#run-without-installing)
+  - [Windows](#windows)
   - [Other systems](#other-systems)
 - [Building](#building)
   - [Prerequisites](#prerequisites)
@@ -41,7 +45,32 @@ A theme management tool for synchronizing color schemes across multiple applicat
 
 ## Installation
 
-### NixOS
+### Linux
+
+#### Ubuntu
+
+1. Download the latest .deb from the [releases page](https://github.com/obsqrbtz/clrsync/releases)
+2. Install the package
+
+```shell
+sudo dpkg -i clrsync-<version>.deb
+```
+
+#### Fedora
+
+1. Download the latest .rpm from the [releases page](https://github.com/obsqrbtz/clrsync/releases)
+
+2. Install the package
+
+```shell
+sudo rpm -i clrsync-<version>.rpm
+
+# or
+
+sudo dnf install clrsync-<version>.rpm
+```
+
+#### NixOS
 
 <details>
 <summary>Home Manager Module</summary>
@@ -197,6 +226,12 @@ nix run github:obsqrbtz/clrsync#clrsync-cli
 ```
 
 </details>
+
+### Windows
+
+1. Download the latest installer from the [releases page](https://github.com/obsqrbtz/clrsync/releases)
+2. Run the installer and follow the wizard
+3. Optionally, add the installation dir to your PATH for easier CLI access
 
 ### Other systems
 
