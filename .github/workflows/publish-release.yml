@@ -106,6 +106,8 @@ jobs:
   release:
     needs: [build-windows, build-ubuntu, build-fedora]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download Windows artifact
         uses: actions/download-artifact@v6
