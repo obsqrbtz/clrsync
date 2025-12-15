@@ -16,10 +16,7 @@ jobs:
       - name: Install NSIS
         run: choco install nsis --no-progress -y
 
-      - name: Install CMake
-        run: choco install cmake --no-progress -y
-
-      - name: Setup MSVC (Visual Studio Build Tools)
+      - name: Setup MSVC
         uses: microsoft/setup-msbuild@v2
 
       - name: Configure project
@@ -29,7 +26,7 @@ jobs:
         run: cmake --build build --config Release
 
       - name: Generate NSIS installer
-        run: cd build && \\
+        run: cd build && \
              cpack -G NSIS
 
       - name: Upload installer
