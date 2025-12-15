@@ -1,0 +1,38 @@
+name: Build NSIS Installer
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install NSIS
+        run: choco install nsis --no-progress -y
+
+      - name: Install CMake
+        run: choco install cmake --no-progress -y
+
+      - name: Setup MSVC (Visual Studio Build Tools)
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Configure project
+        run: cmake -B build -S . -A x64
+
+      - name: Build project
+        run: cmake --build build --config Release
+
+      - name: Generate NSIS installer
+        run: cmake --build build --config Release --target package
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v6
+        with:
+          name: clrsync-installer
+          path: build/*.exe
