@@ -10,19 +10,41 @@ A theme management tool for synchronizing color schemes across multiple applicat
 
 ![Preview](assets/screenshot.png)
 
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+  - [NixOS](#nixos)
+    - [Home Manager Module](#home-manager-module)
+    - [Package](#package)
+    - [Install to profile](#install-to-profile)
+    - [Run without installing](#run-without-installing)
+  - [Other systems](#other-systems)
+- [Building](#building)
+  - [Prerequisites](#prerequisites)
+  - [With CMake](#with-cmake)
+- [Configuration](#configuration)
+  - [Palette Files](#palette-files)
+  - [Template Files](#template-files)
+    - [Color Format Specifiers](#color-format-specifiers)
+- [Usage](#usage)
+  - [CLI](#cli)
+  - [GUI](#gui)
+- [Acknowledgments](#acknowledgments)
+
 ## Features
 
 - **Unified Color Management**: Define color palettes in TOML format and apply them across multiple applications
 - **CLI & GUI**: Choose between a command-line interface or a graphical editor
 - **Live Reload**: Define post-apply hooks (configurable per template)
 - **Flexible Color Formats**: Support for HEX, RGB, HSL with multi-component access (e.g., `{color.r}`, `{color.hex}`, `{color.hsl}`)
-- **Pre-built Themes**: Includes popular themes
 
 ## Installation
 
 ### NixOS
 
-#### Home Manager Module
+<details>
+<summary>Home Manager Module</summary>
 
 1. Add clrsync to your flake inputs
 
@@ -37,21 +59,38 @@ A theme management tool for synchronizing color schemes across multiple applicat
 }
 ```
 
-2. Import the Home Manager module
-
-In home.nix:
+2. Add clrsync to flake outputs
 
 ```nix
-  imports = [
-    inputs.clrsync.homemanagermodules.default
-  ];
+outputs =
+  {
+    self,
+    nixpkgs,
+    home-manager,
+    clrsync,
+    ...
+  }@inputs:
+  let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+  in
+  {
+    # ...
+    homeConfigurations.<Your user name> = home-manager.lib.homeManagerConfiguration {
+      inherit pkgs;
+      extraSpecialArgs = { inherit inputs; };
+      modules = [
+        ./home.nix
+        clrsync.homeManagerModules.default
+      ];
+    };
+  };
 ```
 
 3. Configure in home manager
 
 ```nix
 programs.clrsync = {
-  enable = true;
   package = inputs.clrsync.packages.x86_64-linux.default;  
   defaultTheme = "dark";
   palettesPath = "~/.config/clrsync/palettes";
@@ -75,13 +114,17 @@ programs.clrsync = {
   };
 };
 ```
+
 4. Rebuild
 
 ```nix
 home-manager switch --flake .
 ```
 
-#### Package (For non-declarative configurations)
+</details>
+
+<details>
+<summary>Package</summary>
 
 1. Add clrsync to your flake inputs
 
@@ -97,13 +140,31 @@ home-manager switch --flake .
 
 ```nix
 # In NixOS configuration.nix:
-environment.systemPackages = [
-  inputs.clrsync.packages.x86_64-linux.default
+nixpkgs.overlays = [
+  inputs.clrsync.overlays.default
 ];
 
-# Or in Home Manager:
+environment.systemPackages = [
+  clrsync
+];
+```
+
+Or for home manager:
+
+```nix
+# flake.nix
+pkgs = import nixpkgs {
+  inherit system;
+  overlays = [
+    clrsync.overlays.default
+  ];
+};
+```
+
+```nix
+# home.nix
 home.packages = [
-  inputs.clrsync.packages.x86_64-linux.default
+  clrsync
 ];
 ```
 
@@ -116,10 +177,30 @@ clrsync_gui
 clrsync_cli --apply --theme dark
 ```
 
+</details>
+
+<details>
+<summary>Install to profile</summary>
+
+```shell
+nix profile add github:obsqrbtz/clrsync
+```
+
+</details>
+
+<details>
+<summary>Run without installing</summary>
+
+```shell
+nix run github:obsqrbtz/clrsync
+nix run github:obsqrbtz/clrsync#clrsync-cli
+```
+
+</details>
+
 ### Other systems
 
 Follow the steps from Building section then install with cmake:
-
 ```bash
 cd build
 cmake --install .
@@ -137,7 +218,6 @@ cmake --install .
 - freetype
 
 ### With CMake
-
 ```bash
 mkdir build && cd build
 cmake ..
@@ -147,7 +227,6 @@ cmake --build .
 ## Configuration
 
 Edit or create a configuration file at `~/.config/clrsync/config.toml`:
-
 ```toml
 [general]
 palettes_path = "~/.config/clrsync/palettes"
@@ -162,8 +241,10 @@ reload_cmd = "pkill -SIGUSR1 kitty"
 
 ### Palette Files
 
-Create palette files in your `palettes_path` directory:
+<details>
+<summary>Example palette file</summary>
 
+Create palette files in your `palettes_path` directory:
 ```toml
 # ~/.config/clrsync/palettes/dark.toml
 [general]
@@ -222,10 +303,14 @@ surface_variant = '#1C1C1CFF'
 warning = '#E1C135FF'
 ```
 
+</details>
+
 ### Template Files
 
-Create template files at `~/.config/clrsync/templates` using color variables:
+<details>
+<summary>Example template file</summary>
 
+Create template files at `~/.config/clrsync/templates` using color variables:
 ```conf
 # ~/.config/clrsync/templates/kitty.conf
 cursor              {cursor}
@@ -253,10 +338,12 @@ color7      {base07}
 color15     {base0F}
 ```
 
-#### Color Format Specifiers
+</details>
+
+<details>
+<summary>Color Format Specifiers</summary>
 
 Format colors using dot notation:
-
 ```conf
 # HEX formats
 {color}                    # Default: #RRGGBB
@@ -286,42 +373,38 @@ Format colors using dot notation:
 {color.a}                  # Alpha component
 ```
 
+</details>
+
 ## Usage
 
 ### CLI
 
 List available themes:
-
 ```bash
 clrsync_cli --list-themes
 ```
 
 Apply the default theme:
-
 ```bash
 clrsync_cli --apply
 ```
 
 Apply a specific theme:
-
 ```bash
 clrsync_cli --apply --theme cursed
 ```
 
 Apply a theme from a file path:
-
 ```bash
 clrsync_cli --apply --path /path/to/theme.toml
 ```
 
 Show available color variables:
-
 ```bash
 clrsync_cli --show-vars
 ```
 
 Use a custom config file:
-
 ```bash
 clrsync_cli --config /path/to/config.toml --apply
 ```
@@ -329,7 +412,6 @@ clrsync_cli --config /path/to/config.toml --apply
 ### GUI
 
 Launch the graphical editor:
-
 ```bash
 clrsync_gui
 ```

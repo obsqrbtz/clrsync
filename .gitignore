@@ -3,17 +3,20 @@
 .vs
 out
 
-/build
-/build-*
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
 
-/AUR/clrsync-git
-/AUR/pkg
-/AUR/src
+AUR/clrsync-git
+AUR/pkg
+AUR/src
 
-/result
-/result-*
-
-/.direnv
+result
+result-*
+.direnv/
 
 *.log
 *tar.zst
@@ -23,3 +26,12 @@ out
 *.bak
 *.tmp
 .DS_Store
+
+*.swp
+*.swo
+*~
+
+*.o
+*.a
+*.so
+*.dylib
