@@ -16,18 +16,13 @@
   zlib,
   bzip2,
   wayland-scanner,
+  semver
 }:
 
 stdenv.mkDerivation rec {
   pname = "clrsync";
 
-  baseVersion = "0.1.4";
-
-  version =
-    if src ? rev then
-      "${baseVersion}+${toString src.revCount}.git.${lib.substring 0 7 src.rev}"
-    else
-      baseVersion;
+  version = semver;
 
   src = lib.cleanSourceWith {
     src = ./.;

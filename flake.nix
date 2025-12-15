@@ -13,6 +13,13 @@
       ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
+
+      baseVersion = "0.1.4";
+
+semver = 
+  if self ? rev 
+  then "${baseVersion}+${toString self.revCount}.git.${builtins.substring 0 7 self.rev}"
+  else "${baseVersion}+dev";  # Accept that local builds show "+dev"
     in
     {
       packages = forAllSystems (
@@ -21,7 +28,7 @@
           pkgs = nixpkgsFor.${system};
         in
         rec {
-          clrsync = pkgs.callPackage ./package.nix { };
+          clrsync = pkgs.callPackage ./package.nix { inherit semver; };
           default = clrsync;
         }
       );
