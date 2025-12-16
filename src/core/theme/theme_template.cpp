@@ -43,21 +43,21 @@ void theme_template::set_output_path(const std::string &path)
     m_output_path = expand_user(path);
 }
 
-void theme_template::load_template()
+Result<void> theme_template::load_template()
 {
     if (!std::filesystem::exists(m_template_path))
     {
-        std::cerr << "Warning: Template file '" << m_template_path << "' is missing\n";
-        return;
+        return Err<void>(error_code::template_not_found, "Template file is missing", m_template_path);
     }
+    
     std::ifstream input(m_template_path, std::ios::binary);
     if (!input)
     {
-        std::cerr << "Warning: Failed to open template file: " << m_template_path << std::endl;
-        return;
+        return Err<void>(error_code::template_load_failed, "Failed to open template file", m_template_path);
     }
 
     m_template_data.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+    return Ok();
 }
 
 void theme_template::apply_palette(const core::palette &palette)
@@ -90,7 +90,7 @@ void theme_template::apply_palette(const core::palette &palette)
     }
 }
 
-void theme_template::save_output() const
+Result<void> theme_template::save_output() const
 {
     try
     {
@@ -98,18 +98,22 @@ void theme_template::save_output() const
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Warning: Failed to create output directory for " << m_output_path << ": " << e.what() << std::endl;
-        return;
+        return Err<void>(error_code::dir_create_failed, e.what(), m_output_path);
     }
     
     std::ofstream output(m_output_path, std::ios::binary);
     if (!output)
     {
-        std::cerr << "Warning: Failed to write output file: " << m_output_path << std::endl;
-        return;
+        return Err<void>(error_code::file_write_failed, "Failed to open output file for writing", m_output_path);
     }
 
     output << m_processed_data;
+    if (!output)
+    {
+        return Err<void>(error_code::file_write_failed, "Failed to write to output file", m_output_path);
+    }
+    
+    return Ok();
 }
 
 const std::string &theme_template::raw_template() const

@@ -52,7 +52,7 @@ template <typename FileType> class palette_file
     }
     void save()
     {
-        m_file->save_file();
+        (void)m_file->save_file();
     }
 
   private:

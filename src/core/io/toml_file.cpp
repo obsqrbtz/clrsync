@@ -11,12 +11,13 @@ toml_file::toml_file(std::string path)
     m_path = expand_user(path);
 }
 
-bool toml_file::parse()
+Result<void> toml_file::parse()
 {
     if (!std::filesystem::exists(m_path))
-        return false;
+        return Err<void>(error_code::file_not_found, "File does not exist", m_path);
+    
     m_file = toml::parse_file(m_path);
-    return true;
+    return Ok();
 }
 
 const std::string toml_file::get_string_value(const std::string &section,
@@ -91,11 +92,23 @@ void toml_file::insert_or_update_value(const std::string &section, const std::st
     std::visit([&](auto &&v) { tbl->insert_or_assign(key, v); }, value);
 }
 
-void toml_file::save_file()
+Result<void> toml_file::save_file()
 {
-    std::filesystem::create_directories(std::filesystem::path(m_path).parent_path());
+    try {
+        std::filesystem::create_directories(std::filesystem::path(m_path).parent_path());
+    } catch (const std::exception& e) {
+        return Err<void>(error_code::dir_create_failed, e.what(), m_path);
+    }
+    
     std::ofstream stream(m_path, std::ios::binary);
+    if (!stream)
+        return Err<void>(error_code::file_write_failed, "Failed to open file for writing", m_path);
+    
     stream << m_file;
+    if (!stream)
+        return Err<void>(error_code::file_write_failed, "Failed to write to file", m_path);
+    
+    return Ok();
 }
 
 std::vector<std::string> toml_file::split(const std::string &s, char delim) const

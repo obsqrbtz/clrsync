@@ -10,10 +10,12 @@ palette_controller::palette_controller()
     
     if (m_palettes.empty())
         return;
-        
-    try {
-        m_current_palette = m_palettes[clrsync::core::config::instance().default_theme()];
-    } catch (...) {
+    
+    auto default_theme = clrsync::core::config::instance().default_theme();
+    auto it = m_palettes.find(default_theme);
+    if (it != m_palettes.end()) {
+        m_current_palette = it->second;
+    } else {
         m_current_palette = m_palettes.begin()->second;
     }
 }
@@ -54,7 +56,7 @@ void palette_controller::delete_current_palette()
 void palette_controller::apply_current_theme() const
 {
     clrsync::core::theme_renderer<clrsync::core::io::toml_file> theme_renderer;
-    theme_renderer.apply_theme(m_current_palette.name());
+    (void)theme_renderer.apply_theme(m_current_palette.name());
 }
 
 void palette_controller::set_color(const std::string& key, const clrsync::core::color& color)

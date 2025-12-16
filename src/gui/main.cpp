@@ -7,6 +7,7 @@
 #include "core/config/config.hpp"
 #include "core/io/toml_file.hpp"
 #include "core/utils.hpp"
+#include "core/error.hpp"
 
 #include "color_scheme_editor.hpp"
 #include "gui/font_loader.hpp"
@@ -21,13 +22,10 @@ int main(int, char**)
     auto config_path = clrsync::core::get_default_config_path();
     auto conf = std::make_unique<clrsync::core::io::toml_file>(config_path);
     
-    try
+    auto init_result = clrsync::core::config::instance().initialize(std::move(conf));
+    if (!init_result)
     {
-        clrsync::core::config::instance().initialize(std::move(conf));
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "Fatal error: " << e.what() << std::endl;
+        std::cerr << "Fatal error: " << init_result.error().description() << std::endl;
         std::cerr << "Hint: Set CLRSYNC_CONFIG_PATH environment variable or ensure config exists at: " << config_path << std::endl;
         return 1;
     }

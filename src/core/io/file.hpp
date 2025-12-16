@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <variant>
+#include <core/error.hpp>
 
 using value_type = std::variant<std::string, uint32_t, int, bool>;
 
@@ -14,7 +15,8 @@ class file
   public:
     file() = default;
     file(std::string path) {};
-    virtual bool parse() { return false; };
+    virtual ~file() = default;
+    virtual Result<void> parse() { return Ok(); };
     virtual const std::string get_string_value(const std::string &section,
                                                const std::string &key) const
     {
@@ -39,7 +41,7 @@ class file
     }
     virtual void insert_or_update_value(const std::string &section, const std::string &key,
                                         const value_type &value) {};
-    virtual void save_file() {};
+    virtual Result<void> save_file() { return Ok(); };
 };
 } // namespace clrsync::core::io
 #endif

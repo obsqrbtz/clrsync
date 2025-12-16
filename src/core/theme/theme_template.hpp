@@ -2,6 +2,7 @@
 #define clrsync_CORE_IO_THEME_TEMPLATE_HPP
 
 #include <core/palette/palette.hpp>
+#include <core/error.hpp>
 #include <string>
 
 namespace clrsync::core
@@ -26,11 +27,11 @@ class theme_template
 
     void set_output_path(const std::string &path);
 
-    void load_template();
+    Result<void> load_template();
 
     void apply_palette(const core::palette &palette);
 
-    void save_output() const;
+    Result<void> save_output() const;
 
     const std::string &raw_template() const;
 

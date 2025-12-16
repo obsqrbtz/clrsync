@@ -11,7 +11,7 @@ void template_controller::set_template_enabled(const std::string& key, bool enab
     auto it = m_templates.find(key);
     if (it != m_templates.end()) {
         it->second.set_enabled(enabled);
-        clrsync::core::config::instance().update_template(key, it->second);
+        (void)clrsync::core::config::instance().update_template(key, it->second);
     }
 }
 
@@ -20,7 +20,7 @@ void template_controller::set_template_output_path(const std::string& key, const
     auto it = m_templates.find(key);
     if (it != m_templates.end()) {
         it->second.set_output_path(path);
-        clrsync::core::config::instance().update_template(key, it->second);
+        (void)clrsync::core::config::instance().update_template(key, it->second);
     }
 }
 
@@ -29,7 +29,7 @@ void template_controller::set_template_reload_command(const std::string& key, co
     auto it = m_templates.find(key);
     if (it != m_templates.end()) {
         it->second.set_reload_command(cmd);
-        clrsync::core::config::instance().update_template(key, it->second);
+        (void)clrsync::core::config::instance().update_template(key, it->second);
     }
 }
 

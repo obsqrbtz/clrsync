@@ -343,59 +343,62 @@ void template_editor::save_template()
 
     m_validation_error = "";
 
-    try
+    auto &cfg = clrsync::core::config::instance();
+    std::string palettes_path = cfg.palettes_path();
+    std::filesystem::path templates_dir =
+        std::filesystem::path(palettes_path).parent_path() / "templates";
+
+    if (!std::filesystem::exists(templates_dir))
     {
-        auto &cfg = clrsync::core::config::instance();
-        std::string palettes_path = cfg.palettes_path();
-        std::filesystem::path templates_dir =
-            std::filesystem::path(palettes_path).parent_path() / "templates";
+        std::filesystem::create_directories(templates_dir);
+    }
 
-        if (!std::filesystem::exists(templates_dir))
+    std::filesystem::path template_file;
+    if (m_is_editing_existing)
+    {
+        auto existing_template_result = cfg.template_by_name(trimmed_name);
+        if (!existing_template_result)
         {
-            std::filesystem::create_directories(templates_dir);
-        }
-
-        std::filesystem::path template_file;
-        if (m_is_editing_existing)
-        {
-            const auto &existing_template = cfg.template_by_name(trimmed_name);
-            template_file = existing_template.template_path();
-        }
-        else
-        {
-            template_file = templates_dir / trimmed_name;
-        }
-
-        std::string template_content = m_editor.GetText();
-
-        std::ofstream out(template_file);
-        if (!out.is_open())
-        {
-            m_validation_error = "Failed to write template file";
+            m_validation_error = "Template not found: " + existing_template_result.error().description();
             return;
         }
-        
-        out << template_content;
-        out.close();
-
-        clrsync::core::theme_template tmpl(trimmed_name, template_file.string(), trimmed_path);
-        tmpl.set_reload_command(m_reload_command);
-        tmpl.set_enabled(m_enabled);
-
-        cfg.update_template(trimmed_name, tmpl);
-
-        m_template_name = trimmed_name;
-        m_output_path = trimmed_path;
-        m_is_editing_existing = true;
-        m_saved_content = m_editor.GetText();
-        m_has_unsaved_changes = false;
-
-        refresh_templates();
+        template_file = existing_template_result.value()->template_path();
     }
-    catch (const std::exception &e)
+    else
     {
-        m_validation_error = std::string("Error saving template: ") + e.what();
+        template_file = templates_dir / trimmed_name;
     }
+
+    std::string template_content = m_editor.GetText();
+
+    std::ofstream out(template_file);
+    if (!out.is_open())
+    {
+        m_validation_error = "Failed to write template file";
+        return;
+    }
+    
+    out << template_content;
+    out.close();
+
+    clrsync::core::theme_template tmpl(trimmed_name, template_file.string(), trimmed_path);
+    tmpl.set_reload_command(m_reload_command);
+    tmpl.set_enabled(m_enabled);
+
+    auto result = cfg.update_template(trimmed_name, tmpl);
+    if (!result)
+    {
+        m_validation_error = "Error saving template: " + result.error().description();
+        return;
+    }
+
+    m_template_name = trimmed_name;
+    m_output_path = trimmed_path;
+    m_is_editing_existing = true;
+    m_saved_content = m_editor.GetText();
+    m_has_unsaved_changes = false;
+
+    refresh_templates();
 }
 
 void template_editor::load_template(const std::string &name)
@@ -413,27 +416,24 @@ void template_editor::load_template(const std::string &name)
         m_is_editing_existing = true;
         m_validation_error = "";
 
-        try
+        std::ifstream in(tmpl.template_path());
+        if (in.is_open())
         {
-            std::ifstream in(tmpl.template_path());
-            if (in.is_open())
+            std::string content;
+            std::string line;
+            while (std::getline(in, line))
             {
-                std::string content;
-                std::string line;
-                while (std::getline(in, line))
-                {
-                    content += line + "\n";
-                }
-                in.close();
-
-                m_editor.SetText(content);
-                m_saved_content = content;
-                m_has_unsaved_changes = false;
+                content += line + "\n";
             }
+            in.close();
+
+            m_editor.SetText(content);
+            m_saved_content = content;
+            m_has_unsaved_changes = false;
         }
-        catch (const std::exception &e)
+        else
         {
-            m_validation_error = std::string("Error loading template: ") + e.what();
+            m_validation_error = "Error loading template: Failed to open file";
         }
     }
 }

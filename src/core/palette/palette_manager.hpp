@@ -21,10 +21,7 @@ template <typename FileType> class palette_manager
     {
         auto directory_path_expanded = expand_user(directory_path);
         if (!std::filesystem::exists(directory_path_expanded))
-        {
-            std::cerr << "Palettes directory does not exist\n" ;
             return;
-        }
         for (const auto &entry : std::filesystem::directory_iterator(directory_path_expanded))
         {
             if (entry.is_regular_file())

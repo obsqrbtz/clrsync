@@ -1,6 +1,7 @@
 #ifndef CLRSYNC_CORE_IO_TOML_FILE_HPP
 #define CLRSYNC_CORE_IO_TOML_FILE_HPP
 #include <core/io/file.hpp>
+#include <core/error.hpp>
 #include <string>
 #include <toml/toml.hpp>
 
@@ -10,7 +11,7 @@ class toml_file : public file
 {
   public:
     explicit toml_file(std::string path);
-    bool parse() override;
+    Result<void> parse() override;
     const std::string get_string_value(const std::string &section,
                                        const std::string &key) const override;
     uint32_t get_uint_value(const std::string &section, const std::string &key) const override;
@@ -18,7 +19,7 @@ class toml_file : public file
     std::map<std::string, value_type> get_table(const std::string &section_path) const override;
     void insert_or_update_value(const std::string &section, const std::string &key,
                                 const value_type &value) override;
-    void save_file() override;
+    Result<void> save_file() override;
 
   private:
     toml::parse_result m_file{};

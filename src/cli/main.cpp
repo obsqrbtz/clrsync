@@ -5,6 +5,7 @@
 #include <argparse/argparse.hpp>
 
 #include <core/config/config.hpp>
+#include <core/error.hpp>
 #include <core/io/toml_file.hpp>
 #include <core/palette/palette_file.hpp>
 #include <core/palette/palette_manager.hpp>
@@ -35,16 +36,17 @@ int handle_apply_theme(const argparse::ArgumentParser &program, const std::strin
 {
     clrsync::core::theme_renderer<clrsync::core::io::toml_file> renderer;
     std::string theme_identifier;
+    clrsync::core::Result<void> result = clrsync::core::Ok();
 
     if (program.is_used("--theme"))
     {
         theme_identifier = program.get<std::string>("--theme");
-        renderer.apply_theme(theme_identifier);
+        result = renderer.apply_theme(theme_identifier);
     }
     else if (program.is_used("--path"))
     {
         theme_identifier = program.get<std::string>("--path");
-        renderer.apply_theme_from_path(theme_identifier);
+        result = renderer.apply_theme_from_path(theme_identifier);
     }
     else
     {
@@ -54,17 +56,23 @@ int handle_apply_theme(const argparse::ArgumentParser &program, const std::strin
             return 1;
         }
         theme_identifier = default_theme;
-        renderer.apply_theme(theme_identifier);
+        result = renderer.apply_theme(theme_identifier);
+    }
+
+    if (!result)
+    {
+        std::cerr << "Failed to apply theme: " << result.error().description() << std::endl;
+        return 1;
     }
 
     std::cout << "Applied theme " << theme_identifier << std::endl;
     return 0;
 }
 
-void initialize_config(const std::string &config_path)
+clrsync::core::Result<void> initialize_config(const std::string &config_path)
 {
     auto conf = std::make_unique<clrsync::core::io::toml_file>(config_path);
-    clrsync::core::config::instance().initialize(std::move(conf));
+    return clrsync::core::config::instance().initialize(std::move(conf));
 }
 
 void setup_argument_parser(argparse::ArgumentParser &program)
@@ -103,13 +111,10 @@ int main(int argc, char *argv[])
 
     std::string config_path = program.get<std::string>("--config");
 
-    try
+    auto config_result = initialize_config(config_path);
+    if (!config_result)
     {
-        initialize_config(config_path);
-    }
-    catch (const std::exception &err)
-    {
-        std::cerr << "Error loading config: " << err.what() << std::endl;
+        std::cerr << "Error loading config: " << config_result.error().description() << std::endl;
         return 1;
     }
 
