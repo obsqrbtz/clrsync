@@ -35,13 +35,8 @@ Result<void> config::initialize(std::unique_ptr<clrsync::core::io::file> file)
 
 std::filesystem::path config::get_user_config_dir()
 {
-    auto home = expand_user("~");
-#ifdef _WIN32
-    return home + "\\.config\\clrsync";
-
-#else
-    return home + "/.config/clrsync";
-#endif
+    std::filesystem::path home = normalize_path("~");
+    return home / ".config" / "clrsync";
 }
 
 std::filesystem::path config::get_data_dir()

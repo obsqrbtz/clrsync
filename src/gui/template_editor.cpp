@@ -1,6 +1,7 @@
 #include "template_editor.hpp"
 #include "core/config/config.hpp"
 #include "core/theme/theme_template.hpp"
+#include "core/utils.hpp"
 #include "imgui.h"
 #include <filesystem>
 #include <fstream>
@@ -420,7 +421,7 @@ void template_editor::save_template()
 
     auto &cfg = clrsync::core::config::instance();
 
-    std::filesystem::path template_file = trimmed_input_path;
+    std::filesystem::path template_file = clrsync::core::normalize_path(trimmed_input_path);
     
     // Ensure the parent directory exists
     auto parent_dir = template_file.parent_path();

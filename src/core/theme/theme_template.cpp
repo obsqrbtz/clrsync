@@ -8,8 +8,8 @@ namespace clrsync::core
 {
 theme_template::theme_template(const std::string &name, const std::string &template_path,
                                const std::string &out_path)
-    : m_name(name), m_template_path(expand_user(template_path)),
-      m_output_path(expand_user(out_path))
+    : m_name(name), m_template_path(normalize_path(template_path).string()),
+      m_output_path(normalize_path(out_path).string())
 {
 }
 
@@ -30,7 +30,7 @@ const std::string &theme_template::template_path() const
 
 void theme_template::set_template_path(const std::string &path)
 {
-    m_template_path = expand_user(path);
+    m_template_path = normalize_path(path).string();
 }
 
 const std::string &theme_template::output_path() const
@@ -40,7 +40,7 @@ const std::string &theme_template::output_path() const
 
 void theme_template::set_output_path(const std::string &path)
 {
-    m_output_path = expand_user(path);
+    m_output_path = normalize_path(path).string();
 }
 
 Result<void> theme_template::load_template()

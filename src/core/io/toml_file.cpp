@@ -8,7 +8,7 @@ namespace clrsync::core::io
 {
 toml_file::toml_file(std::string path)
 {
-    m_path = expand_user(path);
+    m_path = normalize_path(path).string();
 }
 
 Result<void> toml_file::parse()

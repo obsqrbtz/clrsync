@@ -19,7 +19,7 @@ template <typename FileType> class palette_manager
     palette_manager() = default;
     void load_palettes_from_directory(const std::string &directory_path)
     {
-        auto directory_path_expanded = expand_user(directory_path);
+        std::filesystem::path directory_path_expanded = normalize_path(directory_path);
         if (!std::filesystem::exists(directory_path_expanded))
             return;
         for (const auto &entry : std::filesystem::directory_iterator(directory_path_expanded))
@@ -34,8 +34,9 @@ template <typename FileType> class palette_manager
     }
     void save_palette_to_file(const palette &pal, const std::string &directory_path) const
     {
-        std::string file_path = directory_path + "/" + pal.name() + ".toml";
-        palette_file<FileType> pal_file(file_path);
+        std::filesystem::path dir_path = normalize_path(directory_path);
+        std::filesystem::path file_path = dir_path / (pal.name() + ".toml");
+        palette_file<FileType> pal_file(file_path.string());
         pal_file.save_palette(pal);
     }
 
