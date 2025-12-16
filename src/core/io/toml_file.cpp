@@ -92,6 +92,25 @@ void toml_file::insert_or_update_value(const std::string &section, const std::st
     std::visit([&](auto &&v) { tbl->insert_or_assign(key, v); }, value);
 }
 
+void toml_file::remove_section(const std::string &section)
+{
+    toml::table *tbl = m_file.as_table();
+    auto parts = split(section, '.');
+    
+    if (parts.empty())
+        return;
+    
+    for (size_t i = 0; i < parts.size() - 1; ++i)
+    {
+        auto *sub = (*tbl)[parts[i]].as_table();
+        if (!sub)
+            return;
+        tbl = sub;
+    }
+    
+    tbl->erase(parts.back());
+}
+
 Result<void> toml_file::save_file()
 {
     try {

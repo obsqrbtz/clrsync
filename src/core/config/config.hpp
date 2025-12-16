@@ -33,6 +33,7 @@ class config
 
     Result<void> update_template(const std::string &key,
                          const clrsync::core::theme_template &theme_template);
+    Result<void> remove_template(const std::string &key);
     static std::filesystem::path get_data_dir();
 
   private:

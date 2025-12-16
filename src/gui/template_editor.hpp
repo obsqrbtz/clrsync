@@ -21,6 +21,7 @@ private:
     void save_template();
     void load_template(const std::string &name);
     void new_template();
+    void delete_template();
     void refresh_templates();
 
     bool is_valid_path(const std::string &path);
@@ -29,6 +30,7 @@ private:
     TextEditor m_editor;
     
     std::string m_template_name;
+    std::string m_input_path;
     std::string m_output_path;
     std::string m_reload_command;
     std::string m_validation_error;
@@ -37,6 +39,7 @@ private:
     
     bool m_enabled{true};
     bool m_is_editing_existing{false};
+    bool m_show_delete_confirmation{false};
 };
 
 #endif // CLRSYNC_GUI_TEMPLATE_EDITOR_HPP

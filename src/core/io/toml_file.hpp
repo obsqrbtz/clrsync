@@ -19,6 +19,7 @@ class toml_file : public file
     std::map<std::string, value_type> get_table(const std::string &section_path) const override;
     void insert_or_update_value(const std::string &section, const std::string &key,
                                 const value_type &value) override;
+    void remove_section(const std::string &section) override;
     Result<void> save_file() override;
 
   private:

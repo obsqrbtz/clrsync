@@ -118,6 +118,40 @@ void template_editor::render()
     render_editor();
     ImGui::EndChild();
 
+    if (m_show_delete_confirmation)
+    {
+        ImGui::OpenPopup("Delete Template?");
+        m_show_delete_confirmation = false;
+    }
+
+    if (ImGui::BeginPopupModal("Delete Template?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Are you sure you want to delete '%s'?", m_template_name.c_str());
+        ImGui::Text("This action cannot be undone.");
+        ImGui::Separator();
+
+        if (ImGui::Button("Delete", ImVec2(120, 0)))
+        {
+            bool success = m_template_controller.remove_template(m_template_name);
+            if (success)
+            {
+                new_template();
+                refresh_templates();
+            }
+            else
+            {
+                m_validation_error = "Failed to delete template";
+            }
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
     ImGui::End();
 }
 
@@ -138,6 +172,19 @@ void template_editor::render_controls()
     if (ImGui::Button("Save"))
     {
         save_template();
+    }
+
+    if (m_is_editing_existing)
+    {
+        ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
+        if (ImGui::Button("Delete"))
+        {
+            delete_template();
+        }
+        ImGui::PopStyleColor(3);
     }
 
     ImGui::SameLine();
@@ -161,6 +208,24 @@ void template_editor::render_controls()
         if (m_is_editing_existing)
         {
             m_template_controller.set_template_enabled(m_template_name, m_enabled);
+        }
+    }
+
+    ImGui::Text("Input Path:");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(-FLT_MIN);
+    char input_path_buf[512] = {0};
+    snprintf(input_path_buf, sizeof(input_path_buf), "%s", m_input_path.c_str());
+    if (ImGui::InputText("##input_path", input_path_buf, sizeof(input_path_buf)))
+    {
+        m_input_path = input_path_buf;
+        if (!m_input_path.empty())
+        {
+            m_validation_error = "";
+        }
+        if (m_is_editing_existing)
+        {
+            m_template_controller.set_template_input_path(m_template_name, m_input_path);
         }
     }
 
@@ -318,6 +383,10 @@ void template_editor::save_template()
     trimmed_name.erase(0, trimmed_name.find_first_not_of(" \t\n\r"));
     trimmed_name.erase(trimmed_name.find_last_not_of(" \t\n\r") + 1);
 
+    std::string trimmed_input_path = m_input_path;
+    trimmed_input_path.erase(0, trimmed_input_path.find_first_not_of(" \t\n\r"));
+    trimmed_input_path.erase(trimmed_input_path.find_last_not_of(" \t\n\r") + 1);
+
     std::string trimmed_path = m_output_path;
     trimmed_path.erase(0, trimmed_path.find_first_not_of(" \t\n\r"));
     trimmed_path.erase(trimmed_path.find_last_not_of(" \t\n\r") + 1);
@@ -325,6 +394,12 @@ void template_editor::save_template()
     if (trimmed_name.empty())
     {
         m_validation_error = "Error: Template name cannot be empty!";
+        return;
+    }
+
+    if (trimmed_input_path.empty())
+    {
+        m_validation_error = "Error: Input path cannot be empty!";
         return;
     }
 
@@ -344,29 +419,22 @@ void template_editor::save_template()
     m_validation_error = "";
 
     auto &cfg = clrsync::core::config::instance();
-    std::string palettes_path = cfg.palettes_path();
-    std::filesystem::path templates_dir =
-        std::filesystem::path(palettes_path).parent_path() / "templates";
 
-    if (!std::filesystem::exists(templates_dir))
+    std::filesystem::path template_file = trimmed_input_path;
+    
+    // Ensure the parent directory exists
+    auto parent_dir = template_file.parent_path();
+    if (!parent_dir.empty() && !std::filesystem::exists(parent_dir))
     {
-        std::filesystem::create_directories(templates_dir);
-    }
-
-    std::filesystem::path template_file;
-    if (m_is_editing_existing)
-    {
-        auto existing_template_result = cfg.template_by_name(trimmed_name);
-        if (!existing_template_result)
+        try
         {
-            m_validation_error = "Template not found: " + existing_template_result.error().description();
+            std::filesystem::create_directories(parent_dir);
+        }
+        catch (const std::exception& e)
+        {
+            m_validation_error = "Error: Could not create directory for input path";
             return;
         }
-        template_file = existing_template_result.value()->template_path();
-    }
-    else
-    {
-        template_file = templates_dir / trimmed_name;
     }
 
     std::string template_content = m_editor.GetText();
@@ -393,6 +461,7 @@ void template_editor::save_template()
     }
 
     m_template_name = trimmed_name;
+    m_input_path = trimmed_input_path;
     m_output_path = trimmed_path;
     m_is_editing_existing = true;
     m_saved_content = m_editor.GetText();
@@ -410,6 +479,7 @@ void template_editor::load_template(const std::string &name)
     {
         const auto &tmpl = it->second;
         m_template_name = name;
+        m_input_path = tmpl.template_path();
         m_output_path = tmpl.output_path();
         m_reload_command = tmpl.reload_command();
         m_enabled = tmpl.enabled();
@@ -446,12 +516,21 @@ void template_editor::new_template()
         "Examples: {color.hex}, {color.rgb}, {color.r}\n\n";
     m_editor.SetText(default_content);
     m_saved_content = default_content;
+    m_input_path = "";
     m_output_path = "";
     m_reload_command = "";
     m_enabled = true;
     m_is_editing_existing = false;
     m_validation_error = "";
     m_has_unsaved_changes = false;
+}
+
+void template_editor::delete_template()
+{
+    if (!m_is_editing_existing || m_template_name.empty())
+        return;
+    
+    m_show_delete_confirmation = true;
 }
 
 void template_editor::refresh_templates()

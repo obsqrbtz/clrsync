@@ -216,6 +216,32 @@ Result<void> config::update_template(const std::string &key,
     return m_file->save_file();
 }
 
+Result<void> config::remove_template(const std::string &key)
+{
+    if (!m_file)
+        return Err<void>(error_code::config_missing, "Configuration not initialized");
+    
+    auto it = m_themes.find(key);
+    if (it == m_themes.end())
+        return Err<void>(error_code::template_not_found, "Template not found", key);
+    
+    std::filesystem::path template_file = it->second.template_path();
+    if (std::filesystem::exists(template_file))
+    {
+        try {
+            std::filesystem::remove(template_file);
+        } catch (const std::exception& e) {
+            return Err<void>(error_code::file_write_failed, "Failed to delete template file", e.what());
+        }
+    }
+    
+    m_themes.erase(it);
+    
+    m_file->remove_section("templates." + key);
+    
+    return m_file->save_file();
+}
+
 const std::unordered_map<std::string, clrsync::core::theme_template> config::templates()
 {
     if (m_themes.empty() && m_file)

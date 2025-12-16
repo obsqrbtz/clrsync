@@ -41,6 +41,7 @@ class file
     }
     virtual void insert_or_update_value(const std::string &section, const std::string &key,
                                         const value_type &value) {};
+    virtual void remove_section(const std::string &section) {};
     virtual Result<void> save_file() { return Ok(); };
 };
 } // namespace clrsync::core::io

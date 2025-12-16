@@ -15,6 +15,15 @@ void template_controller::set_template_enabled(const std::string& key, bool enab
     }
 }
 
+void template_controller::set_template_input_path(const std::string& key, const std::string& path)
+{
+    auto it = m_templates.find(key);
+    if (it != m_templates.end()) {
+        it->second.set_template_path(path);
+        (void)clrsync::core::config::instance().update_template(key, it->second);
+    }
+}
+
 void template_controller::set_template_output_path(const std::string& key, const std::string& path)
 {
     auto it = m_templates.find(key);
@@ -31,6 +40,16 @@ void template_controller::set_template_reload_command(const std::string& key, co
         it->second.set_reload_command(cmd);
         (void)clrsync::core::config::instance().update_template(key, it->second);
     }
+}
+
+bool template_controller::remove_template(const std::string& key)
+{
+    auto result = clrsync::core::config::instance().remove_template(key);
+    if (result) {
+        m_templates.erase(key);
+        return true;
+    }
+    return false;
 }
 
 void template_controller::refresh()

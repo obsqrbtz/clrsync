@@ -12,8 +12,10 @@ public:
     template_controller();
     [[nodiscard]] const std::unordered_map<std::string, clrsync::core::theme_template>& templates() const { return m_templates; }
     void set_template_enabled(const std::string& key, bool enabled);
+    void set_template_input_path(const std::string& key, const std::string& path);
     void set_template_output_path(const std::string& key, const std::string& path);
     void set_template_reload_command(const std::string& key, const std::string& cmd);
+    bool remove_template(const std::string& key);
     void refresh();
     
 private:
