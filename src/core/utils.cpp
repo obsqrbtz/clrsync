@@ -13,6 +13,10 @@ void print_color_keys()
 
 std::string get_default_config_path()
 {
+    const char* env_path = std::getenv("CLRSYNC_CONFIG_PATH");
+    if (env_path && env_path[0] != '\0')
+        return expand_user(env_path);
+    
     auto home = expand_user("~");
 #ifdef _WIN32
     return home + "\\.config\\clrsync\\config.toml";

@@ -47,12 +47,15 @@ void theme_template::load_template()
 {
     if (!std::filesystem::exists(m_template_path))
     {
-        std::cerr << "Template file '" << m_template_path << "' is missing\n";
+        std::cerr << "Warning: Template file '" << m_template_path << "' is missing\n";
         return;
     }
     std::ifstream input(m_template_path, std::ios::binary);
     if (!input)
-        throw std::runtime_error("Failed to open template file: " + m_template_path);
+    {
+        std::cerr << "Warning: Failed to open template file: " << m_template_path << std::endl;
+        return;
+    }
 
     m_template_data.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
 }
@@ -89,10 +92,22 @@ void theme_template::apply_palette(const core::palette &palette)
 
 void theme_template::save_output() const
 {
-    std::filesystem::create_directories(std::filesystem::path(m_output_path).parent_path());
+    try
+    {
+        std::filesystem::create_directories(std::filesystem::path(m_output_path).parent_path());
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Warning: Failed to create output directory for " << m_output_path << ": " << e.what() << std::endl;
+        return;
+    }
+    
     std::ofstream output(m_output_path, std::ios::binary);
     if (!output)
-        throw std::runtime_error("Failed to write output file: " + m_output_path);
+    {
+        std::cerr << "Warning: Failed to write output file: " << m_output_path << std::endl;
+        return;
+    }
 
     output << m_processed_data;
 }

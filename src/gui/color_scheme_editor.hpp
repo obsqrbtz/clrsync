@@ -1,8 +1,9 @@
 #ifndef CLRSYNC_GUI_COLOR_SCHEME_EDITOR_HPP
 #define CLRSYNC_GUI_COLOR_SCHEME_EDITOR_HPP
 
-#include "color_text_edit/TextEditor.h"
 #include "palette_controller.hpp"
+#include "color_table_renderer.hpp"
+#include "preview_renderer.hpp"
 
 class template_editor;
 
@@ -18,15 +19,12 @@ public:
 
 private:
     void render_controls();
-    void render_color_table();
-    void render_preview_content();
-    
-    void apply_palette_to_editor();
-    void apply_palette_to_imgui() const;
+    void apply_themes();
     void notify_palette_changed();
 
     palette_controller m_controller;
-    TextEditor m_editor;
+    color_table_renderer m_color_table;
+    preview_renderer m_preview;
     template_editor* m_template_editor{nullptr};
 };
 

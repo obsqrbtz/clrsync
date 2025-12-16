@@ -16,10 +16,11 @@
 
       baseVersion = nixpkgs.lib.removeSuffix "\n" (builtins.readFile ./VERSION);
 
-      semver = 
-        if self ? rev 
-        then "${baseVersion}+git.${builtins.substring 0 7 self.rev}"
-        else "${baseVersion}+dev";
+      semver =
+        if self ? rev then
+          "${baseVersion}+git.${builtins.substring 0 7 self.rev}"
+        else
+          "${baseVersion}+dev";
     in
     {
       packages = forAllSystems (
@@ -66,12 +67,12 @@
         system:
         let
           pkgs = nixpkgsFor.${system};
+          clrsync = self.packages.${system}.clrsync;
         in
         {
           default = pkgs.mkShell {
-            inputsFrom = [ self.packages.${system}.clrsync ];
-
-            buildInputs = with pkgs; [
+            inputsFrom = [ clrsync ];
+            packages = with pkgs; [
               cmake
               ninja
               clang-tools

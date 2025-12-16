@@ -9,6 +9,7 @@
 #ifdef _WIN32
 #include "windows.h"
 #endif
+#include <iostream>
 
 namespace clrsync::core
 {
@@ -22,9 +23,10 @@ void config::initialize(std::unique_ptr<clrsync::core::io::file> file)
 {
     copy_default_configs();
     m_file = std::move(file);
-    if (m_file)
-        if (!m_file->parse())
-            throw std::runtime_error{"Could not parse config file"};
+    if (!m_file)
+        throw std::runtime_error{"Config file is missing"};
+    if (!m_file->parse())
+        throw std::runtime_error{"Could not parse config file"};
 }
 
 std::filesystem::path config::get_user_config_dir()
@@ -62,13 +64,32 @@ void config::copy_file(const std::filesystem::path &src, const std::filesystem::
     if (std::filesystem::exists(dst))
         return;
 
+    if (!std::filesystem::exists(src))
+    {
+        std::cerr << "Warning: Source file does not exist: " << src << std::endl;
+        return;
+    }
+
     std::ifstream in(src, std::ios::binary);
     std::ofstream out(dst, std::ios::binary);
+    
+    if (!in || !out)
+    {
+        std::cerr << "Warning: Failed to copy file from " << src << " to " << dst << std::endl;
+        return;
+    }
+    
     out << in.rdbuf();
 }
 
 void config::copy_dir(const std::filesystem::path &src, const std::filesystem::path &dst)
 {
+    if (!std::filesystem::exists(src))
+    {
+        std::cerr << "Warning: Source directory does not exist: " << src << std::endl;
+        return;
+    }
+    
     for (auto const &entry : std::filesystem::recursive_directory_iterator(src))
     {
         auto rel = std::filesystem::relative(entry.path(), src);
@@ -91,6 +112,12 @@ void config::copy_default_configs()
     std::filesystem::path system_dir = get_data_dir();
 
     std::filesystem::create_directories(user_dir);
+
+    if (system_dir.empty())
+    {
+        std::cerr << "Warning: No system data directory found, skipping default config copy\n";
+        return;
+    }
 
     {
         auto src = system_dir / "config.toml";

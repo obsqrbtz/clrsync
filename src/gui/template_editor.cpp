@@ -369,11 +369,14 @@ void template_editor::save_template()
         std::string template_content = m_editor.GetText();
 
         std::ofstream out(template_file);
-        if (out.is_open())
+        if (!out.is_open())
         {
-            out << template_content;
-            out.close();
+            m_validation_error = "Failed to write template file";
+            return;
         }
+        
+        out << template_content;
+        out.close();
 
         clrsync::core::theme_template tmpl(trimmed_name, template_file.string(), trimmed_path);
         tmpl.set_reload_command(m_reload_command);

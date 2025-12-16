@@ -20,7 +20,17 @@ int main(int, char**)
 {
     auto config_path = clrsync::core::get_default_config_path();
     auto conf = std::make_unique<clrsync::core::io::toml_file>(config_path);
-    clrsync::core::config::instance().initialize(std::move(conf));
+    
+    try
+    {
+        clrsync::core::config::instance().initialize(std::move(conf));
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        std::cerr << "Hint: Set CLRSYNC_CONFIG_PATH environment variable or ensure config exists at: " << config_path << std::endl;
+        return 1;
+    }
 
     std::filesystem::path base = config_path;
     static std::string ini_path = (base.parent_path() / "layout.ini").string();

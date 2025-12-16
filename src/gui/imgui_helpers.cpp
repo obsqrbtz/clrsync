@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 
 #include "GLFW/glfw3.h"
@@ -11,14 +12,26 @@
 
 GLFWwindow * init_glfw()
 {
-    if (!glfwInit()) return nullptr;
+    glfwSetErrorCallback([](int error, const char* description) {
+        std::cerr << "GLFW Error " << error << ": " << description << std::endl;
+    });
+    
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW\n";
+        return nullptr;
+    }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
     GLFWwindow* w = glfwCreateWindow(1280, 720, "clrsync", nullptr, nullptr);
-    if (!w) return nullptr;
+    if (!w)
+    {
+        std::cerr << "Failed to create GLFW window\n";
+        return nullptr;
+    }
 
     glfwMakeContextCurrent(w);
     glfwSwapInterval(1);

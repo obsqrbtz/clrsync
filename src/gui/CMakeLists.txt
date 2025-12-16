@@ -1,6 +1,9 @@
 set(GUI_SOURCES
     main.cpp
     color_scheme_editor.cpp
+    color_table_renderer.cpp
+    preview_renderer.cpp
+    theme_applier.cpp
     template_editor.cpp
     palette_controller.cpp
     template_controller.cpp
