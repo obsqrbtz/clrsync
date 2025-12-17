@@ -14,7 +14,6 @@ preview_renderer::preview_renderer()
 
 namespace fs = std::filesystem;
 
-// Expands ~ to the user's home directory
 std::string expand_user(const std::string &path)
 {
     if (path.empty()) return "";
@@ -38,7 +37,6 @@ std::string expand_user(const std::string &path)
     return result;
 }
 
-// Lists all files in a directory
 std::vector<std::string> list_files(const std::string &dir_path)
 {
     std::vector<std::string> files;

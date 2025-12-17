@@ -12,6 +12,7 @@ set(GUI_SOURCES
     about_window.cpp
     settings_window.cpp
     font_loader.cpp
+    file_browser.cpp
     ${CMAKE_SOURCE_DIR}/lib/color_text_edit/TextEditor.cpp
 )
 
@@ -28,6 +29,11 @@ if(WIN32)
         glfw 
         imgui 
         OpenGL::GL
+        shell32
+        ole32
+        uuid
+        comdlg32
+        shlwapi
     )
 elseif(APPLE)
     target_link_libraries(clrsync_gui PRIVATE
@@ -35,8 +41,12 @@ elseif(APPLE)
         glfw
         imgui
         OpenGL::GL
+        "-framework Cocoa"
     )
 else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+    
     target_link_libraries(clrsync_gui PRIVATE
         clrsync_core 
         imgui
@@ -47,5 +57,9 @@ else()
         Xi 
         Fontconfig::Fontconfig 
         OpenGL::GL
+        ${GTK3_LIBRARIES}
     )
+    
+    target_include_directories(clrsync_gui PRIVATE ${GTK3_INCLUDE_DIRS})
+    target_compile_options(clrsync_gui PRIVATE ${GTK3_CFLAGS_OTHER})
 endif()

@@ -65,7 +65,9 @@ int main(int, char**)
     settings_window settingsWindow;
     
     colorEditor.set_template_editor(&templateEditor);
+    colorEditor.set_settings_window(&settingsWindow);
     templateEditor.apply_current_palette(colorEditor.controller().current_palette());
+    settingsWindow.set_palette(colorEditor.controller().current_palette());
 
     while (!glfwWindowShouldClose(window))
     {
@@ -78,7 +80,7 @@ int main(int, char**)
         colorEditor.render_controls_and_colors();
         colorEditor.render_preview();
         templateEditor.render();
-        aboutWindow.render();
+        aboutWindow.render(colorEditor.controller().current_palette());
         settingsWindow.render();
 
         loader.pop_font();

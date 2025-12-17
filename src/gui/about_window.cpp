@@ -1,12 +1,13 @@
 #include "about_window.hpp"
 #include "core/version.hpp"
+#include "imgui_helpers.hpp"
 #include "imgui.h"
 
 about_window::about_window()
 {
 }
 
-void about_window::render()
+void about_window::render(const clrsync::core::palette& pal)
 {
     if (!m_visible)
         return;
@@ -21,13 +22,15 @@ void about_window::render()
         const char *title = "clrsync";
         const float title_size = ImGui::CalcTextSize(title).x;
         ImGui::SetCursorPosX((window_width - title_size) * 0.5f);
-        ImGui::TextColored(ImVec4(0.4f, 0.8f, 1.0f, 1.0f), "%s", title);
+        ImVec4 title_color = palette_utils::get_color(pal, "info", "accent");
+        ImGui::TextColored(title_color, "%s", title);
         ImGui::PopFont();
 
         std::string version = "Version " + clrsync::core::version_string();
         const float version_size = ImGui::CalcTextSize(version.c_str()).x;
         ImGui::SetCursorPosX((window_width - version_size) * 0.5f);
-        ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "%s", version.c_str());
+        ImVec4 subtitle_color = palette_utils::get_color(pal, "editor_inactive", "foreground");
+        ImGui::TextColored(subtitle_color, "%s", version.c_str());
 
         ImGui::Spacing();
         ImGui::Separator();
@@ -43,7 +46,12 @@ void about_window::render()
 
         ImGui::Text("Links:");
 
-        if (ImGui::Button("GitHub Repository", ImVec2(200, 0)))
+        const float button_width = 200.0f;
+        const float spacing = ImGui::GetStyle().ItemSpacing.x;
+        const float total_width = 2.0f * button_width + spacing;
+        ImGui::SetCursorPosX((window_width - total_width) * 0.5f);
+
+        if (ImGui::Button("GitHub Repository", ImVec2(button_width, 0)))
         {
 #ifdef _WIN32
             system("start https://github.com/obsqrbtz/clrsync");
@@ -55,7 +63,7 @@ void about_window::render()
         }
         ImGui::SameLine();
 
-        if (ImGui::Button("Documentation", ImVec2(200, 0)))
+        if (ImGui::Button("Documentation", ImVec2(button_width, 0)))
         {
 #ifdef _WIN32
             system("start https://binarygoose.dev/projects/clrsync/overview/");
@@ -71,7 +79,8 @@ void about_window::render()
         ImGui::Separator();
         ImGui::Spacing();
 
-        ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "MIT License");
+        ImVec4 license_color = palette_utils::get_color(pal, "editor_inactive", "foreground");
+        ImGui::TextColored(license_color, "MIT License");
         ImGui::TextWrapped(
             "Copyright (c) 2025 Daniel Dada\n\n"
             "Permission is hereby granted, free of charge, to any person obtaining a copy "
@@ -82,16 +91,6 @@ void about_window::render()
             "furnished to do so, subject to the following conditions:\n\n"
             "The above copyright notice and this permission notice shall be included in all "
             "copies or substantial portions of the Software.");
-
-        ImGui::Spacing();
-        ImGui::Spacing();
-
-        const float button_width = 120.0f;
-        ImGui::SetCursorPosX((window_width - button_width) * 0.5f);
-        if (ImGui::Button("Close", ImVec2(button_width, 0)))
-        {
-            m_visible = false;
-        }
     }
     ImGui::End();
 }

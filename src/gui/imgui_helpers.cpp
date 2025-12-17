@@ -73,7 +73,6 @@ void render_menu_bar(about_window* about, settings_window* settings)
             ImGui::Separator();
             if (ImGui::MenuItem("Exit"))
             {
-                // Will be handled by checking window should close
                 glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
             }
             ImGui::EndMenu();
@@ -164,4 +163,96 @@ void shutdown(GLFWwindow* window)
     ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+namespace palette_utils 
+{
+
+ImVec4 get_color(const clrsync::core::palette& pal, const std::string& key, const std::string& fallback)
+{
+    auto colors = pal.colors();
+    if (colors.empty())
+        return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    
+    auto it = colors.find(key);
+    if (it == colors.end() && !fallback.empty())
+    {
+        it = colors.find(fallback);
+    }
+    
+    if (it != colors.end())
+    {
+        const auto& col = it->second;
+        const uint32_t hex = col.hex();
+        const float r = ((hex >> 24) & 0xFF) / 255.0f;
+        const float g = ((hex >> 16) & 0xFF) / 255.0f;
+        const float b = ((hex >> 8) & 0xFF) / 255.0f;
+        const float a = (hex & 0xFF) / 255.0f;
+        return ImVec4(r, g, b, a);
+    }
+    return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+uint32_t get_color_u32(const clrsync::core::palette& pal, const std::string& key, const std::string& fallback)
+{
+    auto colors = pal.colors();
+    if (colors.empty())
+        return 0xFFFFFFFF;
+    
+    auto it = colors.find(key);
+    if (it == colors.end() && !fallback.empty())
+    {
+        it = colors.find(fallback);
+    }
+    
+    if (it != colors.end())
+    {
+        const auto& col = it->second;
+        const uint32_t hex = col.hex();
+        const uint32_t r = (hex >> 24) & 0xFF;
+        const uint32_t g = (hex >> 16) & 0xFF;
+        const uint32_t b = (hex >> 8) & 0xFF;
+        const uint32_t a = hex & 0xFF;
+        return (a << 24) | (b << 16) | (g << 8) | r;
+    }
+    return 0xFFFFFFFF;
+}
+
+bool render_delete_confirmation_popup(const std::string& popup_title, const std::string& item_name, 
+                                      const std::string& item_type, const clrsync::core::palette& pal,
+                                      const std::function<void()>& on_delete)
+{
+    bool result = false;
+    if (ImGui::BeginPopupModal(popup_title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImVec4 warning_color = get_color(pal, "warning", "accent");
+        ImGui::TextColored(warning_color, "Are you sure you want to delete '%s'?", item_name.c_str());
+        ImGui::Text("This action cannot be undone.");
+        
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+        
+        float button_width = 120.0f;
+        float total_width = 2.0f * button_width + ImGui::GetStyle().ItemSpacing.x;
+        float window_width = ImGui::GetContentRegionAvail().x;
+        ImGui::SetCursorPosX((window_width - total_width) * 0.5f);
+
+        if (ImGui::Button("Delete", ImVec2(button_width, 0)))
+        {
+            on_delete();
+            result = true;
+            ImGui::CloseCurrentPopup();
+        }
+        
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(button_width, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    return result;
+}
+
 }

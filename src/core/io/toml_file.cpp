@@ -64,7 +64,7 @@ std::map<std::string, value_type> toml_file::get_table(const std::string &sectio
         else if (auto d = val.value<double>())
             result[std::string(p.first.str())] = static_cast<uint32_t>(*d);
         else
-            result[std::string(p.first.str())] = {}; // fallback for unsupported types
+            result[std::string(p.first.str())] = {};
     }
 
     return result;

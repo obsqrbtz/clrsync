@@ -1,4 +1,5 @@
 #include "color_table_renderer.hpp"
+#include "imgui_helpers.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <cctype>
@@ -35,7 +36,8 @@ void color_table_renderer::render_color_row(const std::string &name,
     ImGui::TableSetColumnIndex(0);
     const float key_col_width = ImGui::GetContentRegionAvail().x;
     
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.85f, 1.0f, 1.0f));
+    ImVec4 text_color = palette_utils::get_color(current, "info", "accent");
+    ImGui::PushStyleColor(ImGuiCol_Text, text_color);
     const bool copied = ImGui::Selectable(name.c_str(), false, 0, ImVec2(key_col_width, 0.0f));
     ImGui::PopStyleColor();
     
@@ -159,7 +161,7 @@ void color_table_renderer::render(const clrsync::core::palette& current,
         if (!has_matches)
             return;
         
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.5f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, palette_utils::get_color(current, "accent"));
         bool header_open = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth);
         ImGui::PopStyleColor();
         

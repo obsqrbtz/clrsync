@@ -60,6 +60,8 @@ private:
     ImVec4 m_autocomplete_text_color;
     ImVec4 m_autocomplete_selected_text_color;
     ImVec4 m_autocomplete_dim_text_color;
+    
+    clrsync::core::palette m_current_palette;
 };
 
 #endif // CLRSYNC_GUI_TEMPLATE_EDITOR_HPP

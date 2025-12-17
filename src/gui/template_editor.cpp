@@ -3,6 +3,8 @@
 #include "core/theme/theme_template.hpp"
 #include "core/palette/color_keys.hpp"
 #include "core/utils.hpp"
+#include "imgui_helpers.hpp"
+#include "file_browser.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
@@ -52,28 +54,12 @@ template_editor::template_editor() : m_template_name("new_template")
 
 void template_editor::apply_current_palette(const clrsync::core::palette &pal)
 {
+    m_current_palette = pal;
     auto colors = pal.colors();
     if (colors.empty())
         return;
     auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
-        auto it = colors.find(key);
-        if (it == colors.end() && !fallback.empty())
-        {
-            it = colors.find(fallback);
-        }
-
-        if (it != colors.end())
-        {
-            const auto &col = it->second;
-            const uint32_t hex = col.hex();
-            // Convert from RRGGBBAA to AABBGGRR (ImGui format)
-            const uint32_t r = (hex >> 24) & 0xFF;
-            const uint32_t g = (hex >> 16) & 0xFF;
-            const uint32_t b = (hex >> 8) & 0xFF;
-            const uint32_t a = hex & 0xFF;
-            return (a << 24) | (b << 16) | (g << 8) | r;
-        }
-        return 0xFFFFFFFF;
+        return palette_utils::get_color_u32(pal, key, fallback);
     };
 
     auto palette = m_editor.GetPalette();
@@ -116,34 +102,13 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
 
     m_editor.SetPalette(palette);
     
-    // Update autocomplete colors from palette
-    auto convert_to_imvec4 = [&](const std::string &key, const std::string &fallback = "") -> ImVec4 {
-        auto it = colors.find(key);
-        if (it == colors.end() && !fallback.empty())
-        {
-            it = colors.find(fallback);
-        }
-        
-        if (it != colors.end())
-        {
-            const auto &col = it->second;
-            const uint32_t hex = col.hex();
-            const float r = ((hex >> 24) & 0xFF) / 255.0f;
-            const float g = ((hex >> 16) & 0xFF) / 255.0f;
-            const float b = ((hex >> 8) & 0xFF) / 255.0f;
-            const float a = (hex & 0xFF) / 255.0f;
-            return ImVec4(r, g, b, a);
-        }
-        return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    };
-    
-    m_autocomplete_bg_color = convert_to_imvec4("editor_background", "background");
+    m_autocomplete_bg_color = palette_utils::get_color(pal, "editor_background", "background");
     m_autocomplete_bg_color.w = 0.98f;
-    m_autocomplete_border_color = convert_to_imvec4("border", "editor_inactive");
-    m_autocomplete_selected_color = convert_to_imvec4("editor_selected", "surface_variant");
-    m_autocomplete_text_color = convert_to_imvec4("editor_main", "foreground");
-    m_autocomplete_selected_text_color = convert_to_imvec4("foreground", "editor_main");
-    m_autocomplete_dim_text_color = convert_to_imvec4("editor_comment", "editor_inactive");
+    m_autocomplete_border_color = palette_utils::get_color(pal, "border", "editor_inactive");
+    m_autocomplete_selected_color = palette_utils::get_color(pal, "editor_selected", "surface_variant");
+    m_autocomplete_text_color = palette_utils::get_color(pal, "editor_main", "foreground");
+    m_autocomplete_selected_text_color = palette_utils::get_color(pal, "foreground", "editor_main");
+    m_autocomplete_dim_text_color = palette_utils::get_color(pal, "editor_comment", "editor_inactive");
 }
 
 void template_editor::update_autocomplete_suggestions()
@@ -396,14 +361,9 @@ void template_editor::render()
         m_show_delete_confirmation = false;
     }
 
-    if (ImGui::BeginPopupModal("Delete Template?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("Are you sure you want to delete '%s'?", m_template_name.c_str());
-        ImGui::Text("This action cannot be undone.");
-        ImGui::Separator();
-
-        if (ImGui::Button("Delete", ImVec2(120, 0)))
-        {
+    palette_utils::render_delete_confirmation_popup(
+        "Delete Template?", m_template_name, "template", m_current_palette,
+        [this]() {
             bool success = m_template_controller.remove_template(m_template_name);
             if (success)
             {
@@ -414,15 +374,7 @@ void template_editor::render()
             {
                 m_validation_error = "Failed to delete template";
             }
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-        {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
+        });
 
     ImGui::End();
 }
@@ -455,16 +407,23 @@ void template_editor::render_controls()
     if (m_is_editing_existing)
     {
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.2f, 0.2f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.1f, 0.1f, 1.0f));
+        auto error = palette_utils::get_color(m_current_palette, "error");
+        auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f,
+                                error.w);
+        auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f,
+                                error.w);
+        auto on_error = palette_utils::get_color(m_current_palette, "on_error");
+        ImGui::PushStyleColor(ImGuiCol_Button, error);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, error_hover);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, error_active);
+        ImGui::PushStyleColor(ImGuiCol_Text, on_error);
         if (ImGui::Button(" Delete "))
         {
             delete_template();
         }
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Delete this template");
-        ImGui::PopStyleColor(3);
+        ImGui::PopStyleColor(4);
     }
 
     ImGui::SameLine();
@@ -473,15 +432,21 @@ void template_editor::render_controls()
     bool enabled_changed = false;
     if (m_enabled)
     {
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.5f, 0.2f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.6f, 0.3f, 0.6f));
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(0.4f, 0.9f, 0.4f, 1.0f));
+        ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
+        ImVec4 success_hover = ImVec4(success_color.x * 1.2f, success_color.y * 1.2f, success_color.z * 1.2f, 0.6f);
+        ImVec4 success_check = ImVec4(success_color.x * 1.5f, success_color.y * 1.5f, success_color.z * 1.5f, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(success_color.x, success_color.y, success_color.z, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, success_hover);
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, success_check);
     }
     else
     {
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.4f, 0.2f, 0.2f, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.5f, 0.3f, 0.3f, 0.6f));
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(0.9f, 0.4f, 0.4f, 1.0f));
+        ImVec4 error_color = palette_utils::get_color(m_current_palette, "error", "accent");
+        ImVec4 error_hover = ImVec4(error_color.x * 1.2f, error_color.y * 1.2f, error_color.z * 1.2f, 0.6f);
+        ImVec4 error_check = ImVec4(error_color.x * 1.5f, error_color.y * 1.5f, error_color.z * 1.5f, 1.0f);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(error_color.x, error_color.y, error_color.z, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, error_hover);
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, error_check);
     }
     
     enabled_changed = ImGui::Checkbox("Enabled", &m_enabled);
@@ -518,7 +483,7 @@ void template_editor::render_controls()
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Input:");
     ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(-FLT_MIN);
+    ImGui::SetNextItemWidth(-120.0f);
     char input_path_buf[512] = {0};
     snprintf(input_path_buf, sizeof(input_path_buf), "%s", m_input_path.c_str());
     if (ImGui::InputTextWithHint("##input_path", "Path to template file...", 
@@ -534,13 +499,25 @@ void template_editor::render_controls()
             m_template_controller.set_template_input_path(m_template_name, m_input_path);
         }
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Browse##input"))
+    {
+        std::string selected_path = file_dialogs::open_file_dialog("Select Template File", m_input_path);
+        if (!selected_path.empty()) {
+            m_input_path = selected_path;
+            if (m_is_editing_existing) {
+                m_template_controller.set_template_input_path(m_template_name, m_input_path);
+            }
+            m_validation_error = "";
+        }
+    }
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Path where the template source file is stored");
 
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Output:");
     ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(-FLT_MIN);
+    ImGui::SetNextItemWidth(-120.0f);
     char path_buf[512] = {0};
     snprintf(path_buf, sizeof(path_buf), "%s", m_output_path.c_str());
     if (ImGui::InputTextWithHint("##output_path", "Path for generated config...", 
@@ -554,6 +531,18 @@ void template_editor::render_controls()
         if (m_is_editing_existing)
         {
             m_template_controller.set_template_output_path(m_template_name, m_output_path);
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Browse##output"))
+    {
+        std::string selected_path = file_dialogs::save_file_dialog("Select Output File", m_output_path);
+        if (!selected_path.empty()) {
+            m_output_path = selected_path;
+            if (m_is_editing_existing) {
+                m_template_controller.set_template_output_path(m_template_name, m_output_path);
+            }
+            m_validation_error = "";
         }
     }
     if (ImGui::IsItemHovered())
@@ -722,8 +711,10 @@ void template_editor::render_template_list()
 
     if (!m_is_editing_existing)
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.9f, 0.4f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.5f, 0.2f, 0.5f));
+        ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
+        ImVec4 success_bg = ImVec4(success_color.x, success_color.y, success_color.z, 0.5f);
+        ImGui::PushStyleColor(ImGuiCol_Text, success_color);
+        ImGui::PushStyleColor(ImGuiCol_Header, success_bg);
         ImGui::Selectable("+ New Template", true);
         ImGui::PopStyleColor(2);
         ImGui::Separator();

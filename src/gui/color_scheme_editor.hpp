@@ -6,6 +6,7 @@
 #include "preview_renderer.hpp"
 
 class template_editor;
+class settings_window;
 
 class color_scheme_editor
 {
@@ -15,6 +16,7 @@ public:
     void render_controls_and_colors();
     void render_preview();
     void set_template_editor(template_editor* editor) { m_template_editor = editor; }
+    void set_settings_window(settings_window* window) { m_settings_window = window; }
     const palette_controller& controller() const { return m_controller; }
 
 private:
@@ -26,6 +28,7 @@ private:
     color_table_renderer m_color_table;
     preview_renderer m_preview;
     template_editor* m_template_editor{nullptr};
+    settings_window* m_settings_window{nullptr};
     bool m_show_delete_confirmation{false};
 };
 

@@ -1,14 +1,17 @@
 #include "color_scheme_editor.hpp"
-#include "template_editor.hpp"
-#include "theme_applier.hpp"
 #include "imgui.h"
+#include "imgui_helpers.hpp"
+#include "template_editor.hpp"
+#include "settings_window.hpp"
+#include "theme_applier.hpp"
 #include <iostream>
 #include <ranges>
+
 
 color_scheme_editor::color_scheme_editor()
 {
     const auto &current = m_controller.current_palette();
-    
+
     if (!current.colors().empty())
     {
         theme_applier::apply_to_imgui(current);
@@ -25,6 +28,10 @@ void color_scheme_editor::notify_palette_changed()
     if (m_template_editor)
     {
         m_template_editor->apply_current_palette(m_controller.current_palette());
+    }
+    if (m_settings_window)
+    {
+        m_settings_window->set_palette(m_controller.current_palette());
     }
 }
 
@@ -44,8 +51,8 @@ void color_scheme_editor::render_controls_and_colors()
     ImGui::Separator();
 
     ImGui::BeginChild("ColorTableContent", ImVec2(0, 0), false);
-    m_color_table.render(m_controller.current_palette(), m_controller, 
-                        [this]() { apply_themes(); });
+    m_color_table.render(m_controller.current_palette(), m_controller,
+                         [this]() { apply_themes(); });
     ImGui::EndChild();
 
     ImGui::End();
@@ -54,9 +61,9 @@ void color_scheme_editor::render_controls_and_colors()
 void color_scheme_editor::render_preview()
 {
     ImGui::Begin("Color Preview");
-    
+
     m_preview.render(m_controller.current_palette());
-    
+
     ImGui::End();
 }
 
@@ -68,11 +75,10 @@ void color_scheme_editor::render_controls()
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 8));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 5));
 
-    // Palette selector
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Palette:");
     ImGui::SameLine();
-    
+
     ImGui::SetNextItemWidth(200.0f);
     if (ImGui::BeginCombo("##scheme", current.name().c_str()))
     {
@@ -95,7 +101,6 @@ void color_scheme_editor::render_controls()
     ImGui::SameLine();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 8);
 
-    // Action buttons
     static char new_palette_name_buf[128] = "";
     if (ImGui::Button(" + New "))
     {
@@ -109,20 +114,20 @@ void color_scheme_editor::render_controls()
     {
         ImGui::Text("Enter a name for the new palette:");
         ImGui::Spacing();
-        
+
         ImGui::SetNextItemWidth(250);
-        ImGui::InputTextWithHint("##new_palette_input", "Palette name...",
-                                 new_palette_name_buf, IM_ARRAYSIZE(new_palette_name_buf));
+        ImGui::InputTextWithHint("##new_palette_input", "Palette name...", new_palette_name_buf,
+                                 IM_ARRAYSIZE(new_palette_name_buf));
 
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
 
         bool can_create = strlen(new_palette_name_buf) > 0;
-        
+
         if (!can_create)
             ImGui::BeginDisabled();
-            
+
         if (ImGui::Button("Create", ImVec2(120, 0)))
         {
             m_controller.create_palette(new_palette_name_buf);
@@ -131,7 +136,7 @@ void color_scheme_editor::render_controls()
             new_palette_name_buf[0] = 0;
             ImGui::CloseCurrentPopup();
         }
-        
+
         if (!can_create)
             ImGui::EndDisabled();
 
@@ -155,16 +160,23 @@ void color_scheme_editor::render_controls()
         ImGui::SetTooltip("Save current palette to file");
 
     ImGui::SameLine();
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.2f, 0.2f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.1f, 0.1f, 1.0f));
+    auto error = palette_utils::get_color(current, "error");
+    auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f,
+                              error.w);
+    auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f,
+                               error.w);
+    auto on_error = palette_utils::get_color(current, "on_error");
+    ImGui::PushStyleColor(ImGuiCol_Button, error);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, error_hover);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, error_active);
+    ImGui::PushStyleColor(ImGuiCol_Text, on_error);
     if (ImGui::Button(" Delete "))
     {
         m_show_delete_confirmation = true;
     }
+    ImGui::PopStyleColor(4);
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Delete current palette");
-    ImGui::PopStyleColor(3);
 
     if (m_show_delete_confirmation)
     {
@@ -172,47 +184,21 @@ void color_scheme_editor::render_controls()
         m_show_delete_confirmation = false;
     }
 
-    if (ImGui::BeginPopupModal("Delete Palette?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.4f, 1.0f), 
-                          "Are you sure you want to delete '%s'?", current.name().c_str());
-        ImGui::Text("This action cannot be undone.");
-        
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.2f, 0.2f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
-        if (ImGui::Button("Delete", ImVec2(120, 0)))
-        {
-            m_controller.delete_current_palette();
-            apply_themes();
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::PopStyleColor(2);
-        
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-        {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
+    palette_utils::render_delete_confirmation_popup("Delete Palette?", current.name(), "palette",
+                                                    current, [this]() {
+                                                        m_controller.delete_current_palette();
+                                                        apply_themes();
+                                                    });
 
     ImGui::SameLine();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 16);
-    
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.7f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.6f, 0.8f, 1.0f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.4f, 0.6f, 1.0f));
+
     if (ImGui::Button(" Apply Theme "))
     {
         m_controller.apply_current_theme();
     }
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Apply current palette to all enabled templates");
-    ImGui::PopStyleColor(3);
-    
+
     ImGui::PopStyleVar(2);
 }

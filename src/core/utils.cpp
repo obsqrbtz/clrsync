@@ -50,7 +50,6 @@ std::filesystem::path normalize_path(const std::string &path)
 {
     std::string expanded = expand_user(path);
     std::filesystem::path fs_path(expanded);
-    // lexically_normal() resolves . and .. and normalizes separators
     return fs_path.lexically_normal();
 }
 
