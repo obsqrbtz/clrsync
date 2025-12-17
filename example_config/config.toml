@@ -1,5 +1,5 @@
 [general]
-default_theme = 'cursed'
+default_theme = 'dark'
 palettes_path = '~/.config/clrsync/palettes'
 font = 'JetBrainsMono Nerd Font Mono'
 font_size = 14

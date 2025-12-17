@@ -63,12 +63,24 @@ void apply_to_imgui(const clrsync::core::palette& current)
     ImGuiStyle &style = ImGui::GetStyle();
 
     const ImVec4 bg = getColor("background");
+    const ImVec4 onBg = getColor("on_background");
     const ImVec4 surface = getColor("surface");
+    const ImVec4 onSurface = getColor("on_surface");
     const ImVec4 surfaceVariant = getColor("surface_variant");
+    const ImVec4 onSurfaceVariant = getColor("on_surface_variant");
     const ImVec4 fg = getColor("foreground");
     const ImVec4 fgInactive = getColor("editor_inactive");
     const ImVec4 accent = getColor("accent");
     const ImVec4 border = getColor("border");
+    
+    const ImVec4 error = getColor("error");
+    const ImVec4 onError = getColor("on_error");
+    const ImVec4 success = getColor("success");
+    const ImVec4 onSuccess = getColor("on_success");
+    const ImVec4 warning = getColor("warning");
+    const ImVec4 onWarning = getColor("on_warning");
+    const ImVec4 info = getColor("info");
+    const ImVec4 onInfo = getColor("on_info");
 
     style.Colors[ImGuiCol_WindowBg] = bg;
     style.Colors[ImGuiCol_ChildBg] = surface;
@@ -77,8 +89,9 @@ void apply_to_imgui(const clrsync::core::palette& current)
     style.Colors[ImGuiCol_Border] = border;
     style.Colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
 
-    style.Colors[ImGuiCol_Text] = fg;
-    style.Colors[ImGuiCol_TextDisabled] = fgInactive;
+    style.Colors[ImGuiCol_Text] = onSurface;
+    style.Colors[ImGuiCol_TextDisabled] = onSurfaceVariant;
+    style.Colors[ImGuiCol_TextSelectedBg] = accent;
 
     style.Colors[ImGuiCol_Header] = surfaceVariant;
     style.Colors[ImGuiCol_HeaderHovered] = ImVec4(accent.x, accent.y, accent.z, 0.8f);
@@ -125,7 +138,7 @@ void apply_to_imgui(const clrsync::core::palette& current)
         ImVec4(border.x * 0.7f, border.y * 0.7f, border.z * 0.7f, border.w);
 
     style.Colors[ImGuiCol_TableRowBg] = ImVec4(0, 0, 0, 0);
-    style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(fg.x, fg.y, fg.z, 0.06f);
+    style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(onSurfaceVariant.x, onSurfaceVariant.y, onSurfaceVariant.z, 0.06f);
 
     style.Colors[ImGuiCol_Separator] = border;
     style.Colors[ImGuiCol_SeparatorHovered] = accent;

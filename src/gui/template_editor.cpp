@@ -102,13 +102,13 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
 
     m_editor.SetPalette(palette);
     
-    m_autocomplete_bg_color = palette_utils::get_color(pal, "editor_background", "background");
+    m_autocomplete_bg_color = palette_utils::get_color(pal, "surface", "background");
     m_autocomplete_bg_color.w = 0.98f;
-    m_autocomplete_border_color = palette_utils::get_color(pal, "border", "editor_inactive");
-    m_autocomplete_selected_color = palette_utils::get_color(pal, "editor_selected", "surface_variant");
-    m_autocomplete_text_color = palette_utils::get_color(pal, "editor_main", "foreground");
-    m_autocomplete_selected_text_color = palette_utils::get_color(pal, "foreground", "editor_main");
-    m_autocomplete_dim_text_color = palette_utils::get_color(pal, "editor_comment", "editor_inactive");
+    m_autocomplete_border_color = palette_utils::get_color(pal, "border", "surface_variant");
+    m_autocomplete_selected_color = palette_utils::get_color(pal, "accent", "surface_variant");
+    m_autocomplete_text_color = palette_utils::get_color(pal, "on_surface", "foreground");
+    m_autocomplete_selected_text_color = palette_utils::get_color(pal, "on_surface", "foreground");
+    m_autocomplete_dim_text_color = palette_utils::get_color(pal, "on_surface_variant", "editor_inactive");
 }
 
 void template_editor::update_autocomplete_suggestions()
@@ -433,20 +433,20 @@ void template_editor::render_controls()
     if (m_enabled)
     {
         ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
+        ImVec4 success_on_color = palette_utils::get_color(m_current_palette, "on_success", "on_surface");
         ImVec4 success_hover = ImVec4(success_color.x * 1.2f, success_color.y * 1.2f, success_color.z * 1.2f, 0.6f);
-        ImVec4 success_check = ImVec4(success_color.x * 1.5f, success_color.y * 1.5f, success_color.z * 1.5f, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(success_color.x, success_color.y, success_color.z, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, success_hover);
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, success_check);
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, success_on_color);
     }
     else
     {
         ImVec4 error_color = palette_utils::get_color(m_current_palette, "error", "accent");
+        ImVec4 error_on_color = palette_utils::get_color(m_current_palette, "on_error", "on_surface");
         ImVec4 error_hover = ImVec4(error_color.x * 1.2f, error_color.y * 1.2f, error_color.z * 1.2f, 0.6f);
-        ImVec4 error_check = ImVec4(error_color.x * 1.5f, error_color.y * 1.5f, error_color.z * 1.5f, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(error_color.x, error_color.y, error_color.z, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, error_hover);
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, error_check);
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, error_on_color);
     }
     
     enabled_changed = ImGui::Checkbox("Enabled", &m_enabled);
@@ -569,7 +569,8 @@ void template_editor::render_controls()
     if (!m_validation_error.empty())
     {
         ImGui::Spacing();
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
+        ImVec4 error_color = palette_utils::get_color(m_current_palette, "error", "accent");
+        ImGui::PushStyleColor(ImGuiCol_Text, error_color);
         ImGui::TextWrapped("%s", m_validation_error.c_str());
         ImGui::PopStyleColor();
     }
@@ -581,7 +582,8 @@ void template_editor::render_editor()
     
     if (!m_is_editing_existing)
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f));
+        ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
+        ImGui::PushStyleColor(ImGuiCol_Text, success_color);
         ImGui::Text("  New Template");
         ImGui::PopStyleColor();
     }
@@ -600,7 +602,8 @@ void template_editor::render_editor()
         if (m_has_unsaved_changes)
         {
             ImGui::SameLine();
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.6f, 0.2f, 1.0f));
+            ImVec4 warning_color = palette_utils::get_color(m_current_palette, "warning", "accent");
+            ImGui::PushStyleColor(ImGuiCol_Text, warning_color);
             ImGui::Text("(unsaved)");
             ImGui::PopStyleColor();
         }
@@ -705,7 +708,8 @@ void template_editor::render_template_list()
         
         if (!tmpl.enabled())
         {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            ImVec4 disabled_color = palette_utils::get_color(m_current_palette, "on_surface_variant", "editor_inactive");
+            ImGui::PushStyleColor(ImGuiCol_Text, disabled_color);
         }
         
         if (ImGui::Selectable(key.c_str(), selected))

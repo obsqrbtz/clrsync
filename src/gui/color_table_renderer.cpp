@@ -107,7 +107,8 @@ void color_table_renderer::render(const clrsync::core::palette& current,
 {
     if (current.colors().empty())
     {
-        ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.4f, 1.0f), "No palette loaded");
+        ImVec4 warning_color = palette_utils::get_color(current, "warning", "accent");
+        ImGui::TextColored(warning_color, "No palette loaded");
         return;
     }
 

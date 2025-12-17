@@ -250,12 +250,36 @@ void settings_window::render_status_messages()
     if (!m_error_message.empty())
     {
         ImGui::Spacing();
-        auto error_color = palette_utils::get_color(m_current_palette, "error");
-        ImGui::PushStyleColor(ImGuiCol_Text, error_color);
-        ImGui::TextWrapped("Error: %s", m_error_message.c_str());
-        ImGui::PopStyleColor();
-        if (ImGui::Button("Dismiss##error"))
-            m_error_message.clear();
+        
+        auto error_bg_color = palette_utils::get_color(m_current_palette, "error");
+        auto error_text_color = palette_utils::get_color(m_current_palette, "on_error");
+        
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, error_bg_color);
+        ImGui::PushStyleColor(ImGuiCol_Border, error_bg_color);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 4.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+        
+        if (ImGui::BeginChild("##error_box", ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, error_text_color);
+            ImGui::TextWrapped("Error: %s", m_error_message.c_str());
+            ImGui::PopStyleColor();
+            
+            ImGui::Spacing();
+            
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(error_bg_color.x * 0.8f, error_bg_color.y * 0.8f, error_bg_color.z * 0.8f, error_bg_color.w));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(error_bg_color.x * 0.6f, error_bg_color.y * 0.6f, error_bg_color.z * 0.6f, error_bg_color.w));
+            ImGui::PushStyleColor(ImGuiCol_Text, error_text_color);
+            
+            if (ImGui::Button("Dismiss##error"))
+                m_error_message.clear();
+                
+            ImGui::PopStyleColor(3);
+        }
+        ImGui::EndChild();
+        
+        ImGui::PopStyleVar(2);
+        ImGui::PopStyleColor(2);
     }
 }
 
