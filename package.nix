@@ -67,6 +67,7 @@ stdenv.mkDerivation rec {
     libxkbcommon
     zlib
     bzip2
+    gtk3
   ];
 
   cmakeFlags = [

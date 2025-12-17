@@ -14,6 +14,7 @@ depends=(
     mesa
     libglvnd
     libxcursor
+    gtk3
 )
 
 makedepends=(
@@ -26,6 +27,7 @@ makedepends=(
   libxcursor
   wayland
   wayland-protocols
+  gtk3
 )
 
 source=("$pkgname-$pkgver.tar.gz::https://github.com/obsqrbtz/clrsync/archive/refs/tags/v$pkgver.tar.gz")

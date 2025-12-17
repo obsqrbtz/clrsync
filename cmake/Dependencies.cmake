@@ -24,6 +24,11 @@ else()
     pkg_check_modules(WAYLAND_EGL wayland-egl)
 endif()
 
+if (LINUX)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+endif()
+
 if(USE_SYSTEM_GLFW)
     pkg_check_modules(GLFW REQUIRED glfw3)
 else()

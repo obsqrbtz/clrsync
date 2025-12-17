@@ -13,6 +13,7 @@ depends=(
     mesa
     libglvnd
     libxcursor
+    gtk3
 )
 
 makedepends=(
@@ -26,6 +27,7 @@ makedepends=(
   libxcursor
   wayland
   wayland-protocols
+  gtk3
 )
 provides=('clrsync')
 conflicts=('clrsync')
