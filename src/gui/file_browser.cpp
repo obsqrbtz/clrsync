@@ -229,36 +229,38 @@ std::string open_file_dialog(const std::string& title,
         return "";
     }
     
-    GtkWidget* dialog = gtk_file_chooser_dialog_new(
+    GtkFileChooserNative *native = gtk_file_chooser_native_new(
         title.c_str(),
         nullptr,
         GTK_FILE_CHOOSER_ACTION_OPEN,
-        "Cancel", GTK_RESPONSE_CANCEL,
-        "Open", GTK_RESPONSE_ACCEPT,
-        nullptr);
+        "_Open",
+        "_Cancel");
     
+    GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
+
     if (!initial_path.empty()) {
         std::filesystem::path p(initial_path);
         if (std::filesystem::exists(p)) {
             if (std::filesystem::is_directory(p)) {
-                gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), initial_path.c_str());
+                gtk_file_chooser_set_current_folder(chooser, initial_path.c_str());
             } else {
-                gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), p.parent_path().c_str());
-                gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), p.filename().c_str());
+                gtk_file_chooser_set_current_folder(chooser, p.parent_path().c_str());
+                gtk_file_chooser_set_current_name(chooser, p.filename().c_str());
             }
         }
     }
     
     std::string result;
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(native)) == GTK_RESPONSE_ACCEPT) {
+        char* filename = gtk_file_chooser_get_filename(chooser);
         if (filename) {
             result = filename;
             g_free(filename);
         }
     }
     
-    gtk_widget_destroy(dialog);
+    g_object_unref(native);
+    while (gtk_events_pending()) gtk_main_iteration();
     return result;
 }
 
@@ -269,34 +271,35 @@ std::string save_file_dialog(const std::string& title,
         return "";
     }
     
-    GtkWidget* dialog = gtk_file_chooser_dialog_new(
+    GtkFileChooserNative *native = gtk_file_chooser_native_new(
         title.c_str(),
         nullptr,
         GTK_FILE_CHOOSER_ACTION_SAVE,
-        "Cancel", GTK_RESPONSE_CANCEL,
-        "Save", GTK_RESPONSE_ACCEPT,
-        nullptr);
+        "_Save",
+        "_Cancel");
     
-    gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(dialog), TRUE);
+    GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
+    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
     
     if (!initial_path.empty()) {
         std::filesystem::path p(initial_path);
         if (std::filesystem::exists(p.parent_path())) {
-            gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), p.parent_path().c_str());
-            gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), p.filename().c_str());
+            gtk_file_chooser_set_current_folder(chooser, p.parent_path().c_str());
+            gtk_file_chooser_set_current_name(chooser, p.filename().c_str());
         }
     }
     
     std::string result;
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(native)) == GTK_RESPONSE_ACCEPT) {
+        char* filename = gtk_file_chooser_get_filename(chooser);
         if (filename) {
             result = filename;
             g_free(filename);
         }
     }
     
-    gtk_widget_destroy(dialog);
+    g_object_unref(native);
+    while (gtk_events_pending()) gtk_main_iteration();
     return result;
 }
 
@@ -306,28 +309,30 @@ std::string select_folder_dialog(const std::string& title,
         return "";
     }
     
-    GtkWidget* dialog = gtk_file_chooser_dialog_new(
+    GtkFileChooserNative *native = gtk_file_chooser_native_new(
         title.c_str(),
         nullptr,
         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-        "Cancel", GTK_RESPONSE_CANCEL,
-        "Select", GTK_RESPONSE_ACCEPT,
-        nullptr);
+        "_Select",
+        "_Cancel");
     
+    GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
+
     if (!initial_path.empty() && std::filesystem::exists(initial_path)) {
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog), initial_path.c_str());
+        gtk_file_chooser_set_current_folder(chooser, initial_path.c_str());
     }
     
     std::string result;
-    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
-        char* filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(native)) == GTK_RESPONSE_ACCEPT) {
+        char* filename = gtk_file_chooser_get_filename(chooser);
         if (filename) {
             result = filename;
             g_free(filename);
         }
     }
     
-    gtk_widget_destroy(dialog);
+    g_object_unref(native);
+    while (gtk_events_pending()) gtk_main_iteration();
     return result;
 }
 
