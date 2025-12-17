@@ -138,9 +138,35 @@ void color_scheme_editor::render_controls()
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
     if (ImGui::Button("Delete"))
     {
-        m_controller.delete_current_palette();
+        m_show_delete_confirmation = true;
     }
     ImGui::PopStyleColor(3);
+
+    if (m_show_delete_confirmation)
+    {
+        ImGui::OpenPopup("Delete Palette?");
+        m_show_delete_confirmation = false;
+    }
+
+    if (ImGui::BeginPopupModal("Delete Palette?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Are you sure you want to delete '%s'?", current.name().c_str());
+        ImGui::Text("This action cannot be undone.");
+        ImGui::Separator();
+
+        if (ImGui::Button("Delete", ImVec2(120, 0)))
+        {
+            m_controller.delete_current_palette();
+            apply_themes();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
 
     ImGui::SameLine();
     if (ImGui::Button("Apply"))

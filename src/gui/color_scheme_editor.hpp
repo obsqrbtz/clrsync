@@ -26,6 +26,7 @@ private:
     color_table_renderer m_color_table;
     preview_renderer m_preview;
     template_editor* m_template_editor{nullptr};
+    bool m_show_delete_confirmation{false};
 };
 
 #endif // CLRSYNC_GUI_COLOR_SCHEME_EDITOR_HPP
