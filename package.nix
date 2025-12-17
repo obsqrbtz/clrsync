@@ -5,6 +5,7 @@
   git,
   pkg-config,
   makeWrapper,
+  wrapGAppsHook3,
   wayland-protocols,
   glfw,
   freetype,
@@ -17,7 +18,9 @@
   bzip2,
   wayland-scanner,
   gtk3,
-  semver
+  glib,
+  gsettings-desktop-schemas,
+  semver,
 }:
 
 stdenv.mkDerivation rec {
@@ -49,6 +52,7 @@ stdenv.mkDerivation rec {
     git
     pkg-config
     makeWrapper
+    wrapGAppsHook3
     wayland-protocols
   ];
 
@@ -69,6 +73,8 @@ stdenv.mkDerivation rec {
     zlib
     bzip2
     gtk3
+    gsettings-desktop-schemas
+    glib
   ];
 
   cmakeFlags = [
@@ -82,14 +88,10 @@ stdenv.mkDerivation rec {
 
     cmake --install . --prefix $out
 
-    wrapProgram $out/bin/clrsync_gui \
-      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath buildInputs}
-
-    wrapProgram $out/bin/clrsync_cli \
-      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath buildInputs}
-
     runHook postInstall
   '';
+
+  dontWrapGApps = false;
 
   meta = with lib; {
     description = "Color scheme manager with GUI and CLI";
@@ -97,6 +99,6 @@ stdenv.mkDerivation rec {
     license = licenses.mit;
     platforms = platforms.linux;
     mainProgram = "clrsync_gui";
-    maintainers = [ ];
+    maintainers = [ "Daniel Dada" ];
   };
 }
