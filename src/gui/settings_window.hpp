@@ -2,6 +2,7 @@
 #define CLRSYNC_GUI_SETTINGS_WINDOW_HPP
 
 #include <string>
+#include <vector>
 
 class settings_window
 {
@@ -23,6 +24,9 @@ private:
     char m_palettes_path[512];
     char m_font[128];
     int m_font_size;
+    
+    std::vector<std::string> m_available_fonts;
+    int m_selected_font_idx;
     
     std::string m_error_message;
 };

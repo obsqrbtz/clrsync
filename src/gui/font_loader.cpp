@@ -226,3 +226,101 @@ void font_loader::pop_font()
 {
     ImGui::PopFont();
 }
+
+std::vector<std::string> font_loader::get_system_fonts()
+{
+    std::vector<std::string> fonts;
+
+#if defined(_WIN32)
+    auto enumerate_registry_fonts = [&fonts](HKEY root_key, const char* subkey)
+    {
+        HKEY hKey;
+        if (RegOpenKeyExA(root_key, subkey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+            return;
+
+        char value_name[512];
+        DWORD value_name_size;
+        DWORD index = 0;
+
+        while (true)
+        {
+            value_name_size = sizeof(value_name);
+            LONG result = RegEnumValueA(hKey, index++, value_name, &value_name_size, nullptr, nullptr, nullptr, nullptr);
+            
+            if (result != ERROR_SUCCESS)
+                break;
+
+            std::string font_name = value_name;
+            size_t pos = font_name.find(" (");
+            if (pos != std::string::npos)
+                font_name = font_name.substr(0, pos);
+            
+            if (std::find(fonts.begin(), fonts.end(), font_name) == fonts.end())
+                fonts.push_back(font_name);
+        }
+
+        RegCloseKey(hKey);
+    };
+
+    enumerate_registry_fonts(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
+    enumerate_registry_fonts(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
+
+#elif defined(__APPLE__)
+    CTFontCollectionRef collection = CTFontCollectionCreateFromAvailableFonts(nullptr);
+    if (collection)
+    {
+        CFArrayRef fontDescriptors = CTFontCollectionCreateMatchingFontDescriptors(collection);
+        CFRelease(collection);
+        
+        if (fontDescriptors)
+        {
+            CFIndex count = CFArrayGetCount(fontDescriptors);
+            for (CFIndex i = 0; i < count; i++)
+            {
+                CTFontDescriptorRef descriptor = (CTFontDescriptorRef)CFArrayGetValueAtIndex(fontDescriptors, i);
+                CFStringRef fontName = (CFStringRef)CTFontDescriptorCopyAttribute(descriptor, kCTFontDisplayNameAttribute);
+                
+                if (fontName)
+                {
+                    char buffer[256];
+                    if (CFStringGetCString(fontName, buffer, sizeof(buffer), kCFStringEncodingUTF8))
+                    {
+                        std::string font_name = buffer;
+                        if (std::find(fonts.begin(), fonts.end(), font_name) == fonts.end())
+                            fonts.push_back(font_name);
+                    }
+                    CFRelease(fontName);
+                }
+            }
+            CFRelease(fontDescriptors);
+        }
+    }
+
+#else
+    FcInit();
+    FcPattern* pattern = FcPatternCreate();
+    FcObjectSet* os = FcObjectSetBuild(FC_FAMILY, nullptr);
+    FcFontSet* fs = FcFontList(nullptr, pattern, os);
+    
+    if (fs)
+    {
+        for (int i = 0; i < fs->nfont; i++)
+        {
+            FcChar8* family = nullptr;
+            if (FcPatternGetString(fs->fonts[i], FC_FAMILY, 0, &family) == FcResultMatch)
+            {
+                std::string font_name = reinterpret_cast<const char*>(family);
+                if (std::find(fonts.begin(), fonts.end(), font_name) == fonts.end())
+                    fonts.push_back(font_name);
+            }
+        }
+        FcFontSetDestroy(fs);
+    }
+    
+    FcObjectSetDestroy(os);
+    FcPatternDestroy(pattern);
+#endif
+
+    std::sort(fonts.begin(), fonts.end());
+    return fonts;
+}

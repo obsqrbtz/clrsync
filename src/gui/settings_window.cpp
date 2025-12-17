@@ -6,11 +6,15 @@
 #include <cstring>
 
 settings_window::settings_window()
-    : m_font_size(14)
+    : m_font_size(14), m_selected_font_idx(0)
 {
     m_default_theme[0] = '\0';
     m_palettes_path[0] = '\0';
     m_font[0] = '\0';
+    
+    font_loader loader;
+    m_available_fonts = loader.get_system_fonts();
+    
     load_settings();
 }
 
@@ -51,10 +55,25 @@ void settings_window::render()
         ImGui::Text("Font:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(300.0f);
-        ImGui::InputText("##font", m_font, sizeof(m_font));
+        if (ImGui::BeginCombo("##font", m_font))
+        {
+            for (int i = 0; i < static_cast<int>(m_available_fonts.size()); i++)
+            {
+                bool is_selected = (i == m_selected_font_idx);
+                if (ImGui::Selectable(m_available_fonts[i].c_str(), is_selected))
+                {
+                    m_selected_font_idx = i;
+                    strncpy(m_font, m_available_fonts[i].c_str(), sizeof(m_font) - 1);
+                    m_font[sizeof(m_font) - 1] = '\0';
+                }
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
         if (ImGui::IsItemHovered())
         {
-            ImGui::SetTooltip("Font");
+            ImGui::SetTooltip("Select font for the application");
         }
         
         ImGui::Spacing();
@@ -133,6 +152,16 @@ void settings_window::load_settings()
     std::string font = cfg.font();
     strncpy(m_font, font.c_str(), sizeof(m_font) - 1);
     m_font[sizeof(m_font) - 1] = '\0';
+    
+    m_selected_font_idx = 0;
+    for (int i = 0; i < static_cast<int>(m_available_fonts.size()); i++)
+    {
+        if (m_available_fonts[i] == font)
+        {
+            m_selected_font_idx = i;
+            break;
+        }
+    }
     
     m_font_size = cfg.font_size();
     

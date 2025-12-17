@@ -10,10 +10,11 @@ class font_loader
 public:
     font_loader() = default;
 
-    // Loads system font by name and returns an ImFont* or nullptr.
     ImFont* load_font(const char* font_name, float size_px);
     void push_default_font();
     void pop_font();
+    
+    std::vector<std::string> get_system_fonts();
 
 private:
     std::string find_font_path(const char* font_name);
