@@ -41,7 +41,12 @@ static std::string search_registry_for_font(HKEY root_key, const char* subkey, c
         std::string reg_font_name = value_name;
         std::transform(reg_font_name.begin(), reg_font_name.end(), reg_font_name.begin(), ::tolower);
 
-        if (reg_font_name.find(font_name_lower) != std::string::npos)
+        std::string reg_font_name_clean = reg_font_name;
+        size_t type_pos = reg_font_name_clean.find(" (");
+        if (type_pos != std::string::npos)
+            reg_font_name_clean = reg_font_name_clean.substr(0, type_pos);
+
+        if (reg_font_name_clean == font_name_lower)
         {
             std::string font_file = reinterpret_cast<char*>(value_data);
 
