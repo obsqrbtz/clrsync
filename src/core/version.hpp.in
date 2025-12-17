@@ -1,7 +1,6 @@
 #ifndef CLRSYNC_CORE_VERSION_HPP
 #define CLRSYNC_CORE_VERSION_HPP
 
-#include <cstdint>
 #include <string>
 
 namespace clrsync::core

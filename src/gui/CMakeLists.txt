@@ -2,6 +2,7 @@ set(GUI_SOURCES
     main.cpp
     color_scheme_editor.cpp
     color_table_renderer.cpp
+    screen_eyedropper.cpp
     preview_renderer.cpp
     theme_applier.cpp
     template_editor.cpp
@@ -27,7 +28,17 @@ if(WIN32)
         clrsync_core 
         glfw 
         imgui 
+        user32
+        gdi32
         OpenGL::GL
+    )
+elseif(APPLE)
+    target_link_libraries(clrsync_gui PRIVATE
+        clrsync_core
+        glfw
+        imgui
+        OpenGL::GL
+        "-framework ApplicationServices"
     )
 else()
     target_link_libraries(clrsync_gui PRIVATE
