@@ -23,7 +23,11 @@ GLFWwindow * init_glfw()
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    #ifdef __APPLE__
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    #else
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    #endif
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
     GLFWwindow* w = glfwCreateWindow(1280, 720, "clrsync", nullptr, nullptr);
@@ -49,7 +53,11 @@ void init_imgui(GLFWwindow* window, const std::string& ini_path)
 
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 130");
+    #ifdef __APPLE__
+    ImGui_ImplOpenGL3_Init("#version 150");
+    #else
+    ImGui_ImplOpenGL3_Init("#version 120");
+    #endif
 }
 
 void begin_frame()

@@ -123,25 +123,27 @@ std::vector<unsigned char> font_loader::load_font_macos(const char* font_name)
     if (!desc)
         return out;
 
-    CTFontRef font = CTFontCreateWithFontDescriptor(desc, 0, nullptr);
+    CFURLRef url = (CFURLRef)CTFontDescriptorCopyAttribute(desc, kCTFontURLAttribute);
     CFRelease(desc);
 
-    if (!font)
+    if (!url)
         return out;
 
-    CFDataRef data = CTFontCopyTable(font, kCTFontTableCFF, 0);
-    if (!data)
-        data = CTFontCopyTable(font, kCTFontTableHead, 0);
+    CFDataRef data = nullptr;
+    Boolean success = CFURLCreateDataAndPropertiesFromResource(kCFAllocatorDefault, url, &data, nullptr, nullptr, nullptr);
+    CFRelease(url);
 
-    if (data)
+    if (success && data)
     {
         CFIndex size = CFDataGetLength(data);
-        out.resize(size);
-        CFDataGetBytes(data, CFRangeMake(0, size), out.data());
+        if (size > 100)
+        {
+            out.resize(size);
+            CFDataGetBytes(data, CFRangeMake(0, size), out.data());
+        }
         CFRelease(data);
     }
 
-    CFRelease(font);
     return out;
 }
 

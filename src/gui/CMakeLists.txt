@@ -15,6 +15,9 @@ set(GUI_SOURCES
     file_browser.cpp
     ${CMAKE_SOURCE_DIR}/lib/color_text_edit/TextEditor.cpp
 )
+if(APPLE)
+    list(APPEND GUI_SOURCES file_browser_macos.mm)
+endif()
 
 add_executable(clrsync_gui ${GUI_SOURCES})
 
