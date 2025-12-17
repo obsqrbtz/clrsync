@@ -7,12 +7,7 @@ void color_table_renderer::render_color_row(const std::string &name,
                                             palette_controller& controller,
                                             const OnColorChangedCallback& on_changed)
 {
-    const auto &colors = current.colors();
-    auto it = colors.find(name);
-    if (it == colors.end())
-        return;
-
-    const clrsync::core::color &col = it->second;
+    const clrsync::core::color &col = current.get_color(name);
 
     ImGui::TableNextRow();
 

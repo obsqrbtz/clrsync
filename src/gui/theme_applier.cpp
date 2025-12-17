@@ -1,34 +1,20 @@
 #include "theme_applier.hpp"
 #include "imgui.h"
-#include <iostream>
 
 namespace theme_applier
 {
 
 void apply_to_editor(TextEditor& editor, const clrsync::core::palette& current)
 {
-    if (current.colors().empty())
-        return;
-
-    auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
-        auto it = current.colors().find(key);
-        if (it == current.colors().end() && !fallback.empty())
-        {
-            it = current.colors().find(fallback);
-        }
-        
-        if (it != current.colors().end())
-        {
-            const auto &col = it->second;
-            const uint32_t hex = col.hex();
-            // Convert from RRGGBBAA to AABBGGRR (ImGui format)
-            const uint32_t r = (hex >> 24) & 0xFF;
-            const uint32_t g = (hex >> 16) & 0xFF;
-            const uint32_t b = (hex >> 8) & 0xFF;
-            const uint32_t a = hex & 0xFF;
-            return (a << 24) | (b << 16) | (g << 8) | r;
-        }
-        return 0xFFFFFFFF;
+    auto get_color_u32 = [&](const std::string &key) -> uint32_t {
+        const auto &col = current.get_color(key);
+        const uint32_t hex = col.hex();
+        // Convert from RRGGBBAA to AABBGGRR (ImGui format)
+        const uint32_t r = (hex >> 24) & 0xFF;
+        const uint32_t g = (hex >> 16) & 0xFF;
+        const uint32_t b = (hex >> 8) & 0xFF;
+        const uint32_t a = hex & 0xFF;
+        return (a << 24) | (b << 16) | (g << 8) | r;
     };
 
     auto palette = editor.GetPalette();
@@ -65,25 +51,11 @@ void apply_to_editor(TextEditor& editor, const clrsync::core::palette& current)
 
 void apply_to_imgui(const clrsync::core::palette& current)
 {
-    if (current.colors().empty())
-        return;
-    
-    auto getColor = [&](const std::string &key, const std::string &fallback = "") -> ImVec4 {
-        auto it = current.colors().find(key);
-        if (it == current.colors().end() && !fallback.empty())
-        {
-            it = current.colors().find(fallback);
-        }
-        
-        if (it != current.colors().end())
-        {
-            const uint32_t hex = it->second.hex();
-            return {((hex >> 24) & 0xFF) / 255.0f, ((hex >> 16) & 0xFF) / 255.0f,
-                    ((hex >> 8) & 0xFF) / 255.0f, ((hex) & 0xFF) / 255.0f};
-        }
-        
-        std::cout << "WARNING: Color key '" << key << "' not found!\n";
-        return {1, 1, 1, 1};
+    auto getColor = [&](const std::string &key) -> ImVec4 {
+        const auto &col = current.get_color(key);
+        const uint32_t hex = col.hex();
+        return {((hex >> 24) & 0xFF) / 255.0f, ((hex >> 16) & 0xFF) / 255.0f,
+                ((hex >> 8) & 0xFF) / 255.0f, ((hex) & 0xFF) / 255.0f};
     };
 
     ImGuiStyle &style = ImGui::GetStyle();

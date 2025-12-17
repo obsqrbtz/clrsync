@@ -89,15 +89,10 @@ void preview_renderer::render_code_preview()
 void preview_renderer::render_terminal_preview(const clrsync::core::palette& current)
 {
     auto get_color = [&](const std::string &key) -> ImVec4 {
-        auto it = current.colors().find(key);
-        if (it != current.colors().end())
-        {
-            const auto &col = it->second;
-            const uint32_t hex = col.hex();
-            return {((hex >> 24) & 0xFF) / 255.0f, ((hex >> 16) & 0xFF) / 255.0f,
-                    ((hex >> 8) & 0xFF) / 255.0f, ((hex) & 0xFF) / 255.0f};
-        }
-        return {1, 1, 1, 1};
+        const auto &col = current.get_color(key);
+        const uint32_t hex = col.hex();
+        return {((hex >> 24) & 0xFF) / 255.0f, ((hex >> 16) & 0xFF) / 255.0f,
+                ((hex >> 8) & 0xFF) / 255.0f, ((hex) & 0xFF) / 255.0f};
     };
 
     const ImVec4 editor_bg = get_color("editor_background");

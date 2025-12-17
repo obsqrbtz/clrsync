@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <core/palette/color.hpp>
+#include <core/palette/color_keys.hpp>
 
 namespace clrsync::core
 {
@@ -37,8 +38,15 @@ class palette
         {
             return it->second;
         }
-        static color default_color{};
-        return default_color;
+        auto default_it = DEFAULT_COLORS.find(key);
+        if (default_it != DEFAULT_COLORS.end())
+        {
+            static color default_color;
+            default_color.set(default_it->second);
+            return default_color;
+        }
+        static color empty_color{};
+        return empty_color;
     }
 
     const std::unordered_map<std::string, color> &colors() const

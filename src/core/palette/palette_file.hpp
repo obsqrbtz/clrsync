@@ -26,13 +26,25 @@ template <typename FileType> class palette_file
         if (!m_file->parse())
             return false;
         m_palette.set_name(m_file->get_string_value("general", "name"));
+        
+        for (const auto &color_key : COLOR_KEYS)
+        {
+            auto it = DEFAULT_COLORS.find(color_key);
+            if (it != DEFAULT_COLORS.end())
+            {
+                m_palette.set_color(color_key, core::color(it->second));
+            }
+        }
+        
         for (const auto &color_key : COLOR_KEYS)
         {
             auto color_str = m_file->get_string_value("colors", color_key);
-            core::color color{0x000000FF};
             if (!color_str.empty())
+            {
+                core::color color;
                 color.from_hex_string(color_str);
-            m_palette.set_color(color_key, color);
+                m_palette.set_color(color_key, color);
+            }
         }
         return true;
     }

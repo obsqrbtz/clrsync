@@ -30,9 +30,12 @@ void palette_controller::select_palette(const std::string& name)
 
 void palette_controller::create_palette(const std::string& name)
 {
-    std::filesystem::path template_path = clrsync::core::config::get_data_dir() / "palettes" / "cursed.toml";
-    clrsync::core::palette new_palette = m_palette_manager.load_palette_from_file(template_path.string());
-    new_palette.set_name(name);
+    clrsync::core::palette new_palette(name);
+    
+    for (const auto& [key, hex_value] : clrsync::core::DEFAULT_COLORS)
+    {
+        new_palette.set_color(key, clrsync::core::color(hex_value));
+    }
         
     auto dir = clrsync::core::config::instance().palettes_path();
     m_palette_manager.save_palette_to_file(new_palette, dir);
