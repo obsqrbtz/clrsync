@@ -77,9 +77,9 @@ int main(int, char**)
 
         render_menu_bar(&aboutWindow, &settingsWindow);
         setup_main_dockspace(first_time); 
+        templateEditor.render();
         colorEditor.render_controls_and_colors();
         colorEditor.render_preview();
-        templateEditor.render();
         aboutWindow.render(colorEditor.controller().current_palette());
         settingsWindow.render();
 

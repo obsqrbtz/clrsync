@@ -605,30 +605,7 @@ void template_editor::render_editor()
             ImGui::PopStyleColor();
         }
     }
-    
-    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 30);
-    ImGui::TextDisabled("(?)");
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 25.0f);
-        ImGui::TextUnformatted("Template Syntax:");
-        ImGui::Separator();
-        ImGui::TextUnformatted("Use {color_key.format} for color variables");
-        ImGui::Spacing();
-        ImGui::TextUnformatted("Color Keys: background, foreground, accent, etc.");
-        ImGui::TextUnformatted("Formats: hex, rgb, rgba, r, g, b, hsl, hsla, etc.");
-        ImGui::Spacing();
-        ImGui::TextUnformatted("Examples:");
-        ImGui::BulletText("{background.hex} -> #1E1E1E");
-        ImGui::BulletText("{accent.rgb} -> rgb(14,99,156)");
-        ImGui::BulletText("{foreground.r} -> 204");
-        ImGui::Spacing();
-        ImGui::TextUnformatted("Tip: Type '{' to trigger autocomplete!");
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-    
+        
     ImGui::PopStyleVar();
     ImGui::Separator();
 

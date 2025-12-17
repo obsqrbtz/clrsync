@@ -133,8 +133,8 @@ void setup_main_dockspace(bool& first_time)
         }
 
         ImGui::DockBuilderDockWindow("Color Schemes", right);
-        ImGui::DockBuilderDockWindow("Templates", center);
         ImGui::DockBuilderDockWindow("Color Preview", center);
+        ImGui::DockBuilderDockWindow("Templates", center);
         
         ImGui::DockBuilderFinish(dockspace_id);
     }

@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <format>
 #include <stdexcept>
-#include <unordered_map>
 
 namespace clrsync::core
 {

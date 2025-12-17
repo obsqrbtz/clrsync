@@ -35,6 +35,7 @@ if(WIN32)
         comdlg32
         shlwapi
     )
+    set_target_properties(clrsync_gui PROPERTIES WIN32_EXECUTABLE TRUE)
 elseif(APPLE)
     target_link_libraries(clrsync_gui PRIVATE
         clrsync_core

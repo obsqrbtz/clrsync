@@ -131,16 +131,6 @@ void color_table_renderer::render(const clrsync::core::palette& current,
             ImGui::SetTooltip("Clear filter");
     }
     
-    ImGui::SameLine();
-    ImGui::TextDisabled("(?)");
-    if (ImGui::IsItemHovered())
-    {
-        ImGui::BeginTooltip();
-        ImGui::TextUnformatted("Click on a color name to copy its template variable");
-        ImGui::TextUnformatted("Example: clicking 'background' copies {background.hex}");
-        ImGui::EndTooltip();
-    }
-    
     ImGui::PopStyleVar();
     
     ImGui::Spacing();
