@@ -65,3 +65,4 @@ if(WAYLAND_EGL_FOUND)
     list(APPEND WAYLAND_LIBS ${WAYLAND_EGL_LIBRARIES})
     message(STATUS "Found Wayland EGL")
 endif()
+

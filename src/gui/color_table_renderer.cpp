@@ -1,5 +1,4 @@
 #include "color_table_renderer.hpp"
-#include "screen_eyedropper.hpp"
 #include "imgui.h"
 #include <vector>
 
@@ -9,8 +8,6 @@ void color_table_renderer::render_color_row(const std::string &name,
                                             const OnColorChangedCallback& on_changed)
 {
     const clrsync::core::color &col = current.get_color(name);
-
-    const bool is_picking = m_screen_pick.active && m_screen_pick.key == name;
 
     ImGui::TableNextRow();
 
@@ -54,35 +51,11 @@ void color_table_renderer::render_color_row(const std::string &name,
     float c[4] = {((col.hex() >> 24) & 0xFF) / 255.0f, ((col.hex() >> 16) & 0xFF) / 255.0f,
                   ((col.hex() >> 8) & 0xFF) / 255.0f, (col.hex() & 0xFF) / 255.0f};
 
-    if (is_picking)
-    {
-        float sampled_rgb[3];
-        if (clrsync::gui::sample_screen_rgb(sampled_rgb))
-        {
-            m_screen_pick.rgba[0] = sampled_rgb[0];
-            m_screen_pick.rgba[1] = sampled_rgb[1];
-            m_screen_pick.rgba[2] = sampled_rgb[2];
-            m_screen_pick.rgba[3] = m_screen_pick.alpha;
-            m_screen_pick.has_sample = true;
-        }
-
-        if (m_screen_pick.has_sample)
-        {
-            c[0] = m_screen_pick.rgba[0];
-            c[1] = m_screen_pick.rgba[1];
-            c[2] = m_screen_pick.rgba[2];
-            c[3] = m_screen_pick.rgba[3];
-        }
-    }
-
     ImGui::SetNextItemWidth(-FLT_MIN);
     if (ImGui::ColorEdit4(("##color_" + name).c_str(), c,
                           ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel |
                               ImGuiColorEditFlags_AlphaBar))
     {
-        if (is_picking)
-            m_screen_pick.active = false;
-
         uint32_t r = (uint32_t)(c[0] * 255.0f);
         uint32_t g = (uint32_t)(c[1] * 255.0f);
         uint32_t b = (uint32_t)(c[2] * 255.0f);
@@ -92,51 +65,6 @@ void color_table_renderer::render_color_row(const std::string &name,
         controller.set_color(name, clrsync::core::color(hex));
         if (on_changed)
             on_changed();
-    }
-
-    ImGui::SameLine();
-    if (!is_picking)
-    {
-        if (ImGui::Button("Pick"))
-        {
-            m_screen_pick.active = true;
-            m_screen_pick.key = name;
-            m_screen_pick.alpha = c[3];
-            m_screen_pick.has_sample = false;
-        }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-            ImGui::SetTooltip("Pick a color from anywhere on the screen");
-    }
-    else
-    {
-        if (ImGui::Button("Cancel"))
-        {
-            m_screen_pick.active = false;
-        }
-
-        const bool confirm =
-            ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter) ||
-            ImGui::IsKeyPressed(ImGuiKey_Space);
-        const bool cancel = ImGui::IsKeyPressed(ImGuiKey_Escape);
-
-        if (cancel)
-        {
-            m_screen_pick.active = false;
-        }
-        else if (confirm && m_screen_pick.has_sample)
-        {
-            uint32_t r = (uint32_t)(c[0] * 255.0f);
-            uint32_t g = (uint32_t)(c[1] * 255.0f);
-            uint32_t b = (uint32_t)(c[2] * 255.0f);
-            uint32_t a = (uint32_t)(c[3] * 255.0f);
-            uint32_t hex = (r << 24) | (g << 16) | (b << 8) | a;
-
-            controller.set_color(name, clrsync::core::color(hex));
-            if (on_changed)
-                on_changed();
-
-            m_screen_pick.active = false;
-        }
     }
 
     ImGui::PopID();
@@ -154,13 +82,6 @@ void color_table_renderer::render(const clrsync::core::palette& current,
 
     ImGui::Text("Color Variables");
     ImGui::Separator();
-
-    if (m_screen_pick.active)
-    {
-        ImGui::TextUnformatted(
-            "Screen picker active: move cursor anywhere, press Enter/Space to pick, Esc to cancel");
-        ImGui::Spacing();
-    }
 
     auto draw_table = [&](const char *title, const std::vector<const char *> &keys) {
         ImGui::TextUnformatted(title);
