@@ -16,6 +16,7 @@
   zlib,
   bzip2,
   wayland-scanner,
+  gtk3,
   semver
 }:
 
