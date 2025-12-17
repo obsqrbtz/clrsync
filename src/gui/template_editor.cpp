@@ -1,14 +1,33 @@
 #include "template_editor.hpp"
 #include "core/config/config.hpp"
 #include "core/theme/theme_template.hpp"
+#include "core/palette/color_keys.hpp"
 #include "core/utils.hpp"
 #include "imgui.h"
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <ranges>
 
+namespace {
+    const std::vector<std::string> COLOR_FORMATS = {
+        "hex", "hex_stripped", "hexa", "hexa_stripped",
+        "r", "g", "b", "a",
+        "rgb", "rgba",
+        "h", "s", "l",
+        "hsl", "hsla"
+    };
+}
+
 template_editor::template_editor() : m_template_name("new_template")
 {
+    m_autocomplete_bg_color = ImVec4(0.12f, 0.12f, 0.15f, 0.98f);
+    m_autocomplete_border_color = ImVec4(0.4f, 0.4f, 0.45f, 1.0f);
+    m_autocomplete_selected_color = ImVec4(0.25f, 0.45f, 0.75f, 0.9f);
+    m_autocomplete_text_color = ImVec4(0.85f, 0.85f, 0.9f, 1.0f);
+    m_autocomplete_selected_text_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    m_autocomplete_dim_text_color = ImVec4(0.6f, 0.6f, 0.7f, 1.0f);
+    
     TextEditor::LanguageDefinition lang;
     lang.mName = "Template";
 
@@ -96,6 +115,258 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
         get_color_u32("border_focused", "border");
 
     m_editor.SetPalette(palette);
+    
+    // Update autocomplete colors from palette
+    auto convert_to_imvec4 = [&](const std::string &key, const std::string &fallback = "") -> ImVec4 {
+        auto it = colors.find(key);
+        if (it == colors.end() && !fallback.empty())
+        {
+            it = colors.find(fallback);
+        }
+        
+        if (it != colors.end())
+        {
+            const auto &col = it->second;
+            const uint32_t hex = col.hex();
+            const float r = ((hex >> 24) & 0xFF) / 255.0f;
+            const float g = ((hex >> 16) & 0xFF) / 255.0f;
+            const float b = ((hex >> 8) & 0xFF) / 255.0f;
+            const float a = (hex & 0xFF) / 255.0f;
+            return ImVec4(r, g, b, a);
+        }
+        return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+    };
+    
+    m_autocomplete_bg_color = convert_to_imvec4("editor_background", "background");
+    m_autocomplete_bg_color.w = 0.98f;
+    m_autocomplete_border_color = convert_to_imvec4("border", "editor_inactive");
+    m_autocomplete_selected_color = convert_to_imvec4("editor_selected", "surface_variant");
+    m_autocomplete_text_color = convert_to_imvec4("editor_main", "foreground");
+    m_autocomplete_selected_text_color = convert_to_imvec4("foreground", "editor_main");
+    m_autocomplete_dim_text_color = convert_to_imvec4("editor_comment", "editor_inactive");
+}
+
+void template_editor::update_autocomplete_suggestions()
+{
+    m_autocomplete_suggestions.clear();
+    
+    auto cursor = m_editor.GetCursorPosition();
+    std::string line = m_editor.GetCurrentLineText();
+    int col = cursor.mColumn;
+    
+    // Check if inside '{'
+    int brace_pos = -1;
+    for (int i = col - 1; i >= 0; --i)
+    {
+        if (i < (int)line.length())
+        {
+            if (line[i] == '{')
+            {
+                brace_pos = i;
+                break;
+            }
+            else if (line[i] == '}' || line[i] == ' ' || line[i] == '\t')
+            {
+                break;
+            }
+        }
+    }
+    
+    if (brace_pos < 0)
+    {
+        m_show_autocomplete = false;
+        m_autocomplete_dismissed = false; 
+        return;
+    }
+    
+    if (m_autocomplete_dismissed)
+    {
+        bool should_reset_dismissal = false;
+        
+        if (cursor.mLine != m_dismiss_position.mLine ||
+            brace_pos != m_dismiss_brace_pos ||
+            abs(cursor.mColumn - m_dismiss_position.mColumn) > 3)
+        {
+            should_reset_dismissal = true;
+        }
+        
+        if (should_reset_dismissal)
+        {
+            m_autocomplete_dismissed = false;
+        }
+        else
+        {
+            m_show_autocomplete = false;
+            return;
+        }
+    }
+    
+    m_autocomplete_prefix = line.substr(brace_pos + 1, col - brace_pos - 1);
+    m_autocomplete_start_pos = TextEditor::Coordinates(cursor.mLine, brace_pos + 1);
+    
+    size_t dot_pos = m_autocomplete_prefix.find('.');
+    
+    if (dot_pos != std::string::npos)
+    {
+        std::string color_key = m_autocomplete_prefix.substr(0, dot_pos);
+        std::string format_prefix = m_autocomplete_prefix.substr(dot_pos + 1);
+        
+        bool valid_key = false;
+        for (size_t i = 0; i < clrsync::core::NUM_COLOR_KEYS; ++i)
+        {
+            if (clrsync::core::COLOR_KEYS[i] == color_key)
+            {
+                valid_key = true;
+                break;
+            }
+        }
+        
+        if (valid_key)
+        {
+            for (const auto &fmt : COLOR_FORMATS)
+            {
+                if (format_prefix.empty() || 
+                    fmt.find(format_prefix) == 0 ||
+                    fmt.find(format_prefix) != std::string::npos)
+                {
+                    m_autocomplete_suggestions.push_back(color_key + "." + fmt);
+                }
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < clrsync::core::NUM_COLOR_KEYS; ++i)
+        {
+            std::string key = clrsync::core::COLOR_KEYS[i];
+            if (m_autocomplete_prefix.empty() || 
+                key.find(m_autocomplete_prefix) == 0 ||
+                key.find(m_autocomplete_prefix) != std::string::npos)
+            {
+                m_autocomplete_suggestions.push_back(key);
+            }
+        }
+    }
+    
+    std::sort(m_autocomplete_suggestions.begin(), m_autocomplete_suggestions.end(),
+        [this](const std::string &a, const std::string &b) {
+            bool a_prefix = a.find(m_autocomplete_prefix) == 0;
+            bool b_prefix = b.find(m_autocomplete_prefix) == 0;
+            if (a_prefix != b_prefix)
+                return a_prefix;
+            return a < b;
+        });
+    
+    m_show_autocomplete = !m_autocomplete_suggestions.empty();
+    if (m_show_autocomplete && m_autocomplete_selected >= (int)m_autocomplete_suggestions.size())
+    {
+        m_autocomplete_selected = 0;
+    }
+}
+
+void template_editor::render_autocomplete(const ImVec2& editor_pos)
+{
+    if (!m_show_autocomplete || m_autocomplete_suggestions.empty())
+        return;
+    
+    float line_height = ImGui::GetTextLineHeightWithSpacing();
+    float char_width = ImGui::GetFontSize() * 0.5f;
+    auto cursor = m_editor.GetCursorPosition();
+    
+    const float line_number_width = 50.0f;
+    
+    ImVec2 popup_pos;
+    popup_pos.x = editor_pos.x + line_number_width + (m_autocomplete_start_pos.mColumn * char_width);
+    popup_pos.y = editor_pos.y + ((cursor.mLine + 1) * line_height);
+    
+    ImGui::SetNextWindowPos(popup_pos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(300, 0));
+    
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
+                             ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize;
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6, 6));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 2));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, m_autocomplete_bg_color);
+    ImGui::PushStyleColor(ImGuiCol_Border, m_autocomplete_border_color);
+    
+    if (ImGui::Begin("##autocomplete", nullptr, flags))
+    {
+        ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
+        if (m_autocomplete_prefix.find('.') != std::string::npos)
+            ImGui::Text("Formats");
+        else
+            ImGui::Text("Color Keys");
+        ImGui::PopStyleColor();
+        ImGui::Separator();
+        
+        int max_items = std::min((int)m_autocomplete_suggestions.size(), 8);
+        
+        for (int i = 0; i < max_items; ++i)
+        {
+            const auto &suggestion = m_autocomplete_suggestions[i];
+            bool is_selected = (i == m_autocomplete_selected);
+            
+            if (is_selected)
+            {
+                ImVec4 selected_hover = m_autocomplete_selected_color;
+                selected_hover.w = std::min(selected_hover.w + 0.1f, 1.0f);
+                ImGui::PushStyleColor(ImGuiCol_Header, m_autocomplete_selected_color);
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, selected_hover);
+                ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_selected_text_color);
+            }
+            else
+            {
+                ImVec4 normal_bg = m_autocomplete_bg_color;
+                normal_bg.w = 0.5f;
+                ImVec4 hover_bg = m_autocomplete_selected_color;
+                hover_bg.w = 0.3f;
+                ImGui::PushStyleColor(ImGuiCol_Header, normal_bg);
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, hover_bg);
+                ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_text_color);
+            }
+            
+            std::string display_text = "  " + suggestion;
+            
+            if (ImGui::Selectable(display_text.c_str(), is_selected, 
+                                  ImGuiSelectableFlags_None, ImVec2(0, 0)))
+            {
+                auto start = m_autocomplete_start_pos;
+                auto end = m_editor.GetCursorPosition();
+                m_editor.SetSelection(start, end);
+                m_editor.Delete();
+                m_editor.InsertText(suggestion + "}");
+                m_show_autocomplete = false;
+                m_autocomplete_dismissed = false;
+            }
+            
+            ImGui::PopStyleColor(3);
+            
+            if (is_selected && ImGui::IsWindowAppearing())
+            {
+                ImGui::SetScrollHereY();
+            }
+        }
+        
+        if (m_autocomplete_suggestions.size() > 8)
+        {
+            ImGui::Separator();
+            ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
+            ImGui::Text("  +%d more", (int)m_autocomplete_suggestions.size() - 8);
+            ImGui::PopStyleColor();
+        }
+        
+        ImGui::Separator();
+        ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
+        ImGui::Text("  Tab/Enter: accept | Esc: dismiss");
+        ImGui::PopStyleColor();
+    }
+    ImGui::End();
+    
+    ImGui::PopStyleColor(2);
+    ImGui::PopStyleVar(3);
 }
 
 void template_editor::render()
@@ -158,10 +429,14 @@ void template_editor::render()
 
 void template_editor::render_controls()
 {
-    if (ImGui::Button("New Template"))
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 8));
+    
+    if (ImGui::Button(" + New "))
     {
         new_template();
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Create a new template");
 
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
         ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_S))
@@ -170,28 +445,63 @@ void template_editor::render_controls()
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Save"))
+    if (ImGui::Button(" Save "))
     {
         save_template();
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Save template (Ctrl+S)");
 
     if (m_is_editing_existing)
     {
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
-        if (ImGui::Button("Delete"))
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.7f, 0.2f, 0.2f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.1f, 0.1f, 1.0f));
+        if (ImGui::Button(" Delete "))
         {
             delete_template();
         }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Delete this template");
         ImGui::PopStyleColor(3);
     }
 
     ImGui::SameLine();
-    ImGui::Text("Template Name:");
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(150.0f);
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
+    
+    bool enabled_changed = false;
+    if (m_enabled)
+    {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.2f, 0.5f, 0.2f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.3f, 0.6f, 0.3f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(0.4f, 0.9f, 0.4f, 1.0f));
+    }
+    else
+    {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.4f, 0.2f, 0.2f, 0.5f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.5f, 0.3f, 0.3f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, ImVec4(0.9f, 0.4f, 0.4f, 1.0f));
+    }
+    
+    enabled_changed = ImGui::Checkbox("Enabled", &m_enabled);
+    ImGui::PopStyleColor(3);
+    
+    if (enabled_changed && m_is_editing_existing)
+    {
+        m_template_controller.set_template_enabled(m_template_name, m_enabled);
+    }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Enable/disable this template for theme application");
+    
+    ImGui::PopStyleVar();
+    
+    ImGui::Spacing();
+    
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Name:");
+    ImGui::SameLine(80);
+    ImGui::SetNextItemWidth(180.0f);
     char name_buf[256] = {0};
     snprintf(name_buf, sizeof(name_buf), "%s", m_template_name.c_str());
     if (ImGui::InputText("##template_name", name_buf, sizeof(name_buf)))
@@ -202,22 +512,17 @@ void template_editor::render_controls()
             m_validation_error = "";
         }
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Unique name for this template");
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox("Enabled", &m_enabled))
-    {
-        if (m_is_editing_existing)
-        {
-            m_template_controller.set_template_enabled(m_template_name, m_enabled);
-        }
-    }
-
-    ImGui::Text("Input Path:");
-    ImGui::SameLine();
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Input:");
+    ImGui::SameLine(80);
     ImGui::SetNextItemWidth(-FLT_MIN);
     char input_path_buf[512] = {0};
     snprintf(input_path_buf, sizeof(input_path_buf), "%s", m_input_path.c_str());
-    if (ImGui::InputText("##input_path", input_path_buf, sizeof(input_path_buf)))
+    if (ImGui::InputTextWithHint("##input_path", "Path to template file...", 
+                                  input_path_buf, sizeof(input_path_buf)))
     {
         m_input_path = input_path_buf;
         if (!m_input_path.empty())
@@ -229,13 +534,17 @@ void template_editor::render_controls()
             m_template_controller.set_template_input_path(m_template_name, m_input_path);
         }
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Path where the template source file is stored");
 
-    ImGui::Text("Output Path:");
-    ImGui::SameLine();
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Output:");
+    ImGui::SameLine(80);
     ImGui::SetNextItemWidth(-FLT_MIN);
     char path_buf[512] = {0};
     snprintf(path_buf, sizeof(path_buf), "%s", m_output_path.c_str());
-    if (ImGui::InputText("##output_path", path_buf, sizeof(path_buf)))
+    if (ImGui::InputTextWithHint("##output_path", "Path for generated config...", 
+                                 path_buf, sizeof(path_buf)))
     {
         m_output_path = path_buf;
         if (!m_output_path.empty())
@@ -247,13 +556,17 @@ void template_editor::render_controls()
             m_template_controller.set_template_output_path(m_template_name, m_output_path);
         }
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Path where the processed config will be written");
 
-    ImGui::Text("Reload Command:");
-    ImGui::SameLine();
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Reload:");
+    ImGui::SameLine(80);
     ImGui::SetNextItemWidth(-FLT_MIN);
     char reload_buf[512] = {0};
     snprintf(reload_buf, sizeof(reload_buf), "%s", m_reload_command.c_str());
-    if (ImGui::InputText("##reload_cmd", reload_buf, sizeof(reload_buf)))
+    if (ImGui::InputTextWithHint("##reload_cmd", "Command to reload app (optional)...",
+                                 reload_buf, sizeof(reload_buf)))
     {
         m_reload_command = reload_buf;
         if (m_is_editing_existing)
@@ -261,10 +574,13 @@ void template_editor::render_controls()
             m_template_controller.set_template_reload_command(m_template_name, m_reload_command);
         }
     }
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Shell command to run after applying theme (e.g., 'pkill -USR1 kitty')");
 
     if (!m_validation_error.empty())
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+        ImGui::Spacing();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 0.4f, 1.0f));
         ImGui::TextWrapped("%s", m_validation_error.c_str());
         ImGui::PopStyleColor();
     }
@@ -272,15 +588,17 @@ void template_editor::render_controls()
 
 void template_editor::render_editor()
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
+    
     if (!m_is_editing_existing)
     {
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f));
-        ImGui::Text("New Template");
+        ImGui::Text("  New Template");
         ImGui::PopStyleColor();
     }
     else
     {
-        ImGui::Text("%s", m_template_name.c_str());
+        ImGui::Text("  %s", m_template_name.c_str());
         auto trim_right = [](const std::string &s) -> std::string {
             size_t end = s.find_last_not_of("\r\n");
             return (end == std::string::npos) ? "" : s.substr(0, end + 1);
@@ -294,39 +612,157 @@ void template_editor::render_editor()
         {
             ImGui::SameLine();
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.6f, 0.2f, 1.0f));
-            ImGui::Text("●");
+            ImGui::Text("(unsaved)");
             ImGui::PopStyleColor();
         }
     }
-
+    
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 30);
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered())
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 25.0f);
+        ImGui::TextUnformatted("Template Syntax:");
+        ImGui::Separator();
+        ImGui::TextUnformatted("Use {color_key.format} for color variables");
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Color Keys: background, foreground, accent, etc.");
+        ImGui::TextUnformatted("Formats: hex, rgb, rgba, r, g, b, hsl, hsla, etc.");
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Examples:");
+        ImGui::BulletText("{background.hex} -> #1E1E1E");
+        ImGui::BulletText("{accent.rgb} -> rgb(14,99,156)");
+        ImGui::BulletText("{foreground.r} -> 204");
+        ImGui::Spacing();
+        ImGui::TextUnformatted("Tip: Type '{' to trigger autocomplete!");
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+    
+    ImGui::PopStyleVar();
     ImGui::Separator();
 
+    bool consume_keys = false;
+    
+    if (m_show_autocomplete && ImGui::IsKeyPressed(ImGuiKey_Escape, false))
+    {
+        m_show_autocomplete = false;
+        m_autocomplete_dismissed = true;
+        
+        m_dismiss_position = m_editor.GetCursorPosition();
+        
+        std::string line = m_editor.GetCurrentLineText();
+        m_dismiss_brace_pos = -1;
+        for (int i = m_dismiss_position.mColumn - 1; i >= 0; --i)
+        {
+            if (i < (int)line.length() && line[i] == '{')
+            {
+                m_dismiss_brace_pos = i;
+                break;
+            }
+        }
+        
+        consume_keys = true;
+    }
+    else if (m_show_autocomplete && !m_autocomplete_suggestions.empty())
+    {
+        int max_visible = std::min((int)m_autocomplete_suggestions.size(), 8);
+        
+        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow, false))
+        {
+            m_autocomplete_selected = (m_autocomplete_selected + 1) % max_visible;
+            consume_keys = true;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_UpArrow, false))
+        {
+            m_autocomplete_selected = (m_autocomplete_selected - 1 + max_visible) % max_visible;
+            consume_keys = true;
+        }
+        else if (ImGui::IsKeyPressed(ImGuiKey_Tab, false) || 
+                 ImGui::IsKeyPressed(ImGuiKey_Enter, false))
+        {
+            auto start = m_autocomplete_start_pos;
+            auto end = m_editor.GetCursorPosition();
+            m_editor.SetSelection(start, end);
+            m_editor.Delete();
+            m_editor.InsertText(m_autocomplete_suggestions[m_autocomplete_selected] + "}");
+            m_show_autocomplete = false;
+            m_autocomplete_dismissed = false; 
+            consume_keys = true;
+        }
+    }
+    
+    if (consume_keys)
+    {
+        m_editor.SetHandleKeyboardInputs(false);
+    }
+
+    ImVec2 editor_pos = ImGui::GetCursorScreenPos();
+    
     m_editor.Render("##TemplateEditor", ImVec2(0, 0), true);
+    
+    if (consume_keys)
+    {
+        m_editor.SetHandleKeyboardInputs(true);
+    }
+    
+    update_autocomplete_suggestions();
+    render_autocomplete(editor_pos);
 }
 
 void template_editor::render_template_list()
 {
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
+    
     ImGui::Text("Templates");
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
+    ImGui::TextDisabled("(%d)", (int)m_template_controller.templates().size());
     ImGui::Separator();
 
     if (!m_is_editing_existing)
     {
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 0.4f, 1.0f));
-        ImGui::Selectable("* New Template *", true);
-        ImGui::PopStyleColor();
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.9f, 0.4f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.2f, 0.5f, 0.2f, 0.5f));
+        ImGui::Selectable("+ New Template", true);
+        ImGui::PopStyleColor(2);
         ImGui::Separator();
     }
 
     const auto &templates = m_template_controller.templates();
 
-    for (const auto &key : templates | std::views::keys)
+    for (const auto &[key, tmpl] : templates)
     {
         const bool selected = (m_template_name == key && m_is_editing_existing);
+        
+        if (!tmpl.enabled())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        }
+        
         if (ImGui::Selectable(key.c_str(), selected))
         {
             load_template(key);
         }
+        
+        if (!tmpl.enabled())
+        {
+            ImGui::PopStyleColor();
+        }
+        
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::Text("Template: %s", key.c_str());
+            ImGui::Separator();
+            ImGui::Text("Status: %s", tmpl.enabled() ? "Enabled" : "Disabled");
+            if (!tmpl.output_path().empty())
+                ImGui::Text("Output: %s", tmpl.output_path().c_str());
+            ImGui::EndTooltip();
+        }
     }
+    
+    ImGui::PopStyleVar();
 }
 
 bool template_editor::is_valid_path(const std::string &path)
@@ -423,7 +859,6 @@ void template_editor::save_template()
 
     std::filesystem::path template_file = clrsync::core::normalize_path(trimmed_input_path);
     
-    // Ensure the parent directory exists
     auto parent_dir = template_file.parent_path();
     if (!parent_dir.empty() && !std::filesystem::exists(parent_dir))
     {

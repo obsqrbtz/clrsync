@@ -20,6 +20,11 @@ private:
                          const clrsync::core::palette& palette,
                          palette_controller& controller,
                          const OnColorChangedCallback& on_changed);
+    
+    bool matches_filter(const std::string& name) const;
+    
+    char m_filter_text[128] = {0};
+    bool m_show_only_modified{false};
 };
 
 #endif // CLRSYNC_GUI_COLOR_TABLE_RENDERER_HPP
