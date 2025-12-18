@@ -9,8 +9,10 @@
 #include "core/config/config.hpp"
 #include "core/io/toml_file.hpp"
 
+#include "gui/backend/glfw_opengl.hpp"
 #include "gui/helpers/imgui_helpers.hpp"
 #include "gui/platform/font_loader.hpp"
+#include "gui/ui_manager.hpp"
 #include "gui/views/about_window.hpp"
 #include "gui/views/color_scheme_editor.hpp"
 #include "gui/views/settings_window.hpp"
@@ -35,32 +37,42 @@ int main(int, char **)
     static std::string ini_path = (base.parent_path() / "layout.ini").string();
     bool first_time = !std::filesystem::exists(ini_path);
 
-    GLFWwindow *window = init_glfw();
-    if (!window)
-        return 1;
+    printf("GLFW Version: %s\n", glfwGetVersionString());
 
-    printf("GLFV Version: %s\n", glfwGetVersionString());
+    auto backend = clrsync::gui::backend::glfw_opengl_backend();
+    auto window_config = clrsync::gui::backend::window_config();
+    window_config.title = "clrsync";
+    window_config.width = 1280;
+    window_config.height = 720;
+    window_config.transparent_framebuffer = true;
 
-    std::cout << "GLFW runtime platform: ";
-    switch (glfwGetPlatform())
+    if (!backend.initialize(window_config))
     {
-    case GLFW_PLATFORM_WAYLAND:
-        std::cout << "Wayland\n";
-        break;
-    case GLFW_PLATFORM_X11:
-        std::cout << "X11\n";
-        break;
-    case GLFW_PLATFORM_COCOA:
-        std::cout << "Cocoa\n";
-        break;
-    case GLFW_PLATFORM_WIN32:
-        std::cout << "Win32\n";
-        break;
-    default:
-        std::cout << "Unknown\n";
+        std::cerr << "Failed to initialize backend." << std::endl;
+        return 1;
     }
 
-    init_imgui(window, ini_path);
+    std::cout << "GLFW runtime platform: ";
+    switch (glfwGetPlatform()) {
+        case GLFW_PLATFORM_WAYLAND: std::cout << "Wayland\n"; break;
+        case GLFW_PLATFORM_X11: std::cout << "X11\n"; break;
+        case GLFW_PLATFORM_COCOA: std::cout << "Cocoa\n"; break;
+        case GLFW_PLATFORM_WIN32: std::cout << "Win32\n"; break;
+        default: std::cout << "Unknown\n";
+    }
+
+    clrsync::gui::ui_manager ui_manager(&backend);
+    
+    clrsync::gui::ui_config ui_cfg;
+    ui_cfg.ini_path = ini_path;
+    ui_cfg.enable_docking = true;
+    ui_cfg.enable_keyboard_nav = true;
+    
+    if (!ui_manager.initialize(ui_cfg))
+    {
+        std::cerr << "Failed to initialize UI manager." << std::endl;
+        return 1;
+    }
 
     font_loader loader;
 
@@ -80,11 +92,12 @@ int main(int, char **)
     templateEditor.apply_current_palette(colorEditor.controller().current_palette());
     settingsWindow.set_palette(colorEditor.controller().current_palette());
 
-    while (!glfwWindowShouldClose(window))
+    while (!backend.should_close())
     {
-        glfwPollEvents();
+        backend.begin_frame();
+        
         loader.push_default_font();
-        begin_frame();
+        ui_manager.begin_frame();
 
         render_menu_bar(&aboutWindow, &settingsWindow);
         setup_main_dockspace(first_time);
@@ -95,8 +108,12 @@ int main(int, char **)
         settingsWindow.render();
 
         loader.pop_font();
-        end_frame(window);
+        
+        ui_manager.end_frame();
+        backend.end_frame();
     }
-    shutdown(window);
+
+    ui_manager.shutdown();
+    backend.shutdown();
     return 0;
 }

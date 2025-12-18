@@ -21,6 +21,8 @@ set(GUI_SOURCES
         platform/linux/font_loader_linux.cpp
         platform/macos/font_loader_macos.cpp
         platform/windows/font_loader_windows.cpp
+        backend/glfw_opengl.cpp
+        ui_manager.cpp
 )
 
 if(WIN32)
