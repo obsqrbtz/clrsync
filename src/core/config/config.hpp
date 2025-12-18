@@ -24,6 +24,8 @@ class config
     const std::unordered_map<std::string, clrsync::core::theme_template> templates();
     Result<const clrsync::core::theme_template *> template_by_name(const std::string &name) const;
     std::filesystem::path get_user_config_dir();
+    std::filesystem::path get_user_state_dir();
+    std::filesystem::path get_writable_config_path();
 
     Result<void> set_default_theme(const std::string &theme);
     Result<void> set_palettes_path(const std::string &path);
@@ -42,7 +44,10 @@ class config
 
     std::string m_palettes_dir{};
     std::unique_ptr<io::file> m_file;
+    std::unique_ptr<io::file> m_temp_file; 
+    std::string m_temp_config_path;
     std::unordered_map<std::string, theme_template> m_themes{};
+    Result<void> save_config_value(const std::string &section, const std::string &key, const value_type &value);
     static void copy_file(const std::filesystem::path &src, const std::filesystem::path &dst);
     static void copy_dir(const std::filesystem::path &src, const std::filesystem::path &dst);
     void copy_default_configs();

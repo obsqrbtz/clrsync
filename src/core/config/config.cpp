@@ -1,6 +1,7 @@
 #include "config.hpp"
 #include "core/common/error.hpp"
 #include "core/common/utils.hpp"
+#include "core/io/toml_file.hpp"
 
 #include "core/palette/color.hpp"
 #include <filesystem>
@@ -31,6 +32,37 @@ Result<void> config::initialize(std::unique_ptr<clrsync::core::io::file> file)
         return Err<void>(error_code::config_invalid, parse_result.error().message,
                          parse_result.error().context);
 
+    std::filesystem::path config_path = get_user_config_dir() / "config.toml";
+    std::filesystem::path temp_config_path = get_user_config_dir() / "config-temp.toml";
+    
+    if (std::filesystem::exists(config_path))
+    {
+        std::error_code ec;
+        auto perms = std::filesystem::status(config_path, ec).permissions();
+        
+        if (ec || (perms & std::filesystem::perms::owner_write) == std::filesystem::perms::none)
+        {
+            m_temp_config_path = temp_config_path.string();
+            
+            if (std::filesystem::exists(temp_config_path))
+            {
+                try
+                {
+                    auto temp_conf = std::make_unique<clrsync::core::io::toml_file>(temp_config_path.string());
+                    auto temp_parse = temp_conf->parse();
+                    if (temp_parse)
+                    {
+                        m_temp_file = std::move(temp_conf);
+                    }
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << "Warning: Failed to load temp config: " << e.what() << std::endl;
+                }
+            }
+        }
+    }
+
     return Ok();
 }
 
@@ -38,6 +70,30 @@ std::filesystem::path config::get_user_config_dir()
 {
     std::filesystem::path home = normalize_path("~");
     return home / ".config" / "clrsync";
+}
+
+std::filesystem::path config::get_user_state_dir()
+{
+    std::filesystem::path home = normalize_path("~");
+    return home / ".local" / "state" / "clrsync";
+}
+
+std::filesystem::path config::get_writable_config_path()
+{
+    std::filesystem::path config_path = get_user_config_dir() / "config.toml";
+    
+    if (std::filesystem::exists(config_path))
+    {
+        std::error_code ec;
+        auto perms = std::filesystem::status(config_path, ec).permissions();
+        
+        if (ec || (perms & std::filesystem::perms::owner_write) == std::filesystem::perms::none)
+        {
+            return get_user_config_dir() / "config-temp.toml";
+        }
+    }
+    
+    return config_path;
 }
 
 std::filesystem::path config::get_data_dir()
@@ -135,15 +191,50 @@ void config::copy_default_configs()
     }
 }
 
+Result<void> config::save_config_value(const std::string &section, const std::string &key, const value_type &value)
+{
+    if (!m_temp_config_path.empty())
+    {
+        if (!m_temp_file)
+        {
+            m_temp_file = std::make_unique<clrsync::core::io::toml_file>(m_temp_config_path);
+            m_temp_file->parse();
+        }
+        
+        m_temp_file->set_value(section, key, value);
+        return m_temp_file->save_file();
+    }
+    
+    m_file->set_value(section, key, value);
+    return m_file->save_file();
+}
+
 const std::string &config::palettes_path()
 {
     if (m_palettes_dir.empty() && m_file)
+    {
+        if (m_temp_file)
+        {
+            auto temp_value = m_temp_file->get_string_value("general", "palettes_path");
+            if (!temp_value.empty())
+            {
+                m_palettes_dir = temp_value;
+                return m_palettes_dir;
+            }
+        }
         m_palettes_dir = m_file->get_string_value("general", "palettes_path");
+    }
     return m_palettes_dir;
 }
 
 const std::string config::default_theme() const
 {
+    if (m_temp_file)
+    {
+        auto temp_value = m_temp_file->get_string_value("general", "default_theme");
+        if (!temp_value.empty())
+            return temp_value;
+    }
     if (m_file)
         return m_file->get_string_value("general", "default_theme");
     return {};
@@ -151,6 +242,12 @@ const std::string config::default_theme() const
 
 const std::string config::font() const
 {
+    if (m_temp_file)
+    {
+        auto temp_value = m_temp_file->get_string_value("general", "font");
+        if (!temp_value.empty())
+            return temp_value;
+    }
     if (m_file)
         return m_file->get_string_value("general", "font");
     return {};
@@ -158,6 +255,12 @@ const std::string config::font() const
 
 const uint32_t config::font_size() const
 {
+    if (m_temp_file)
+    {
+        auto temp_value = m_temp_file->get_uint_value("general", "font_size");
+        if (temp_value != 0)
+            return temp_value;
+    }
     if (m_file)
         return m_file->get_uint_value("general", "font_size");
     return 14;
@@ -168,8 +271,7 @@ Result<void> config::set_default_theme(const std::string &theme)
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
 
-    m_file->set_value("general", "default_theme", theme);
-    return m_file->save_file();
+    return save_config_value("general", "default_theme", theme);
 }
 
 Result<void> config::set_palettes_path(const std::string &path)
@@ -177,8 +279,7 @@ Result<void> config::set_palettes_path(const std::string &path)
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
 
-    m_file->set_value("general", "palettes_path", path);
-    return m_file->save_file();
+    return save_config_value("general", "palettes_path", path);
 }
 
 Result<void> config::set_font(const std::string &font)
@@ -186,16 +287,14 @@ Result<void> config::set_font(const std::string &font)
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
 
-    m_file->set_value("general", "font", font);
-    return m_file->save_file();
+    return save_config_value("general", "font", font);
 }
 Result<void> config::set_font_size(int font_size)
 {
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
 
-    m_file->set_value("general", "font_size", font_size);
-    return m_file->save_file();
+    return save_config_value("general", "font_size", static_cast<uint32_t>(font_size));
 }
 
 Result<void> config::update_template(const std::string &key,
@@ -205,11 +304,17 @@ Result<void> config::update_template(const std::string &key,
         return Err<void>(error_code::config_missing, "Configuration not initialized");
 
     m_themes[key] = theme_template;
-    m_file->set_value("templates." + key, "input_path", theme_template.template_path());
-    m_file->set_value("templates." + key, "output_path", theme_template.output_path());
-    m_file->set_value("templates." + key, "enabled", theme_template.enabled());
-    m_file->set_value("templates." + key, "reload_cmd", theme_template.reload_command());
-    return m_file->save_file();
+    
+    auto result1 = save_config_value("templates." + key, "input_path", theme_template.template_path());
+    if (!result1) return result1;
+    
+    auto result2 = save_config_value("templates." + key, "output_path", theme_template.output_path());
+    if (!result2) return result2;
+    
+    auto result3 = save_config_value("templates." + key, "enabled", theme_template.enabled());
+    if (!result3) return result3;
+    
+    return save_config_value("templates." + key, "reload_cmd", theme_template.reload_command());
 }
 
 Result<void> config::remove_template(const std::string &key)
@@ -237,8 +342,18 @@ Result<void> config::remove_template(const std::string &key)
 
     m_themes.erase(it);
 
+    if (!m_temp_config_path.empty())
+    {
+        if (!m_temp_file)
+        {
+            m_temp_file = std::make_unique<clrsync::core::io::toml_file>(m_temp_config_path);
+            m_temp_file->parse();
+        }
+        m_temp_file->remove_section("templates." + key);
+        return m_temp_file->save_file();
+    }
+    
     m_file->remove_section("templates." + key);
-
     return m_file->save_file();
 }
 
