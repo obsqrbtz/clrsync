@@ -60,7 +60,7 @@ class color
 
     const std::string to_hex_string_with_alpha() const;
 
-    std::string format(const std::string& field) const;
+    std::string format(const std::string &field) const;
 
     void set(uint32_t hex);
 

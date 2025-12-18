@@ -3,30 +3,30 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-
 #include "core/config/config.hpp"
+#include "core/error.hpp"
 #include "core/io/toml_file.hpp"
 #include "core/utils.hpp"
-#include "core/error.hpp"
 
-#include "color_scheme_editor.hpp"
-#include "gui/font_loader.hpp"
-#include "gui/settings_window.hpp"
-#include "imgui_helpers.hpp"
-#include "template_editor.hpp"
-#include "about_window.hpp"
+#include "gui/helpers/imgui_helpers.hpp"
+#include "gui/platform/font_loader.hpp"
+#include "gui/views/about_window.hpp"
+#include "gui/views/color_scheme_editor.hpp"
+#include "gui/views/settings_window.hpp"
+#include "gui/views/template_editor.hpp"
 
-
-int main(int, char**)
+int main(int, char **)
 {
     auto config_path = clrsync::core::get_default_config_path();
     auto conf = std::make_unique<clrsync::core::io::toml_file>(config_path);
-    
+
     auto init_result = clrsync::core::config::instance().initialize(std::move(conf));
     if (!init_result)
     {
         std::cerr << "Fatal error: " << init_result.error().description() << std::endl;
-        std::cerr << "Hint: Set CLRSYNC_CONFIG_PATH environment variable or ensure config exists at: " << config_path << std::endl;
+        std::cerr
+            << "Hint: Set CLRSYNC_CONFIG_PATH environment variable or ensure config exists at: "
+            << config_path << std::endl;
         return 1;
     }
 
@@ -34,27 +34,37 @@ int main(int, char**)
     static std::string ini_path = (base.parent_path() / "layout.ini").string();
     bool first_time = !std::filesystem::exists(ini_path);
 
-    GLFWwindow* window = init_glfw();
-    if (!window) return 1;
+    GLFWwindow *window = init_glfw();
+    if (!window)
+        return 1;
 
     printf("GLFV Version: %s\n", glfwGetVersionString());
 
     std::cout << "GLFW runtime platform: ";
-    switch (glfwGetPlatform()) {
-        case GLFW_PLATFORM_WAYLAND: std::cout << "Wayland\n"; break;
-        case GLFW_PLATFORM_X11: std::cout << "X11\n"; break;
-        case GLFW_PLATFORM_COCOA: std::cout << "Cocoa\n"; break;
-        case GLFW_PLATFORM_WIN32: std::cout << "Win32\n"; break;
-        default: std::cout << "Unknown\n";
+    switch (glfwGetPlatform())
+    {
+    case GLFW_PLATFORM_WAYLAND:
+        std::cout << "Wayland\n";
+        break;
+    case GLFW_PLATFORM_X11:
+        std::cout << "X11\n";
+        break;
+    case GLFW_PLATFORM_COCOA:
+        std::cout << "Cocoa\n";
+        break;
+    case GLFW_PLATFORM_WIN32:
+        std::cout << "Win32\n";
+        break;
+    default:
+        std::cout << "Unknown\n";
     }
-
 
     init_imgui(window, ini_path);
 
     font_loader loader;
 
-    ImFont* font =
-        loader.load_font(clrsync::core::config::instance().font().c_str(), clrsync::core::config::instance().font_size());
+    ImFont *font = loader.load_font(clrsync::core::config::instance().font().c_str(),
+                                    clrsync::core::config::instance().font_size());
 
     if (font)
         ImGui::GetIO().FontDefault = font;
@@ -63,7 +73,7 @@ int main(int, char**)
     template_editor templateEditor;
     about_window aboutWindow;
     settings_window settingsWindow;
-    
+
     colorEditor.set_template_editor(&templateEditor);
     colorEditor.set_settings_window(&settingsWindow);
     templateEditor.apply_current_palette(colorEditor.controller().current_palette());
@@ -76,7 +86,7 @@ int main(int, char**)
         begin_frame();
 
         render_menu_bar(&aboutWindow, &settingsWindow);
-        setup_main_dockspace(first_time); 
+        setup_main_dockspace(first_time);
         templateEditor.render();
         colorEditor.render_controls_and_colors();
         colorEditor.render_preview();

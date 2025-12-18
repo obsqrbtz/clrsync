@@ -1,46 +1,46 @@
-#include "color_table_renderer.hpp"
-#include "imgui_helpers.hpp"
+#include "gui/views/color_table_renderer.hpp"
+#include "gui/helpers/imgui_helpers.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <cctype>
 #include <vector>
 
-bool color_table_renderer::matches_filter(const std::string& name) const
+bool color_table_renderer::matches_filter(const std::string &name) const
 {
     if (m_filter_text[0] == '\0')
         return true;
-    
+
     std::string filter_lower = m_filter_text;
     std::string name_lower = name;
-    
+
     std::transform(filter_lower.begin(), filter_lower.end(), filter_lower.begin(),
                    [](unsigned char c) { return std::tolower(c); });
     std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(),
                    [](unsigned char c) { return std::tolower(c); });
-    
+
     return name_lower.find(filter_lower) != std::string::npos;
 }
 
 void color_table_renderer::render_color_row(const std::string &name,
-                                            const clrsync::core::palette& current,
-                                            palette_controller& controller,
-                                            const OnColorChangedCallback& on_changed)
+                                            const clrsync::core::palette &current,
+                                            palette_controller &controller,
+                                            const OnColorChangedCallback &on_changed)
 {
     if (!matches_filter(name))
         return;
-    
+
     const clrsync::core::color &col = current.get_color(name);
 
     ImGui::TableNextRow();
 
     ImGui::TableSetColumnIndex(0);
     const float key_col_width = ImGui::GetContentRegionAvail().x;
-    
+
     ImVec4 text_color = palette_utils::get_color(current, "info", "accent");
     ImGui::PushStyleColor(ImGuiCol_Text, text_color);
     const bool copied = ImGui::Selectable(name.c_str(), false, 0, ImVec2(key_col_width, 0.0f));
     ImGui::PopStyleColor();
-    
+
     if (ImGui::IsItemHovered())
     {
         ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
@@ -101,9 +101,9 @@ void color_table_renderer::render_color_row(const std::string &name,
     ImGui::PopID();
 }
 
-void color_table_renderer::render(const clrsync::core::palette& current,
-                                  palette_controller& controller,
-                                  const OnColorChangedCallback& on_changed)
+void color_table_renderer::render(const clrsync::core::palette &current,
+                                  palette_controller &controller,
+                                  const OnColorChangedCallback &on_changed)
 {
     if (current.colors().empty())
     {
@@ -113,13 +113,13 @@ void color_table_renderer::render(const clrsync::core::palette& current,
     }
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
-    
+
     ImGui::Text("Filter:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(200);
-    bool filter_changed = ImGui::InputTextWithHint("##color_filter", "Search colors...", 
-                                                    m_filter_text, sizeof(m_filter_text));
-    
+    bool filter_changed = ImGui::InputTextWithHint("##color_filter", "Search colors...",
+                                                   m_filter_text, sizeof(m_filter_text));
+
     if (m_filter_text[0] != '\0')
     {
         ImGui::SameLine();
@@ -131,14 +131,15 @@ void color_table_renderer::render(const clrsync::core::palette& current,
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Clear filter");
     }
-    
+
     ImGui::PopStyleVar();
-    
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
 
-    auto draw_table = [&](const char *title, const char* id, const std::vector<const char *> &keys) {
+    auto draw_table = [&](const char *title, const char *id,
+                          const std::vector<const char *> &keys) {
         bool has_matches = false;
         for (auto *k : keys)
         {
@@ -148,18 +149,20 @@ void color_table_renderer::render(const clrsync::core::palette& current,
                 break;
             }
         }
-        
+
         if (!has_matches)
             return;
-        
+
         ImGui::PushStyleColor(ImGuiCol_Text, palette_utils::get_color(current, "accent"));
-        bool header_open = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth);
+        bool header_open = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_DefaultOpen |
+                                                        ImGuiTreeNodeFlags_SpanAvailWidth);
         ImGui::PopStyleColor();
-        
+
         if (header_open)
         {
-            if (ImGui::BeginTable(id, 3, 
-                ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp))
+            if (ImGui::BeginTable(id, 3,
+                                  ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
+                                      ImGuiTableFlags_SizingStretchProp))
             {
                 ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 160.0f);
                 ImGui::TableSetupColumn("HEX", ImGuiTableColumnFlags_WidthFixed, 95.0f);
@@ -177,23 +180,23 @@ void color_table_renderer::render(const clrsync::core::palette& current,
         ImGui::Spacing();
     };
 
-    draw_table("General UI", "##general_ui", {"background", "on_background", "surface", "on_surface",
-                              "surface_variant", "on_surface_variant", "foreground",
-                              "cursor", "accent"});
+    draw_table("General UI", "##general_ui",
+               {"background", "on_background", "surface", "on_surface", "surface_variant",
+                "on_surface_variant", "foreground", "cursor", "accent"});
 
     draw_table("Borders", "##borders", {"border_focused", "border"});
 
-    draw_table("Semantic Colors", "##semantic", {"success", "info", "warning", "error",
-                                   "on_success", "on_info", "on_warning", "on_error"});
+    draw_table(
+        "Semantic Colors", "##semantic",
+        {"success", "info", "warning", "error", "on_success", "on_info", "on_warning", "on_error"});
 
-    draw_table("Editor", "##editor", {"editor_background", "editor_command", "editor_comment",
-                          "editor_disabled", "editor_emphasis", "editor_error",
-                          "editor_inactive", "editor_line_number", "editor_link",
-                          "editor_main", "editor_selected", "editor_selection_inactive",
-                          "editor_string", "editor_success", "editor_warning"});
+    draw_table("Editor", "##editor",
+               {"editor_background", "editor_command", "editor_comment", "editor_disabled",
+                "editor_emphasis", "editor_error", "editor_inactive", "editor_line_number",
+                "editor_link", "editor_main", "editor_selected", "editor_selection_inactive",
+                "editor_string", "editor_success", "editor_warning"});
 
-    draw_table("Terminal (Base16)", "##terminal", {"base00", "base01", "base02", "base03",
-                                     "base04", "base05", "base06", "base07",
-                                     "base08", "base09", "base0A", "base0B",
-                                     "base0C", "base0D", "base0E", "base0F"});
+    draw_table("Terminal (Base16)", "##terminal",
+               {"base00", "base01", "base02", "base03", "base04", "base05", "base06", "base07",
+                "base08", "base09", "base0A", "base0B", "base0C", "base0D", "base0E", "base0F"});
 }

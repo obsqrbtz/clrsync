@@ -6,12 +6,10 @@
 #include <string>
 #include <unordered_map>
 
-
 namespace clrsync::core
 {
 
-template <typename FileType>
-class template_manager
+template <typename FileType> class template_manager
 {
   public:
     template_manager() = default;

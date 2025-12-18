@@ -1,13 +1,13 @@
 #include "about_window.hpp"
 #include "core/version.hpp"
-#include "imgui_helpers.hpp"
+#include "gui/helpers/imgui_helpers.hpp"
 #include "imgui.h"
 
 about_window::about_window()
 {
 }
 
-void about_window::render(const clrsync::core::palette& pal)
+void about_window::render(const clrsync::core::palette &pal)
 {
     if (!m_visible)
         return;

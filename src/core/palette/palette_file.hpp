@@ -26,7 +26,7 @@ template <typename FileType> class palette_file
         if (!m_file->parse())
             return false;
         m_palette.set_name(m_file->get_string_value("general", "name"));
-        
+
         for (const auto &color_key : COLOR_KEYS)
         {
             auto it = DEFAULT_COLORS.find(color_key);
@@ -35,7 +35,7 @@ template <typename FileType> class palette_file
                 m_palette.set_color(color_key, core::color(it->second));
             }
         }
-        
+
         for (const auto &color_key : COLOR_KEYS)
         {
             auto color_str = m_file->get_string_value("colors", color_key);

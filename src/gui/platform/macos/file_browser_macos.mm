@@ -1,7 +1,6 @@
-#include "file_browser.hpp"
-#include <filesystem>
-
 #ifdef __APPLE__
+#include "gui/platform/file_browser.hpp"
+#include <filesystem>
 #include <Cocoa/Cocoa.h>
 
 namespace file_dialogs {
@@ -76,5 +75,4 @@ std::string select_folder_dialog(const std::string& title,
 }
 
 }
-
 #endif

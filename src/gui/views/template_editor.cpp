@@ -1,24 +1,21 @@
 #include "template_editor.hpp"
 #include "core/config/config.hpp"
-#include "core/theme/theme_template.hpp"
 #include "core/palette/color_keys.hpp"
+#include "core/theme/theme_template.hpp"
 #include "core/utils.hpp"
-#include "imgui_helpers.hpp"
-#include "file_browser.hpp"
+#include "gui/helpers/imgui_helpers.hpp"
+#include "gui/platform/file_browser.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <ranges>
 
-namespace {
-    const std::vector<std::string> COLOR_FORMATS = {
-        "hex", "hex_stripped", "hexa", "hexa_stripped",
-        "r", "g", "b", "a",
-        "rgb", "rgba",
-        "h", "s", "l",
-        "hsl", "hsla"
-    };
+namespace
+{
+const std::vector<std::string> COLOR_FORMATS = {
+    "hex", "hex_stripped", "hexa", "hexa_stripped", "r", "g", "b", "a", "rgb", "rgba", "h", "s",
+    "l",   "hsl",          "hsla"};
 }
 
 template_editor::template_editor() : m_template_name("new_template")
@@ -29,7 +26,7 @@ template_editor::template_editor() : m_template_name("new_template")
     m_autocomplete_text_color = ImVec4(0.85f, 0.85f, 0.9f, 1.0f);
     m_autocomplete_selected_text_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
     m_autocomplete_dim_text_color = ImVec4(0.6f, 0.6f, 0.7f, 1.0f);
-    
+
     TextEditor::LanguageDefinition lang;
     lang.mName = "Template";
 
@@ -101,24 +98,25 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
         get_color_u32("border_focused", "border");
 
     m_editor.SetPalette(palette);
-    
+
     m_autocomplete_bg_color = palette_utils::get_color(pal, "surface", "background");
     m_autocomplete_bg_color.w = 0.98f;
     m_autocomplete_border_color = palette_utils::get_color(pal, "border", "surface_variant");
     m_autocomplete_selected_color = palette_utils::get_color(pal, "accent", "surface_variant");
     m_autocomplete_text_color = palette_utils::get_color(pal, "on_surface", "foreground");
     m_autocomplete_selected_text_color = palette_utils::get_color(pal, "on_surface", "foreground");
-    m_autocomplete_dim_text_color = palette_utils::get_color(pal, "on_surface_variant", "editor_inactive");
+    m_autocomplete_dim_text_color =
+        palette_utils::get_color(pal, "on_surface_variant", "editor_inactive");
 }
 
 void template_editor::update_autocomplete_suggestions()
 {
     m_autocomplete_suggestions.clear();
-    
+
     auto cursor = m_editor.GetCursorPosition();
     std::string line = m_editor.GetCurrentLineText();
     int col = cursor.mColumn;
-    
+
     // Check if inside '{'
     int brace_pos = -1;
     for (int i = col - 1; i >= 0; --i)
@@ -136,25 +134,24 @@ void template_editor::update_autocomplete_suggestions()
             }
         }
     }
-    
+
     if (brace_pos < 0)
     {
         m_show_autocomplete = false;
-        m_autocomplete_dismissed = false; 
+        m_autocomplete_dismissed = false;
         return;
     }
-    
+
     if (m_autocomplete_dismissed)
     {
         bool should_reset_dismissal = false;
-        
-        if (cursor.mLine != m_dismiss_position.mLine ||
-            brace_pos != m_dismiss_brace_pos ||
+
+        if (cursor.mLine != m_dismiss_position.mLine || brace_pos != m_dismiss_brace_pos ||
             abs(cursor.mColumn - m_dismiss_position.mColumn) > 3)
         {
             should_reset_dismissal = true;
         }
-        
+
         if (should_reset_dismissal)
         {
             m_autocomplete_dismissed = false;
@@ -165,17 +162,17 @@ void template_editor::update_autocomplete_suggestions()
             return;
         }
     }
-    
+
     m_autocomplete_prefix = line.substr(brace_pos + 1, col - brace_pos - 1);
     m_autocomplete_start_pos = TextEditor::Coordinates(cursor.mLine, brace_pos + 1);
-    
+
     size_t dot_pos = m_autocomplete_prefix.find('.');
-    
+
     if (dot_pos != std::string::npos)
     {
         std::string color_key = m_autocomplete_prefix.substr(0, dot_pos);
         std::string format_prefix = m_autocomplete_prefix.substr(dot_pos + 1);
-        
+
         bool valid_key = false;
         for (size_t i = 0; i < clrsync::core::NUM_COLOR_KEYS; ++i)
         {
@@ -185,13 +182,12 @@ void template_editor::update_autocomplete_suggestions()
                 break;
             }
         }
-        
+
         if (valid_key)
         {
             for (const auto &fmt : COLOR_FORMATS)
             {
-                if (format_prefix.empty() || 
-                    fmt.find(format_prefix) == 0 ||
+                if (format_prefix.empty() || fmt.find(format_prefix) == 0 ||
                     fmt.find(format_prefix) != std::string::npos)
                 {
                     m_autocomplete_suggestions.push_back(color_key + "." + fmt);
@@ -204,24 +200,23 @@ void template_editor::update_autocomplete_suggestions()
         for (size_t i = 0; i < clrsync::core::NUM_COLOR_KEYS; ++i)
         {
             std::string key = clrsync::core::COLOR_KEYS[i];
-            if (m_autocomplete_prefix.empty() || 
-                key.find(m_autocomplete_prefix) == 0 ||
+            if (m_autocomplete_prefix.empty() || key.find(m_autocomplete_prefix) == 0 ||
                 key.find(m_autocomplete_prefix) != std::string::npos)
             {
                 m_autocomplete_suggestions.push_back(key);
             }
         }
     }
-    
+
     std::sort(m_autocomplete_suggestions.begin(), m_autocomplete_suggestions.end(),
-        [this](const std::string &a, const std::string &b) {
-            bool a_prefix = a.find(m_autocomplete_prefix) == 0;
-            bool b_prefix = b.find(m_autocomplete_prefix) == 0;
-            if (a_prefix != b_prefix)
-                return a_prefix;
-            return a < b;
-        });
-    
+              [this](const std::string &a, const std::string &b) {
+                  bool a_prefix = a.find(m_autocomplete_prefix) == 0;
+                  bool b_prefix = b.find(m_autocomplete_prefix) == 0;
+                  if (a_prefix != b_prefix)
+                      return a_prefix;
+                  return a < b;
+              });
+
     m_show_autocomplete = !m_autocomplete_suggestions.empty();
     if (m_show_autocomplete && m_autocomplete_selected >= (int)m_autocomplete_suggestions.size())
     {
@@ -229,34 +224,36 @@ void template_editor::update_autocomplete_suggestions()
     }
 }
 
-void template_editor::render_autocomplete(const ImVec2& editor_pos)
+void template_editor::render_autocomplete(const ImVec2 &editor_pos)
 {
     if (!m_show_autocomplete || m_autocomplete_suggestions.empty())
         return;
-    
+
     float line_height = ImGui::GetTextLineHeightWithSpacing();
     float char_width = ImGui::GetFontSize() * 0.5f;
     auto cursor = m_editor.GetCursorPosition();
-    
+
     const float line_number_width = 50.0f;
-    
+
     ImVec2 popup_pos;
-    popup_pos.x = editor_pos.x + line_number_width + (m_autocomplete_start_pos.mColumn * char_width);
+    popup_pos.x =
+        editor_pos.x + line_number_width + (m_autocomplete_start_pos.mColumn * char_width);
     popup_pos.y = editor_pos.y + ((cursor.mLine + 1) * line_height);
-    
+
     ImGui::SetNextWindowPos(popup_pos, ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(300, 0));
-    
+
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                              ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
-                             ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize;
-    
+                             ImGuiWindowFlags_NoFocusOnAppearing |
+                             ImGuiWindowFlags_AlwaysAutoResize;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6, 6));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 2));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, m_autocomplete_bg_color);
     ImGui::PushStyleColor(ImGuiCol_Border, m_autocomplete_border_color);
-    
+
     if (ImGui::Begin("##autocomplete", nullptr, flags))
     {
         ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
@@ -266,14 +263,14 @@ void template_editor::render_autocomplete(const ImVec2& editor_pos)
             ImGui::Text("Color Keys");
         ImGui::PopStyleColor();
         ImGui::Separator();
-        
+
         int max_items = std::min((int)m_autocomplete_suggestions.size(), 8);
-        
+
         for (int i = 0; i < max_items; ++i)
         {
             const auto &suggestion = m_autocomplete_suggestions[i];
             bool is_selected = (i == m_autocomplete_selected);
-            
+
             if (is_selected)
             {
                 ImVec4 selected_hover = m_autocomplete_selected_color;
@@ -292,11 +289,11 @@ void template_editor::render_autocomplete(const ImVec2& editor_pos)
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, hover_bg);
                 ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_text_color);
             }
-            
+
             std::string display_text = "  " + suggestion;
-            
-            if (ImGui::Selectable(display_text.c_str(), is_selected, 
-                                  ImGuiSelectableFlags_None, ImVec2(0, 0)))
+
+            if (ImGui::Selectable(display_text.c_str(), is_selected, ImGuiSelectableFlags_None,
+                                  ImVec2(0, 0)))
             {
                 auto start = m_autocomplete_start_pos;
                 auto end = m_editor.GetCursorPosition();
@@ -306,15 +303,15 @@ void template_editor::render_autocomplete(const ImVec2& editor_pos)
                 m_show_autocomplete = false;
                 m_autocomplete_dismissed = false;
             }
-            
+
             ImGui::PopStyleColor(3);
-            
+
             if (is_selected && ImGui::IsWindowAppearing())
             {
                 ImGui::SetScrollHereY();
             }
         }
-        
+
         if (m_autocomplete_suggestions.size() > 8)
         {
             ImGui::Separator();
@@ -322,14 +319,14 @@ void template_editor::render_autocomplete(const ImVec2& editor_pos)
             ImGui::Text("  +%d more", (int)m_autocomplete_suggestions.size() - 8);
             ImGui::PopStyleColor();
         }
-        
+
         ImGui::Separator();
         ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
         ImGui::Text("  Tab/Enter: accept | Esc: dismiss");
         ImGui::PopStyleColor();
     }
     ImGui::End();
-    
+
     ImGui::PopStyleColor(2);
     ImGui::PopStyleVar(3);
 }
@@ -362,8 +359,7 @@ void template_editor::render()
     }
 
     palette_utils::render_delete_confirmation_popup(
-        "Delete Template?", m_template_name, "template", m_current_palette,
-        [this]() {
+        "Delete Template?", m_template_name, "template", m_current_palette, [this]() {
             bool success = m_template_controller.remove_template(m_template_name);
             if (success)
             {
@@ -382,7 +378,7 @@ void template_editor::render()
 void template_editor::render_controls()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 8));
-    
+
     if (ImGui::Button(" + New "))
     {
         new_template();
@@ -408,10 +404,8 @@ void template_editor::render_controls()
     {
         ImGui::SameLine();
         auto error = palette_utils::get_color(m_current_palette, "error");
-        auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f,
-                                error.w);
-        auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f,
-                                error.w);
+        auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f, error.w);
+        auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f, error.w);
         auto on_error = palette_utils::get_color(m_current_palette, "on_error");
         ImGui::PushStyleColor(ImGuiCol_Button, error);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, error_hover);
@@ -428,41 +422,47 @@ void template_editor::render_controls()
 
     ImGui::SameLine();
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
-    
+
     bool enabled_changed = false;
     if (m_enabled)
     {
         ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
-        ImVec4 success_on_color = palette_utils::get_color(m_current_palette, "on_success", "on_surface");
-        ImVec4 success_hover = ImVec4(success_color.x * 1.2f, success_color.y * 1.2f, success_color.z * 1.2f, 0.6f);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(success_color.x, success_color.y, success_color.z, 0.5f));
+        ImVec4 success_on_color =
+            palette_utils::get_color(m_current_palette, "on_success", "on_surface");
+        ImVec4 success_hover =
+            ImVec4(success_color.x * 1.2f, success_color.y * 1.2f, success_color.z * 1.2f, 0.6f);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg,
+                              ImVec4(success_color.x, success_color.y, success_color.z, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, success_hover);
         ImGui::PushStyleColor(ImGuiCol_CheckMark, success_on_color);
     }
     else
     {
         ImVec4 error_color = palette_utils::get_color(m_current_palette, "error", "accent");
-        ImVec4 error_on_color = palette_utils::get_color(m_current_palette, "on_error", "on_surface");
-        ImVec4 error_hover = ImVec4(error_color.x * 1.2f, error_color.y * 1.2f, error_color.z * 1.2f, 0.6f);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(error_color.x, error_color.y, error_color.z, 0.5f));
+        ImVec4 error_on_color =
+            palette_utils::get_color(m_current_palette, "on_error", "on_surface");
+        ImVec4 error_hover =
+            ImVec4(error_color.x * 1.2f, error_color.y * 1.2f, error_color.z * 1.2f, 0.6f);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg,
+                              ImVec4(error_color.x, error_color.y, error_color.z, 0.5f));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, error_hover);
         ImGui::PushStyleColor(ImGuiCol_CheckMark, error_on_color);
     }
-    
+
     enabled_changed = ImGui::Checkbox("Enabled", &m_enabled);
     ImGui::PopStyleColor(3);
-    
+
     if (enabled_changed && m_is_editing_existing)
     {
         m_template_controller.set_template_enabled(m_template_name, m_enabled);
     }
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Enable/disable this template for theme application");
-    
+
     ImGui::PopStyleVar();
-    
+
     ImGui::Spacing();
-    
+
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Name:");
     ImGui::SameLine(80);
@@ -486,8 +486,8 @@ void template_editor::render_controls()
     ImGui::SetNextItemWidth(-120.0f);
     char input_path_buf[512] = {0};
     snprintf(input_path_buf, sizeof(input_path_buf), "%s", m_input_path.c_str());
-    if (ImGui::InputTextWithHint("##input_path", "Path to template file...", 
-                                  input_path_buf, sizeof(input_path_buf)))
+    if (ImGui::InputTextWithHint("##input_path", "Path to template file...", input_path_buf,
+                                 sizeof(input_path_buf)))
     {
         m_input_path = input_path_buf;
         if (!m_input_path.empty())
@@ -502,10 +502,13 @@ void template_editor::render_controls()
     ImGui::SameLine();
     if (ImGui::Button("Browse##input"))
     {
-        std::string selected_path = file_dialogs::open_file_dialog("Select Template File", m_input_path);
-        if (!selected_path.empty()) {
+        std::string selected_path =
+            file_dialogs::open_file_dialog("Select Template File", m_input_path);
+        if (!selected_path.empty())
+        {
             m_input_path = selected_path;
-            if (m_is_editing_existing) {
+            if (m_is_editing_existing)
+            {
                 m_template_controller.set_template_input_path(m_template_name, m_input_path);
             }
             m_validation_error = "";
@@ -520,8 +523,8 @@ void template_editor::render_controls()
     ImGui::SetNextItemWidth(-120.0f);
     char path_buf[512] = {0};
     snprintf(path_buf, sizeof(path_buf), "%s", m_output_path.c_str());
-    if (ImGui::InputTextWithHint("##output_path", "Path for generated config...", 
-                                 path_buf, sizeof(path_buf)))
+    if (ImGui::InputTextWithHint("##output_path", "Path for generated config...", path_buf,
+                                 sizeof(path_buf)))
     {
         m_output_path = path_buf;
         if (!m_output_path.empty())
@@ -536,10 +539,13 @@ void template_editor::render_controls()
     ImGui::SameLine();
     if (ImGui::Button("Browse##output"))
     {
-        std::string selected_path = file_dialogs::save_file_dialog("Select Output File", m_output_path);
-        if (!selected_path.empty()) {
+        std::string selected_path =
+            file_dialogs::save_file_dialog("Select Output File", m_output_path);
+        if (!selected_path.empty())
+        {
             m_output_path = selected_path;
-            if (m_is_editing_existing) {
+            if (m_is_editing_existing)
+            {
                 m_template_controller.set_template_output_path(m_template_name, m_output_path);
             }
             m_validation_error = "";
@@ -554,8 +560,8 @@ void template_editor::render_controls()
     ImGui::SetNextItemWidth(-FLT_MIN);
     char reload_buf[512] = {0};
     snprintf(reload_buf, sizeof(reload_buf), "%s", m_reload_command.c_str());
-    if (ImGui::InputTextWithHint("##reload_cmd", "Command to reload app (optional)...",
-                                 reload_buf, sizeof(reload_buf)))
+    if (ImGui::InputTextWithHint("##reload_cmd", "Command to reload app (optional)...", reload_buf,
+                                 sizeof(reload_buf)))
     {
         m_reload_command = reload_buf;
         if (m_is_editing_existing)
@@ -579,7 +585,7 @@ void template_editor::render_controls()
 void template_editor::render_editor()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
-    
+
     if (!m_is_editing_existing)
     {
         ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
@@ -608,19 +614,19 @@ void template_editor::render_editor()
             ImGui::PopStyleColor();
         }
     }
-        
+
     ImGui::PopStyleVar();
     ImGui::Separator();
 
     bool consume_keys = false;
-    
+
     if (m_show_autocomplete && ImGui::IsKeyPressed(ImGuiKey_Escape, false))
     {
         m_show_autocomplete = false;
         m_autocomplete_dismissed = true;
-        
+
         m_dismiss_position = m_editor.GetCursorPosition();
-        
+
         std::string line = m_editor.GetCurrentLineText();
         m_dismiss_brace_pos = -1;
         for (int i = m_dismiss_position.mColumn - 1; i >= 0; --i)
@@ -631,13 +637,13 @@ void template_editor::render_editor()
                 break;
             }
         }
-        
+
         consume_keys = true;
     }
     else if (m_show_autocomplete && !m_autocomplete_suggestions.empty())
     {
         int max_visible = std::min((int)m_autocomplete_suggestions.size(), 8);
-        
+
         if (ImGui::IsKeyPressed(ImGuiKey_DownArrow, false))
         {
             m_autocomplete_selected = (m_autocomplete_selected + 1) % max_visible;
@@ -648,7 +654,7 @@ void template_editor::render_editor()
             m_autocomplete_selected = (m_autocomplete_selected - 1 + max_visible) % max_visible;
             consume_keys = true;
         }
-        else if (ImGui::IsKeyPressed(ImGuiKey_Tab, false) || 
+        else if (ImGui::IsKeyPressed(ImGuiKey_Tab, false) ||
                  ImGui::IsKeyPressed(ImGuiKey_Enter, false))
         {
             auto start = m_autocomplete_start_pos;
@@ -657,25 +663,25 @@ void template_editor::render_editor()
             m_editor.Delete();
             m_editor.InsertText(m_autocomplete_suggestions[m_autocomplete_selected] + "}");
             m_show_autocomplete = false;
-            m_autocomplete_dismissed = false; 
+            m_autocomplete_dismissed = false;
             consume_keys = true;
         }
     }
-    
+
     if (consume_keys)
     {
         m_editor.SetHandleKeyboardInputs(false);
     }
 
     ImVec2 editor_pos = ImGui::GetCursorScreenPos();
-    
+
     m_editor.Render("##TemplateEditor", ImVec2(0, 0), true);
-    
+
     if (consume_keys)
     {
         m_editor.SetHandleKeyboardInputs(true);
     }
-    
+
     update_autocomplete_suggestions();
     render_autocomplete(editor_pos);
 }
@@ -683,7 +689,7 @@ void template_editor::render_editor()
 void template_editor::render_template_list()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
-    
+
     ImGui::Text("Templates");
     ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
     ImGui::TextDisabled("(%d)", (int)m_template_controller.templates().size());
@@ -705,23 +711,24 @@ void template_editor::render_template_list()
     for (const auto &[key, tmpl] : templates)
     {
         const bool selected = (m_template_name == key && m_is_editing_existing);
-        
+
         if (!tmpl.enabled())
         {
-            ImVec4 disabled_color = palette_utils::get_color(m_current_palette, "on_surface_variant", "editor_inactive");
+            ImVec4 disabled_color = palette_utils::get_color(
+                m_current_palette, "on_surface_variant", "editor_inactive");
             ImGui::PushStyleColor(ImGuiCol_Text, disabled_color);
         }
-        
+
         if (ImGui::Selectable(key.c_str(), selected))
         {
             load_template(key);
         }
-        
+
         if (!tmpl.enabled())
         {
             ImGui::PopStyleColor();
         }
-        
+
         if (ImGui::IsItemHovered())
         {
             ImGui::BeginTooltip();
@@ -733,7 +740,7 @@ void template_editor::render_template_list()
             ImGui::EndTooltip();
         }
     }
-    
+
     ImGui::PopStyleVar();
 }
 
@@ -830,7 +837,7 @@ void template_editor::save_template()
     auto &cfg = clrsync::core::config::instance();
 
     std::filesystem::path template_file = clrsync::core::normalize_path(trimmed_input_path);
-    
+
     auto parent_dir = template_file.parent_path();
     if (!parent_dir.empty() && !std::filesystem::exists(parent_dir))
     {
@@ -838,7 +845,7 @@ void template_editor::save_template()
         {
             std::filesystem::create_directories(parent_dir);
         }
-        catch (const std::exception& e)
+        catch (const std::exception &e)
         {
             m_validation_error = "Error: Could not create directory for input path";
             return;
@@ -853,7 +860,7 @@ void template_editor::save_template()
         m_validation_error = "Failed to write template file";
         return;
     }
-    
+
     out << template_content;
     out.close();
 
@@ -937,7 +944,7 @@ void template_editor::delete_template()
 {
     if (!m_is_editing_existing || m_template_name.empty())
         return;
-    
+
     m_show_delete_confirmation = true;
 }
 

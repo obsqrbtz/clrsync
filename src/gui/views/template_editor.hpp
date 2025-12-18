@@ -1,25 +1,25 @@
 #ifndef CLRSYNC_GUI_TEMPLATE_EDITOR_HPP
 #define CLRSYNC_GUI_TEMPLATE_EDITOR_HPP
 
-#include "template_controller.hpp"
-#include <core/palette/palette.hpp>
 #include "color_text_edit/TextEditor.h"
+#include "gui/controllers/template_controller.hpp"
 #include "imgui.h"
+#include <core/palette/palette.hpp>
 #include <string>
 #include <vector>
 
 class template_editor
 {
-public:
+  public:
     template_editor();
     void render();
-    void apply_current_palette(const clrsync::core::palette& pal);
+    void apply_current_palette(const clrsync::core::palette &pal);
 
-private:
+  private:
     void render_controls();
     void render_editor();
     void render_template_list();
-    void render_autocomplete(const ImVec2& editor_pos);
+    void render_autocomplete(const ImVec2 &editor_pos);
     void update_autocomplete_suggestions();
 
     void save_template();
@@ -32,7 +32,7 @@ private:
 
     template_controller m_template_controller;
     TextEditor m_editor;
-    
+
     std::string m_template_name;
     std::string m_input_path;
     std::string m_output_path;
@@ -40,7 +40,7 @@ private:
     std::string m_validation_error;
     std::string m_saved_content;
     bool m_has_unsaved_changes = false;
-    
+
     bool m_enabled{true};
     bool m_is_editing_existing{false};
     bool m_show_delete_confirmation{false};
@@ -53,14 +53,14 @@ private:
     int m_autocomplete_selected{0};
     std::string m_autocomplete_prefix;
     TextEditor::Coordinates m_autocomplete_start_pos;
-    
+
     ImVec4 m_autocomplete_bg_color;
     ImVec4 m_autocomplete_border_color;
     ImVec4 m_autocomplete_selected_color;
     ImVec4 m_autocomplete_text_color;
     ImVec4 m_autocomplete_selected_text_color;
     ImVec4 m_autocomplete_dim_text_color;
-    
+
     clrsync::core::palette m_current_palette;
 };
 

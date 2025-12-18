@@ -1,10 +1,10 @@
 #ifndef CLRSYNC_CORE_IO_FILE_HPP
 #define CLRSYNC_CORE_IO_FILE_HPP
+#include <core/error.hpp>
 #include <cstdint>
 #include <map>
 #include <string>
 #include <variant>
-#include <core/error.hpp>
 
 using value_type = std::variant<std::string, uint32_t, int, bool>;
 
@@ -16,7 +16,10 @@ class file
     file() = default;
     file(std::string path) {};
     virtual ~file() = default;
-    virtual Result<void> parse() { return Ok(); };
+    virtual Result<void> parse()
+    {
+        return Ok();
+    };
     virtual const std::string get_string_value(const std::string &section,
                                                const std::string &key) const
     {
@@ -35,14 +38,17 @@ class file
         return {};
     }
     virtual void set_value(const std::string &section, const std::string &key,
-                   const value_type &value)
+                           const value_type &value)
     {
         insert_or_update_value(section, key, value);
     }
     virtual void insert_or_update_value(const std::string &section, const std::string &key,
                                         const value_type &value) {};
     virtual void remove_section(const std::string &section) {};
-    virtual Result<void> save_file() { return Ok(); };
+    virtual Result<void> save_file()
+    {
+        return Ok();
+    };
 };
 } // namespace clrsync::core::io
 #endif

@@ -1,7 +1,7 @@
 #ifndef CLRSYNC_CORE_IO_TOML_FILE_HPP
 #define CLRSYNC_CORE_IO_TOML_FILE_HPP
-#include <core/io/file.hpp>
 #include <core/error.hpp>
+#include <core/io/file.hpp>
 #include <string>
 #include <toml/toml.hpp>
 

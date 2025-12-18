@@ -1,6 +1,6 @@
 #include "config.hpp"
-#include "core/utils.hpp"
 #include "core/error.hpp"
+#include "core/utils.hpp"
 
 #include <core/palette/color.hpp>
 #include <filesystem>
@@ -25,11 +25,12 @@ Result<void> config::initialize(std::unique_ptr<clrsync::core::io::file> file)
     m_file = std::move(file);
     if (!m_file)
         return Err<void>(error_code::config_missing, "Config file is missing");
-    
+
     auto parse_result = m_file->parse();
     if (!parse_result)
-        return Err<void>(error_code::config_invalid, parse_result.error().message, parse_result.error().context);
-    
+        return Err<void>(error_code::config_invalid, parse_result.error().message,
+                         parse_result.error().context);
+
     return Ok();
 }
 
@@ -68,10 +69,10 @@ void config::copy_file(const std::filesystem::path &src, const std::filesystem::
 
     std::ifstream in(src, std::ios::binary);
     std::ofstream out(dst, std::ios::binary);
-    
+
     if (!in || !out)
         return;
-    
+
     out << in.rdbuf();
 }
 
@@ -79,7 +80,7 @@ void config::copy_dir(const std::filesystem::path &src, const std::filesystem::p
 {
     if (!std::filesystem::exists(src))
         return;
-    
+
     for (auto const &entry : std::filesystem::recursive_directory_iterator(src))
     {
         auto rel = std::filesystem::relative(entry.path(), src);
@@ -166,7 +167,7 @@ Result<void> config::set_default_theme(const std::string &theme)
 {
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
-    
+
     m_file->set_value("general", "default_theme", theme);
     return m_file->save_file();
 }
@@ -175,7 +176,7 @@ Result<void> config::set_palettes_path(const std::string &path)
 {
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
-    
+
     m_file->set_value("general", "palettes_path", path);
     return m_file->save_file();
 }
@@ -184,7 +185,7 @@ Result<void> config::set_font(const std::string &font)
 {
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
-    
+
     m_file->set_value("general", "font", font);
     return m_file->save_file();
 }
@@ -192,17 +193,17 @@ Result<void> config::set_font_size(int font_size)
 {
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
-    
+
     m_file->set_value("general", "font_size", font_size);
     return m_file->save_file();
 }
 
 Result<void> config::update_template(const std::string &key,
-                             const clrsync::core::theme_template &theme_template)
+                                     const clrsync::core::theme_template &theme_template)
 {
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
-    
+
     m_themes[key] = theme_template;
     m_file->set_value("templates." + key, "input_path", theme_template.template_path());
     m_file->set_value("templates." + key, "output_path", theme_template.output_path());
@@ -215,25 +216,29 @@ Result<void> config::remove_template(const std::string &key)
 {
     if (!m_file)
         return Err<void>(error_code::config_missing, "Configuration not initialized");
-    
+
     auto it = m_themes.find(key);
     if (it == m_themes.end())
         return Err<void>(error_code::template_not_found, "Template not found", key);
-    
+
     std::filesystem::path template_file = it->second.template_path();
     if (std::filesystem::exists(template_file))
     {
-        try {
+        try
+        {
             std::filesystem::remove(template_file);
-        } catch (const std::exception& e) {
-            return Err<void>(error_code::file_write_failed, "Failed to delete template file", e.what());
+        }
+        catch (const std::exception &e)
+        {
+            return Err<void>(error_code::file_write_failed, "Failed to delete template file",
+                             e.what());
         }
     }
-    
+
     m_themes.erase(it);
-    
+
     m_file->remove_section("templates." + key);
-    
+
     return m_file->save_file();
 }
 
@@ -264,14 +269,16 @@ const std::unordered_map<std::string, clrsync::core::theme_template> config::tem
     return m_themes;
 }
 
-Result<const clrsync::core::theme_template*> config::template_by_name(const std::string &name) const
+Result<const clrsync::core::theme_template *> config::template_by_name(
+    const std::string &name) const
 {
     auto it = m_themes.find(name);
     if (it != m_themes.end())
     {
         return Ok(&it->second);
     }
-    return Err<const clrsync::core::theme_template*>(error_code::template_not_found, "Template not found", name);
+    return Err<const clrsync::core::theme_template *>(error_code::template_not_found,
+                                                      "Template not found", name);
 }
 
 } // namespace clrsync::core

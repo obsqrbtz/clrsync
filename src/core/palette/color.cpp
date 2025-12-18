@@ -111,14 +111,17 @@ void color::from_hex_string(const std::string &str)
     if (str.empty() || str[0] != '#')
         throw std::invalid_argument("Invalid hex color format");
 
-    if (str.size() == 7) {
+    if (str.size() == 7)
+    {
         uint32_t rgb = static_cast<uint32_t>(std::stoul(str.substr(1), nullptr, 16));
         m_hex = (rgb << 8) | 0xFF;
     }
-    else if (str.size() == 9) {
+    else if (str.size() == 9)
+    {
         m_hex = static_cast<uint32_t>(std::stoul(str.substr(1), nullptr, 16));
     }
-    else {
+    else
+    {
         throw std::invalid_argument("Invalid hex color format");
     }
 }
@@ -137,30 +140,38 @@ const std::string color::to_hex_string_with_alpha() const
     return std::string(buffer);
 }
 
-std::string color::format(const std::string& field) const
+std::string color::format(const std::string &field) const
 {
-    auto rgb  = to_rgb();
+    auto rgb = to_rgb();
     auto rgba = to_rgba();
     auto hslv = to_hsl();
     auto hslav = to_hsla();
 
-    if (field == "hex") return to_hex_string();
-    if (field == "hex_stripped") {
+    if (field == "hex")
+        return to_hex_string();
+    if (field == "hex_stripped")
+    {
         auto s = to_hex_string();
         return s.substr(1);
     }
 
-    if (field == "hexa") return to_hex_string_with_alpha();
-    if (field == "hexa_stripped") {
+    if (field == "hexa")
+        return to_hex_string_with_alpha();
+    if (field == "hexa_stripped")
+    {
         auto s = to_hex_string_with_alpha();
         return s.substr(1);
     }
 
-    if (field == "r") return std::to_string(rgb.r);
-    if (field == "g") return std::to_string(rgb.g);
-    if (field == "b") return std::to_string(rgb.b);
+    if (field == "r")
+        return std::to_string(rgb.r);
+    if (field == "g")
+        return std::to_string(rgb.g);
+    if (field == "b")
+        return std::to_string(rgb.b);
 
-    if (field == "a") {
+    if (field == "a")
+    {
         float af = rgba.a / 255.0f;
         return std::format("{:.2f}", af);
     }
@@ -169,9 +180,7 @@ std::string color::format(const std::string& field) const
         return std::format("rgb({},{},{})", rgb.r, rgb.g, rgb.b);
 
     if (field == "rgba")
-        return std::format("rgba({},{},{},{:.2f})",
-                           rgba.r, rgba.g, rgba.b,
-                           rgba.a / 255.0f);
+        return std::format("rgba({},{},{},{:.2f})", rgba.r, rgba.g, rgba.b, rgba.a / 255.0f);
 
     if (field == "h")
         return std::format("{:.0f}", hslv.h);
@@ -185,12 +194,10 @@ std::string color::format(const std::string& field) const
         return std::format("{:.2f}", hslav.a);
 
     if (field == "hsl")
-        return std::format("hsl({:.0f},{:.2f},{:.2f})",
-                           hslv.h, hslv.s, hslv.l);
+        return std::format("hsl({:.0f},{:.2f},{:.2f})", hslv.h, hslv.s, hslv.l);
 
     if (field == "hsla")
-        return std::format("hsla({:.0f},{:.2f},{:.2f},{:.2f})",
-                           hslav.h, hslav.s, hslav.l, hslav.a);
+        return std::format("hsla({:.0f},{:.2f},{:.2f},{:.2f})", hslav.h, hslav.s, hslav.l, hslav.a);
 
     throw std::runtime_error("Unknown color format: " + field);
 }

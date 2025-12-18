@@ -1,23 +1,27 @@
 set(GUI_SOURCES
     main.cpp
-    color_scheme_editor.cpp
-    color_table_renderer.cpp
-    preview_renderer.cpp
-    theme_applier.cpp
-    template_editor.cpp
-    palette_controller.cpp
-    template_controller.cpp
-    imgui_helpers.cpp
-    imgui_helpers.hpp
-    about_window.cpp
-    settings_window.cpp
-    font_loader.cpp
-    file_browser.cpp
-    ${CMAKE_SOURCE_DIR}/lib/color_text_edit/TextEditor.cpp
+        views/color_scheme_editor.cpp
+        views/color_table_renderer.cpp
+        views/preview_renderer.cpp
+        controllers/theme_applier.cpp
+        views/template_editor.cpp
+        controllers/palette_controller.cpp
+        controllers/template_controller.cpp
+        helpers/imgui_helpers.cpp
+        helpers/imgui_helpers.hpp
+        views/about_window.cpp
+        views/settings_window.cpp
+        platform/windows/font_loader_windows.cpp
+        platform/linux/font_loader_linux.cpp
+        platform/macos/font_loader_macos.cpp
+        platform/linux/file_browser_linux.cpp
+        platform/windows/file_browser_windows.cpp
+        platform/macos/file_browser_macos.mm
+        ${CMAKE_SOURCE_DIR}/lib/color_text_edit/TextEditor.cpp
+        platform/linux/font_loader_linux.cpp
+        platform/macos/font_loader_macos.cpp
+        platform/windows/font_loader_windows.cpp
 )
-if(APPLE)
-    list(APPEND GUI_SOURCES file_browser_macos.mm)
-endif()
 
 if(WIN32)
     add_executable(clrsync_gui WIN32 ${GUI_SOURCES})

@@ -47,13 +47,15 @@ Result<void> theme_template::load_template()
 {
     if (!std::filesystem::exists(m_template_path))
     {
-        return Err<void>(error_code::template_not_found, "Template file is missing", m_template_path);
+        return Err<void>(error_code::template_not_found, "Template file is missing",
+                         m_template_path);
     }
-    
+
     std::ifstream input(m_template_path, std::ios::binary);
     if (!input)
     {
-        return Err<void>(error_code::template_load_failed, "Failed to open template file", m_template_path);
+        return Err<void>(error_code::template_load_failed, "Failed to open template file",
+                         m_template_path);
     }
 
     m_template_data.assign(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
@@ -64,7 +66,7 @@ void theme_template::apply_palette(const core::palette &palette)
 {
     m_processed_data = m_template_data;
 
-    for (const auto& [key, color] : palette.colors())
+    for (const auto &[key, color] : palette.colors())
     {
         // simple replacement: {foreground}
         replace_all(m_processed_data, "{" + key + "}", color.format("hex"));
@@ -96,23 +98,25 @@ Result<void> theme_template::save_output() const
     {
         std::filesystem::create_directories(std::filesystem::path(m_output_path).parent_path());
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         return Err<void>(error_code::dir_create_failed, e.what(), m_output_path);
     }
-    
+
     std::ofstream output(m_output_path, std::ios::binary);
     if (!output)
     {
-        return Err<void>(error_code::file_write_failed, "Failed to open output file for writing", m_output_path);
+        return Err<void>(error_code::file_write_failed, "Failed to open output file for writing",
+                         m_output_path);
     }
 
     output << m_processed_data;
     if (!output)
     {
-        return Err<void>(error_code::file_write_failed, "Failed to write to output file", m_output_path);
+        return Err<void>(error_code::file_write_failed, "Failed to write to output file",
+                         m_output_path);
     }
-    
+
     return Ok();
 }
 

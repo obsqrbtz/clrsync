@@ -1,12 +1,11 @@
 #include "color_scheme_editor.hpp"
+#include "gui/controllers/theme_applier.hpp"
+#include "gui/helpers/imgui_helpers.hpp"
 #include "imgui.h"
-#include "imgui_helpers.hpp"
-#include "template_editor.hpp"
 #include "settings_window.hpp"
-#include "theme_applier.hpp"
+#include "template_editor.hpp"
 #include <iostream>
 #include <ranges>
-
 
 color_scheme_editor::color_scheme_editor()
 {
@@ -161,10 +160,8 @@ void color_scheme_editor::render_controls()
 
     ImGui::SameLine();
     auto error = palette_utils::get_color(current, "error");
-    auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f,
-                              error.w);
-    auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f,
-                               error.w);
+    auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f, error.w);
+    auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f, error.w);
     auto on_error = palette_utils::get_color(current, "on_error");
     ImGui::PushStyleColor(ImGuiCol_Button, error);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, error_hover);

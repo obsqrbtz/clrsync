@@ -1,10 +1,10 @@
-#include "theme_applier.hpp"
+#include "gui/controllers/theme_applier.hpp"
 #include "imgui.h"
 
 namespace theme_applier
 {
 
-static uint32_t get_color_u32(const clrsync::core::palette& current, const std::string &key)
+static uint32_t get_color_u32(const clrsync::core::palette &current, const std::string &key)
 {
     const auto &col = current.get_color(key);
     const uint32_t hex = col.hex();
@@ -16,7 +16,7 @@ static uint32_t get_color_u32(const clrsync::core::palette& current, const std::
     return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
-void apply_to_editor(TextEditor& editor, const clrsync::core::palette& current)
+void apply_to_editor(TextEditor &editor, const clrsync::core::palette &current)
 {
     auto palette = editor.GetPalette();
 
@@ -26,32 +26,40 @@ void apply_to_editor(TextEditor& editor, const clrsync::core::palette& current)
     palette[int(TextEditor::PaletteIndex::String)] = get_color_u32(current, "editor_string");
     palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32(current, "editor_string");
     palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32(current, "editor_main");
-    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32(current, "editor_emphasis");
+    palette[int(TextEditor::PaletteIndex::Preprocessor)] =
+        get_color_u32(current, "editor_emphasis");
     palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32(current, "editor_main");
     palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32(current, "editor_link");
-    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32(current, "editor_link");
+    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] =
+        get_color_u32(current, "editor_link");
 
     palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32(current, "editor_comment");
-    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32(current, "editor_comment");
+    palette[int(TextEditor::PaletteIndex::MultiLineComment)] =
+        get_color_u32(current, "editor_comment");
 
-    palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32(current, "editor_background");
+    palette[int(TextEditor::PaletteIndex::Background)] =
+        get_color_u32(current, "editor_background");
     palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32(current, "cursor");
 
     palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32(current, "editor_selected");
     palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32(current, "editor_error");
     palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32(current, "editor_error");
 
-    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32(current, "editor_line_number");
-    
-    palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32(current, "surface_variant");
-    palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32(current, "surface");
+    palette[int(TextEditor::PaletteIndex::LineNumber)] =
+        get_color_u32(current, "editor_line_number");
 
-    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32(current, "border_focused");
+    palette[int(TextEditor::PaletteIndex::CurrentLineFill)] =
+        get_color_u32(current, "surface_variant");
+    palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] =
+        get_color_u32(current, "surface");
+
+    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] =
+        get_color_u32(current, "border_focused");
 
     editor.SetPalette(palette);
 }
 
-void apply_to_imgui(const clrsync::core::palette& current)
+void apply_to_imgui(const clrsync::core::palette &current)
 {
     auto getColor = [&](const std::string &key) -> ImVec4 {
         const auto &col = current.get_color(key);
@@ -72,7 +80,7 @@ void apply_to_imgui(const clrsync::core::palette& current)
     const ImVec4 fgInactive = getColor("editor_inactive");
     const ImVec4 accent = getColor("accent");
     const ImVec4 border = getColor("border");
-    
+
     const ImVec4 error = getColor("error");
     const ImVec4 onError = getColor("on_error");
     const ImVec4 success = getColor("success");
@@ -138,7 +146,8 @@ void apply_to_imgui(const clrsync::core::palette& current)
         ImVec4(border.x * 0.7f, border.y * 0.7f, border.z * 0.7f, border.w);
 
     style.Colors[ImGuiCol_TableRowBg] = ImVec4(0, 0, 0, 0);
-    style.Colors[ImGuiCol_TableRowBgAlt] = ImVec4(onSurfaceVariant.x, onSurfaceVariant.y, onSurfaceVariant.z, 0.06f);
+    style.Colors[ImGuiCol_TableRowBgAlt] =
+        ImVec4(onSurfaceVariant.x, onSurfaceVariant.y, onSurfaceVariant.z, 0.06f);
 
     style.Colors[ImGuiCol_Separator] = border;
     style.Colors[ImGuiCol_SeparatorHovered] = accent;

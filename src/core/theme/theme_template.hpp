@@ -1,8 +1,8 @@
 #ifndef clrsync_CORE_IO_THEME_TEMPLATE_HPP
 #define clrsync_CORE_IO_THEME_TEMPLATE_HPP
 
-#include <core/palette/palette.hpp>
 #include <core/error.hpp>
+#include <core/palette/palette.hpp>
 #include <string>
 
 namespace clrsync::core

@@ -15,7 +15,7 @@ Result<void> toml_file::parse()
 {
     if (!std::filesystem::exists(m_path))
         return Err<void>(error_code::file_not_found, "File does not exist", m_path);
-    
+
     m_file = toml::parse_file(m_path);
     return Ok();
 }
@@ -96,10 +96,10 @@ void toml_file::remove_section(const std::string &section)
 {
     toml::table *tbl = m_file.as_table();
     auto parts = split(section, '.');
-    
+
     if (parts.empty())
         return;
-    
+
     for (size_t i = 0; i < parts.size() - 1; ++i)
     {
         auto *sub = (*tbl)[parts[i]].as_table();
@@ -107,26 +107,29 @@ void toml_file::remove_section(const std::string &section)
             return;
         tbl = sub;
     }
-    
+
     tbl->erase(parts.back());
 }
 
 Result<void> toml_file::save_file()
 {
-    try {
+    try
+    {
         std::filesystem::create_directories(std::filesystem::path(m_path).parent_path());
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         return Err<void>(error_code::dir_create_failed, e.what(), m_path);
     }
-    
+
     std::ofstream stream(m_path, std::ios::binary);
     if (!stream)
         return Err<void>(error_code::file_write_failed, "Failed to open file for writing", m_path);
-    
+
     stream << m_file;
     if (!stream)
         return Err<void>(error_code::file_write_failed, "Failed to write to file", m_path);
-    
+
     return Ok();
 }
 

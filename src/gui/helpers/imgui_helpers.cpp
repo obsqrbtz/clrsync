@@ -2,7 +2,7 @@
 #include <string>
 
 #include "GLFW/glfw3.h"
-#include "gui/settings_window.hpp"
+#include "gui/views/settings_window.hpp"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
@@ -10,12 +10,12 @@
 
 #include "imgui_internal.h"
 
-GLFWwindow * init_glfw()
+GLFWwindow *init_glfw()
 {
-    glfwSetErrorCallback([](int error, const char* description) {
+    glfwSetErrorCallback([](int error, const char *description) {
         std::cerr << "GLFW Error " << error << ": " << description << std::endl;
     });
-    
+
     if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW\n";
@@ -23,14 +23,14 @@ GLFWwindow * init_glfw()
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    #ifdef __APPLE__
+#ifdef __APPLE__
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    #else
+#else
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    #endif
+#endif
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 
-    GLFWwindow* w = glfwCreateWindow(1280, 720, "clrsync", nullptr, nullptr);
+    GLFWwindow *w = glfwCreateWindow(1280, 720, "clrsync", nullptr, nullptr);
     if (!w)
     {
         std::cerr << "Failed to create GLFW window\n";
@@ -42,22 +42,22 @@ GLFWwindow * init_glfw()
     return w;
 }
 
-void init_imgui(GLFWwindow* window, const std::string& ini_path)
+void init_imgui(GLFWwindow *window, const std::string &ini_path)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.IniFilename = ini_path.c_str();
 
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    #ifdef __APPLE__
+#ifdef __APPLE__
     ImGui_ImplOpenGL3_Init("#version 150");
-    #else
+#else
     ImGui_ImplOpenGL3_Init("#version 120");
-    #endif
+#endif
 }
 
 void begin_frame()
@@ -67,7 +67,7 @@ void begin_frame()
     ImGui::NewFrame();
 }
 
-void render_menu_bar(about_window* about, settings_window* settings)
+void render_menu_bar(about_window *about, settings_window *settings)
 {
     if (ImGui::BeginMainMenuBar())
     {
@@ -99,25 +99,21 @@ void render_menu_bar(about_window* about, settings_window* settings)
     }
 }
 
-void setup_main_dockspace(bool& first_time)
+void setup_main_dockspace(bool &first_time)
 {
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
 
-    constexpr ImGuiWindowFlags flags =
-        ImGuiWindowFlags_NoTitleBar |
-        ImGuiWindowFlags_NoCollapse |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoBringToFrontOnFocus |
-        ImGuiWindowFlags_NoNavFocus |
-        ImGuiWindowFlags_MenuBar;
+    constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                                       ImGuiWindowFlags_NoBringToFrontOnFocus |
+                                       ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_MenuBar;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("MainDockSpace", nullptr, flags);
     ImGui::PopStyleVar(3);
 
@@ -134,7 +130,7 @@ void setup_main_dockspace(bool& first_time)
         ImGuiID center, right;
         ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.5f, &right, &center);
 
-        ImGuiDockNode* center_node = ImGui::DockBuilderGetNode(center);
+        ImGuiDockNode *center_node = ImGui::DockBuilderGetNode(center);
         if (center_node)
         {
             center_node->LocalFlags |= ImGuiDockNodeFlags_CentralNode;
@@ -143,15 +139,15 @@ void setup_main_dockspace(bool& first_time)
         ImGui::DockBuilderDockWindow("Color Schemes", right);
         ImGui::DockBuilderDockWindow("Color Preview", center);
         ImGui::DockBuilderDockWindow("Templates", center);
-        
+
         ImGui::DockBuilderFinish(dockspace_id);
     }
 
-    ImGui::DockSpace(dockspace_id, ImVec2{0,0}, ImGuiDockNodeFlags_None);
+    ImGui::DockSpace(dockspace_id, ImVec2{0, 0}, ImGuiDockNodeFlags_None);
     ImGui::End();
 }
 
-void end_frame(GLFWwindow* window)
+void end_frame(GLFWwindow *window)
 {
     ImGui::Render();
     int w, h;
@@ -164,7 +160,7 @@ void end_frame(GLFWwindow* window)
     glfwSwapBuffers(window);
 }
 
-void shutdown(GLFWwindow* window)
+void shutdown(GLFWwindow *window)
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -173,24 +169,25 @@ void shutdown(GLFWwindow* window)
     glfwTerminate();
 }
 
-namespace palette_utils 
+namespace palette_utils
 {
 
-ImVec4 get_color(const clrsync::core::palette& pal, const std::string& key, const std::string& fallback)
+ImVec4 get_color(const clrsync::core::palette &pal, const std::string &key,
+                 const std::string &fallback)
 {
     auto colors = pal.colors();
     if (colors.empty())
         return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    
+
     auto it = colors.find(key);
     if (it == colors.end() && !fallback.empty())
     {
         it = colors.find(fallback);
     }
-    
+
     if (it != colors.end())
     {
-        const auto& col = it->second;
+        const auto &col = it->second;
         const uint32_t hex = col.hex();
         const float r = ((hex >> 24) & 0xFF) / 255.0f;
         const float g = ((hex >> 16) & 0xFF) / 255.0f;
@@ -201,21 +198,22 @@ ImVec4 get_color(const clrsync::core::palette& pal, const std::string& key, cons
     return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-uint32_t get_color_u32(const clrsync::core::palette& pal, const std::string& key, const std::string& fallback)
+uint32_t get_color_u32(const clrsync::core::palette &pal, const std::string &key,
+                       const std::string &fallback)
 {
     auto colors = pal.colors();
     if (colors.empty())
         return 0xFFFFFFFF;
-    
+
     auto it = colors.find(key);
     if (it == colors.end() && !fallback.empty())
     {
         it = colors.find(fallback);
     }
-    
+
     if (it != colors.end())
     {
-        const auto& col = it->second;
+        const auto &col = it->second;
         const uint32_t hex = col.hex();
         const uint32_t r = (hex >> 24) & 0xFF;
         const uint32_t g = (hex >> 16) & 0xFF;
@@ -226,21 +224,23 @@ uint32_t get_color_u32(const clrsync::core::palette& pal, const std::string& key
     return 0xFFFFFFFF;
 }
 
-bool render_delete_confirmation_popup(const std::string& popup_title, const std::string& item_name, 
-                                      const std::string& item_type, const clrsync::core::palette& pal,
-                                      const std::function<void()>& on_delete)
+bool render_delete_confirmation_popup(const std::string &popup_title, const std::string &item_name,
+                                      const std::string &item_type,
+                                      const clrsync::core::palette &pal,
+                                      const std::function<void()> &on_delete)
 {
     bool result = false;
     if (ImGui::BeginPopupModal(popup_title.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImVec4 warning_color = get_color(pal, "warning", "accent");
-        ImGui::TextColored(warning_color, "Are you sure you want to delete '%s'?", item_name.c_str());
+        ImGui::TextColored(warning_color, "Are you sure you want to delete '%s'?",
+                           item_name.c_str());
         ImGui::Text("This action cannot be undone.");
-        
+
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
-        
+
         float button_width = 120.0f;
         float total_width = 2.0f * button_width + ImGui::GetStyle().ItemSpacing.x;
         float window_width = ImGui::GetContentRegionAvail().x;
@@ -252,7 +252,7 @@ bool render_delete_confirmation_popup(const std::string& popup_title, const std:
             result = true;
             ImGui::CloseCurrentPopup();
         }
-        
+
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(button_width, 0)))
         {
@@ -263,4 +263,4 @@ bool render_delete_confirmation_popup(const std::string& popup_title, const std:
     return result;
 }
 
-}
+} // namespace palette_utils

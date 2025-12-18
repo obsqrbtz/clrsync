@@ -1,8 +1,8 @@
 #ifndef CLRSYNC_CORE_UTILS_HPP
 #define CLRSYNC_CORE_UTILS_HPP
 
-#include <string>
 #include <filesystem>
+#include <string>
 
 #include <core/palette/color_keys.hpp>
 

@@ -3,12 +3,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace clrsync::core
 {
-constexpr const char* COLOR_KEYS[] = {
+constexpr const char *COLOR_KEYS[] = {
     // General UI
     "background",
     "on_background",
@@ -79,31 +79,31 @@ constexpr size_t NUM_COLOR_KEYS = std::size(COLOR_KEYS);
 inline const std::unordered_map<std::string, uint32_t> DEFAULT_COLORS = {
     {"background", 0x111111ff},
     {"on_background", 0xd4d4d4ff},
-    
+
     {"surface", 0x111111ff},
     {"on_surface", 0xd4d4d4ff},
-    
+
     {"surface_variant", 0x191919ff},
     {"on_surface_variant", 0xd4d4d4ff},
-    
+
     {"border_focused", 0x2e2e2eff},
     {"border", 0x242424ff},
-    
+
     {"foreground", 0xd2d2d2ff},
-    
+
     {"cursor", 0xd2d2d2ff},
     {"accent", 0x9a8652ff},
-    
+
     {"success", 0x668a51ff},
     {"info", 0x3a898cff},
     {"warning", 0xb47837ff},
     {"error", 0xaa4e4aff},
-    
+
     {"on_success", 0xd2d2d2ff},
     {"on_info", 0xd2d2d2ff},
     {"on_warning", 0xd2d2d2ff},
     {"on_error", 0xd2d2d2ff},
-    
+
     {"editor_background", 0x111111ff},
     {"editor_command", 0x3a898cff},
     {"editor_comment", 0x849899ff},
@@ -119,7 +119,7 @@ inline const std::unordered_map<std::string, uint32_t> DEFAULT_COLORS = {
     {"editor_string", 0x9a8652ff},
     {"editor_success", 0x668a51ff},
     {"editor_warning", 0xb47837ff},
-    
+
     {"base00", 0x111111ff},
     {"base01", 0x668a51ff},
     {"base02", 0x9a8652ff},
