@@ -19,7 +19,11 @@ if(APPLE)
     list(APPEND GUI_SOURCES file_browser_macos.mm)
 endif()
 
-add_executable(clrsync_gui ${GUI_SOURCES})
+if(WIN32)
+    add_executable(clrsync_gui WIN32 ${GUI_SOURCES})
+else()
+    add_executable(clrsync_gui ${GUI_SOURCES})
+endif()
 
 target_include_directories(clrsync_gui PRIVATE 
     ${CMAKE_SOURCE_DIR}/src 
@@ -38,7 +42,9 @@ if(WIN32)
         comdlg32
         shlwapi
     )
-    set_target_properties(clrsync_gui PROPERTIES WIN32_EXECUTABLE TRUE)
+    if (MSVC)
+        target_link_options(clrsync_gui PRIVATE /ENTRY:mainCRTStartup)
+    endif()
 elseif(APPLE)
     target_link_libraries(clrsync_gui PRIVATE
         clrsync_core

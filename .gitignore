@@ -4,6 +4,7 @@
 out
 
 build/
+build-msvc/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
