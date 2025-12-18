@@ -27,7 +27,7 @@ set(CPACK_NSIS_CREATE_DESKTOP_LINKS "bin/clrsync_gui.exe;clrsync")
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Daniel Dada <dan@binarygoose.dev>")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.31), libglfw3, libfreetype6")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.31), libglfw3, libfreetype6, zlib1g, libharfbuzz0b")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
@@ -36,6 +36,6 @@ set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT")
 set(CPACK_RPM_PACKAGE_GROUP "Applications/System")
 set(CPACK_RPM_PACKAGE_URL "https://github.com/obsqrbtz/clrsync")
-set(CPACK_RPM_PACKAGE_REQUIRES "freetype, glfw, fontconfig")
+set(CPACK_RPM_PACKAGE_REQUIRES "freetype, glfw, fontconfig, zlib, harfbuzz")
 
 include(CPack)

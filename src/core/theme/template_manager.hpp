@@ -1,8 +1,8 @@
 #ifndef CLRSYNC_CORE_THEME_TEMPLATE_MANAGER_HPP
 #define CLRSYNC_CORE_THEME_TEMPLATE_MANAGER_HPP
 
-#include <core/config/config.hpp>
-#include <core/theme/theme_template.hpp>
+#include "core/config/config.hpp"
+#include "core/theme/theme_template.hpp"
 #include <string>
 #include <unordered_map>
 

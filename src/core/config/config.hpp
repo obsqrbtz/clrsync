@@ -1,9 +1,9 @@
 #ifndef CLRSYNC_CORE_CONFIG_HPP
 #define CLRSYNC_CORE_CONFIG_HPP
 
-#include <core/error.hpp>
-#include <core/io/file.hpp>
-#include <core/theme/theme_template.hpp>
+#include "core/common/error.hpp"
+#include "core/io/file.hpp"
+#include "core/theme/theme_template.hpp"
 #include <filesystem>
 #include <memory>
 #include <string>

@@ -1,6 +1,6 @@
 #include "gui/views/settings_window.hpp"
+#include "core/common/error.hpp"
 #include "core/config/config.hpp"
-#include "core/error.hpp"
 #include "gui/helpers/imgui_helpers.hpp"
 #include "gui/platform/file_browser.hpp"
 #include "gui/platform/font_loader.hpp"

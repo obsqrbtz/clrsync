@@ -57,8 +57,8 @@ endif()
 message(STATUS "clrsync version: ${SEMVER}")
 
 configure_file(
-    ${CMAKE_SOURCE_DIR}/src/core/version.hpp.in
-    ${CMAKE_SOURCE_DIR}/src/core/version.hpp
+    ${CMAKE_SOURCE_DIR}/src/core/common/version.hpp.in
+    ${CMAKE_SOURCE_DIR}/src/core/common/version.hpp
     @ONLY
 )
 

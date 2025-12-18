@@ -2,8 +2,8 @@ set(CORE_SOURCES
     palette/color.cpp
     io/toml_file.cpp
     config/config.cpp
-    utils.cpp
-    version.cpp
+        common/utils.cpp
+        common/version.cpp
     theme/theme_template.cpp
 )
 

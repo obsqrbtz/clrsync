@@ -1,9 +1,10 @@
 #ifndef CLRSYNC_CORE_THEME_THEME_RENDERER_HPP
 #define CLRSYNC_CORE_THEME_THEME_RENDERER_HPP
-#include <core/config/config.hpp>
-#include <core/error.hpp>
-#include <core/palette/palette_manager.hpp>
-#include <core/theme/template_manager.hpp>
+#include "core/common/error.hpp"
+#include "core/config/config.hpp"
+#include "core/palette/palette_manager.hpp"
+#include "core/theme/template_manager.hpp"
+#include <iostream>
 #include <string>
 
 namespace clrsync::core

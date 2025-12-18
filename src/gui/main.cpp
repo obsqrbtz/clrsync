@@ -1,12 +1,13 @@
+#include <iostream>
 #include <memory>
 
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include "core/common/error.hpp"
+#include "core/common/utils.hpp"
 #include "core/config/config.hpp"
-#include "core/error.hpp"
 #include "core/io/toml_file.hpp"
-#include "core/utils.hpp"
 
 #include "gui/helpers/imgui_helpers.hpp"
 #include "gui/platform/font_loader.hpp"

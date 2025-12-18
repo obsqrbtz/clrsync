@@ -4,8 +4,8 @@
 #include <string>
 #include <unordered_map>
 
-#include <core/palette/color.hpp>
-#include <core/palette/color_keys.hpp>
+#include "core/palette/color.hpp"
+#include "core/palette/color_keys.hpp"
 
 namespace clrsync::core
 {

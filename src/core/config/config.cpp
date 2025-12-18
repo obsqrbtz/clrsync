@@ -1,8 +1,8 @@
 #include "config.hpp"
-#include "core/error.hpp"
-#include "core/utils.hpp"
+#include "core/common/error.hpp"
+#include "core/common/utils.hpp"
 
-#include <core/palette/color.hpp>
+#include "core/palette/color.hpp"
 #include <filesystem>
 #include <fstream>
 

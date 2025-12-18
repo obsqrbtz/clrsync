@@ -7,17 +7,18 @@ if(WIN32)
         freetype
         URL https://download.savannah.gnu.org/releases/freetype/freetype-2.14.1.tar.gz
     )
+    
+    set(FT_DISABLE_ZLIB FALSE CACHE BOOL "" FORCE)
+    set(FT_DISABLE_BZIP2 TRUE CACHE BOOL "" FORCE)
+    set(FT_DISABLE_PNG TRUE CACHE BOOL "" FORCE)
+    set(FT_DISABLE_HARFBUZZ FALSE CACHE BOOL "" FORCE)
+    set(FT_DISABLE_BROTLI TRUE CACHE BOOL "" FORCE)
+    
     FetchContent_MakeAvailable(freetype)
 elseif(APPLE)
     option(USE_SYSTEM_GLFW ON)
     find_package(Freetype REQUIRED)
     find_package(ZLIB REQUIRED)
-    find_package(BZip2 REQUIRED)
-    find_package(PNG REQUIRED)
-    
-    
-    find_library(BROTLIDEC_LIBRARY NAMES brotlidec)
-    find_library(BROTLICOMMON_LIBRARY NAMES brotlicommon)
     
     find_package(PkgConfig QUIET)
     if(PkgConfig_FOUND)
@@ -28,11 +29,6 @@ else()
     find_package(PkgConfig REQUIRED)
     find_package(Fontconfig REQUIRED)
     find_package(ZLIB REQUIRED)
-    find_package(BZip2 REQUIRED)
-    find_package(PNG REQUIRED)
-
-    find_library(BROTLIDEC_LIBRARY NAMES brotlidec)
-    find_library(BROTLICOMMON_LIBRARY NAMES brotlicommon)
 
     pkg_check_modules(HARFBUZZ harfbuzz)
     pkg_check_modules(WAYLAND_CLIENT wayland-client)
@@ -77,11 +73,6 @@ else()
 endif()
 
 set(FREETYPE_EXTRA_LIBS "")
-if(BROTLIDEC_LIBRARY AND BROTLICOMMON_LIBRARY)
-    list(APPEND FREETYPE_EXTRA_LIBS ${BROTLIDEC_LIBRARY} ${BROTLICOMMON_LIBRARY})
-    message(STATUS "Found Brotli libraries")
-endif()
-
 if(HARFBUZZ_FOUND)
     list(APPEND FREETYPE_EXTRA_LIBS ${HARFBUZZ_LIBRARIES})
     message(STATUS "Found HarfBuzz")

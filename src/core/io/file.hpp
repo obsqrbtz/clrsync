@@ -1,6 +1,6 @@
 #ifndef CLRSYNC_CORE_IO_FILE_HPP
 #define CLRSYNC_CORE_IO_FILE_HPP
-#include <core/error.hpp>
+#include "core/common/error.hpp"
 #include <cstdint>
 #include <map>
 #include <string>

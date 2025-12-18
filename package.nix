@@ -15,7 +15,6 @@
   wayland,
   libxkbcommon,
   zlib,
-  bzip2,
   wayland-scanner,
   gtk3,
   glib,
@@ -71,7 +70,6 @@ stdenv.mkDerivation rec {
     wayland-protocols
     libxkbcommon
     zlib
-    bzip2
     gtk3
     gsettings-desktop-schemas
     glib

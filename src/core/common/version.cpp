@@ -1,4 +1,4 @@
-#include "version.hpp"
+#include "core/common/version.hpp"
 
 namespace clrsync::core
 {

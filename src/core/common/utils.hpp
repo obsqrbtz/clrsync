@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string>
 
-#include <core/palette/color_keys.hpp>
+#include "core/palette/color_keys.hpp"
 
 namespace clrsync::core
 {

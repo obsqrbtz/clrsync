@@ -49,6 +49,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake build-essential git \
             libglfw3-dev libfreetype6-dev libfontconfig1-dev \
+            zlib1g-dev libharfbuzz-dev \
             libx11-dev libxrandr-dev libxi-dev libgtk-3-dev \
             mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev \
             libxinerama-dev libxcursor-dev libxkbcommon-dev
@@ -83,6 +84,7 @@ jobs:
         run: |
           dnf install -y cmake gcc gcc-c++ make rpm-build git \
             glfw-devel freetype-devel fontconfig-devel \
+            zlib-devel harfbuzz-devel \
             libX11-devel libXrandr-devel libXi-devel \
             mesa-libGL-devel mesa-libGLU-devel \
             libXinerama-devel libXcursor-devel \

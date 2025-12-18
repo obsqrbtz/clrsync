@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <string>
 
-#include <core/io/file.hpp>
-#include <core/palette/color_keys.hpp>
-#include <core/palette/palette.hpp>
+#include "core/io/file.hpp"
+#include "core/palette/color_keys.hpp"
+#include "core/palette/palette.hpp"
 
 #include <memory>
 

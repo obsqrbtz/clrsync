@@ -2,9 +2,9 @@
 #define CLRSYNC_GUI_TEMPLATE_EDITOR_HPP
 
 #include "color_text_edit/TextEditor.h"
+#include "core/palette/palette.hpp"
 #include "gui/controllers/template_controller.hpp"
 #include "imgui.h"
-#include <core/palette/palette.hpp>
 #include <string>
 #include <vector>
 

@@ -1,12 +1,15 @@
 #ifdef _WIN32
 
-#include "gui/platform/file_browser.hpp"
-#include <filesystem>
-
+// clang-format off
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <commdlg.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <windows.h>
+// clang-format on
+
+#include "gui/platform/file_browser.hpp"
+#include <filesystem>
 
 namespace file_dialogs
 {
@@ -140,7 +143,11 @@ std::string select_folder_dialog(const std::string &title, const std::string &in
                 if (SUCCEEDED(hr))
                 {
                     std::wstring wpath(pszFilePath);
-                    std::string result(wpath.begin(), wpath.end());
+                    int size = WideCharToMultiByte(CP_UTF8, 0, wpath.c_str(), -1, nullptr, 0,
+                                                   nullptr, nullptr);
+                    std::string result(size - 1, 0);
+                    WideCharToMultiByte(CP_UTF8, 0, wpath.c_str(), -1, &result[0], size, nullptr,
+                                        nullptr);
                     CoTaskMemFree(pszFilePath);
                     pItem->Release();
                     pFileOpen->Release();

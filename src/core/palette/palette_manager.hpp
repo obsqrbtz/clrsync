@@ -1,14 +1,13 @@
 #ifndef CLRSYNC_CORE_PALETTE_PALETTE_MANAGER_HPP
 #define CLRSYNC_CORE_PALETTE_PALETTE_MANAGER_HPP
 
-#include "core/utils.hpp"
-#include <iostream>
+#include "core/common/utils.hpp"
 #include <string>
 #include <unordered_map>
 
-#include <core/config/config.hpp>
-#include <core/palette/palette.hpp>
-#include <core/palette/palette_file.hpp>
+#include "core/config/config.hpp"
+#include "core/palette/palette.hpp"
+#include "core/palette/palette_file.hpp"
 #include <filesystem>
 
 namespace clrsync::core

@@ -4,15 +4,15 @@
 
 #include <argparse/argparse.hpp>
 
-#include <core/config/config.hpp>
-#include <core/error.hpp>
-#include <core/io/toml_file.hpp>
-#include <core/palette/palette_file.hpp>
-#include <core/palette/palette_manager.hpp>
-#include <core/theme/theme_renderer.hpp>
-#include <core/theme/theme_template.hpp>
-#include <core/utils.hpp>
-#include <core/version.hpp>
+#include "core/common/error.hpp"
+#include "core/common/utils.hpp"
+#include "core/common/version.hpp"
+#include "core/config/config.hpp"
+#include "core/io/toml_file.hpp"
+#include "core/palette/palette_file.hpp"
+#include "core/palette/palette_manager.hpp"
+#include "core/theme/theme_renderer.hpp"
+#include "core/theme/theme_template.hpp"
 
 void handle_show_vars()
 {

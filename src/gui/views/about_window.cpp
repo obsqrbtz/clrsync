@@ -1,5 +1,5 @@
-#include "about_window.hpp"
-#include "core/version.hpp"
+#include "gui/views/about_window.hpp"
+#include "core/common/version.hpp"
 #include "gui/helpers/imgui_helpers.hpp"
 #include "imgui.h"
 
