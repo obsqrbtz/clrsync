@@ -1,3 +1,4 @@
+#ifdef __WIN32
 #include "core/config/config.hpp"
 #include "gui/platform/font_loader.hpp"
 #include "imgui_internal.h"
@@ -166,3 +167,4 @@ std::vector<std::string> font_loader::get_system_fonts()
     std::sort(fonts.begin(), fonts.end());
     return fonts;
 }
+#endif

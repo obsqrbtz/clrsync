@@ -2,6 +2,7 @@
 
 #include "gui/platform/file_browser.hpp"
 #include <gtk/gtk.h>
+#include <filesystem>
 
 namespace file_dialogs
 {

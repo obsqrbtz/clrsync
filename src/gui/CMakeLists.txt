@@ -16,7 +16,6 @@ set(GUI_SOURCES
         platform/macos/font_loader_macos.cpp
         platform/linux/file_browser_linux.cpp
         platform/windows/file_browser_windows.cpp
-        platform/macos/file_browser_macos.mm
         ${CMAKE_SOURCE_DIR}/lib/color_text_edit/TextEditor.cpp
         platform/linux/font_loader_linux.cpp
         platform/macos/font_loader_macos.cpp
@@ -24,6 +23,12 @@ set(GUI_SOURCES
         backend/glfw_opengl.cpp
         ui_manager.cpp
 )
+
+if(MACOS)
+    list(APPEND GUI_SOURCES
+        platform/macos/file_browser_macos.mm
+    )
+endif()
 
 if(WIN32)
     add_executable(clrsync_gui WIN32 ${GUI_SOURCES})
