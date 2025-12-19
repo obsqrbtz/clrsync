@@ -1,4 +1,4 @@
-#ifdef __WIN32
+#ifdef _WIN32
 #include "core/config/config.hpp"
 #include "gui/platform/font_loader.hpp"
 #include "imgui_internal.h"
