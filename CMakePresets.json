@@ -1,0 +1,325 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true
+    },
+    {
+      "name": "debug",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux",
+      "hidden": true,
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "windows",
+      "hidden": true,
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "macos",
+      "hidden": true,
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "gcc",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "ninja",
+      "hidden": true,
+      "generator": "Ninja"
+    },
+    {
+      "name": "make",
+      "hidden": true,
+      "generator": "Unix Makefiles"
+    },
+    {
+      "name": "msvc-ninja",
+      "displayName": "MSVC (Ninja)",
+      "generator": "Ninja",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/windows/msvc",
+      "cacheVariables": {
+      "CMAKE_C_COMPILER": "cl",
+      "CMAKE_CXX_COMPILER": "cl"
+  }
+    },
+    {
+      "name": "msvc-vs2026",
+      "displayName": "MSVC (Visual Studio 18 2026)",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/build/windows/msvc/vs2026",
+      "architecture": {
+        "value": "x64"
+      }
+    },
+    {
+      "name": "windows-msvc-ninja-debug",
+      "inherits": [
+        "windows",
+        "msvc-ninja",
+        "ninja",
+        "debug"
+      ],
+      "displayName": "Windows · MSVC · Ninja · Debug",
+      "binaryDir": "${sourceDir}/build/windows/msvc/ninja/debug"
+    },
+    {
+      "name": "windows-msvc-ninja-release",
+      "inherits": [
+        "windows",
+        "msvc-ninja",
+        "ninja",
+        "release"
+      ],
+      "displayName": "Windows · MSVC · Ninja · Release",
+      "binaryDir": "${sourceDir}/build/windows/msvc/ninja/release"
+    },
+    {
+      "name": "linux-gcc-ninja-debug",
+      "inherits": [
+        "linux",
+        "gcc",
+        "ninja",
+        "debug"
+      ],
+      "displayName": "Linux · GCC · Ninja · Debug",
+      "binaryDir": "${sourceDir}/build/linux/gcc/ninja/debug"
+    },
+    {
+      "name": "linux-gcc-ninja-release",
+      "inherits": [
+        "linux",
+        "gcc",
+        "ninja",
+        "release"
+      ],
+      "displayName": "Linux · GCC · Ninja · Release",
+      "binaryDir": "${sourceDir}/build/linux/gcc/ninja/release"
+    },
+    {
+      "name": "linux-gcc-make-debug",
+      "inherits": [
+        "linux",
+        "gcc",
+        "make",
+        "debug"
+      ],
+      "displayName": "Linux · GCC · Make · Debug",
+      "binaryDir": "${sourceDir}/build/linux/gcc/make/debug"
+    },
+    {
+      "name": "linux-gcc-make-release",
+      "inherits": [
+        "linux",
+        "gcc",
+        "make",
+        "release"
+      ],
+      "displayName": "Linux · GCC · Make · Release",
+      "binaryDir": "${sourceDir}/build/linux/gcc/make/release"
+    },
+    {
+      "name": "linux-clang-ninja-debug",
+      "inherits": [
+        "linux",
+        "clang",
+        "ninja",
+        "debug"
+      ],
+      "displayName": "Linux · Clang · Ninja · Debug",
+      "binaryDir": "${sourceDir}/build/linux/clang/ninja/debug"
+    },
+    {
+      "name": "linux-clang-ninja-release",
+      "inherits": [
+        "linux",
+        "clang",
+        "ninja",
+        "release"
+      ],
+      "displayName": "Linux · Clang · Ninja · Release",
+      "binaryDir": "${sourceDir}/build/linux/clang/ninja/release"
+    },
+    {
+      "name": "linux-clang-make-debug",
+      "inherits": [
+        "linux",
+        "clang",
+        "make",
+        "debug"
+      ],
+      "displayName": "Linux · Clang · Make · Debug",
+      "binaryDir": "${sourceDir}/build/linux/clang/make/debug"
+    },
+    {
+      "name": "linux-clang-make-release",
+      "inherits": [
+        "linux",
+        "clang",
+        "make",
+        "release"
+      ],
+      "displayName": "Linux · Clang · Make · Release",
+      "binaryDir": "${sourceDir}/build/linux/clang/make/release"
+    },
+    {
+      "name": "macos-appleclang-ninja-debug",
+      "inherits": [
+        "macos",
+        "clang",
+        "ninja",
+        "debug"
+      ],
+      "displayName": "macOS · Apple Clang · Ninja · Debug",
+      "binaryDir": "${sourceDir}/build/macos/appleclang/ninja/debug"
+    },
+    {
+      "name": "macos-appleclang-ninja-release",
+      "inherits": [
+        "macos",
+        "clang",
+        "ninja",
+        "release"
+      ],
+      "displayName": "macOS · Apple Clang · Ninja · Release",
+      "binaryDir": "${sourceDir}/build/macos/appleclang/ninja/release"
+    },
+    {
+      "name": "macos-appleclang-make-debug",
+      "inherits": [
+        "macos",
+        "clang",
+        "make",
+        "debug"
+      ],
+      "displayName": "macOS · Apple Clang · Make · Debug",
+      "binaryDir": "${sourceDir}/build/macos/appleclang/make/debug"
+    },
+    {
+      "name": "macos-appleclang-make-release",
+      "inherits": [
+        "macos",
+        "clang",
+        "make",
+        "release"
+      ],
+      "displayName": "macOS · Apple Clang · Make · Release",
+      "binaryDir": "${sourceDir}/build/macos/appleclang/make/release"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "vs-debug",
+      "configurePreset": "msvc-vs2026",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs-release",
+      "configurePreset": "msvc-vs2026",
+      "configuration": "Release"
+    },
+    {
+      "name": "msvc-ninja-debug",
+      "configurePreset": "windows-msvc-ninja-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "msvc-ninja-release",
+      "configurePreset": "windows-msvc-ninja-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-gcc-ninja-debug",
+      "configurePreset": "linux-gcc-ninja-debug"
+    },
+    {
+      "name": "linux-gcc-ninja-release",
+      "configurePreset": "linux-gcc-ninja-release"
+    },
+    {
+      "name": "linux-gcc-make-debug",
+      "configurePreset": "linux-gcc-make-debug"
+    },
+    {
+      "name": "linux-gcc-make-release",
+      "configurePreset": "linux-gcc-make-release"
+    },
+    {
+      "name": "linux-clang-ninja-debug",
+      "configurePreset": "linux-clang-ninja-debug"
+    },
+    {
+      "name": "linux-clang-ninja-release",
+      "configurePreset": "linux-clang-ninja-release"
+    },
+    {
+      "name": "linux-clang-make-debug",
+      "configurePreset": "linux-clang-make-debug"
+    },
+    {
+      "name": "linux-clang-make-release",
+      "configurePreset": "linux-clang-make-release"
+    },
+    {
+      "name": "macos-appleclang-ninja-debug",
+      "configurePreset": "macos-appleclang-ninja-debug"
+    },
+    {
+      "name": "macos-appleclang-ninja-release",
+      "configurePreset": "macos-appleclang-ninja-release"
+    },
+    {
+      "name": "macos-appleclang-make-debug",
+      "configurePreset": "macos-appleclang-make-debug"
+    },
+    {
+      "name": "macos-appleclang-make-release",
+      "configurePreset": "macos-appleclang-make-release"
+    }
+  ]
+}
