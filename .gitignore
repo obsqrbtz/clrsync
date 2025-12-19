@@ -3,6 +3,8 @@
 .vs
 out
 
+.clangd
+
 build/
 build-msvc/
 CMakeCache.txt
