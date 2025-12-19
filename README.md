@@ -3,8 +3,6 @@
 
 # clrsync
 
-**Notice:** This application is not yet released and is subject to change.  
-
 A theme management tool for synchronizing color schemes across multiple applications. clrsync allows to define color palettes once and apply them consistently to all configurable applications.
 
 ![Preview](assets/screenshot.png)
