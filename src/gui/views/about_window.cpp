@@ -35,8 +35,6 @@ void about_window::render(const clrsync::core::palette &pal)
         ImGui::Separator();
         ImGui::Spacing();
 
-        ImGui::Text("Links:");
-
         constexpr float button_width = 200.0f;
         float spacing = ImGui::GetStyle().ItemSpacing.x;
         float total_width = 2.0f * button_width + spacing;

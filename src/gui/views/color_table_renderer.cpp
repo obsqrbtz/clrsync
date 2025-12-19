@@ -114,11 +114,15 @@ void color_table_renderer::render(const clrsync::core::palette &current,
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 6));
 
+    ImGui::AlignTextToFramePadding();
     ImGui::Text("Filter:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(200);
-    bool filter_changed = ImGui::InputTextWithHint("##color_filter", "Search colors...",
-                                                   m_filter_text, sizeof(m_filter_text));
+    bool filter_changed =
+        ImGui::InputTextWithHint("##color_filter",
+                                "Search colors...",
+                                m_filter_text,
+                                sizeof(m_filter_text));
 
     if (m_filter_text[0] != '\0')
     {

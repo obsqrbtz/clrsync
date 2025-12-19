@@ -1,12 +1,11 @@
 #include "gui/views/settings_window.hpp"
 #include "core/common/error.hpp"
 #include "core/config/config.hpp"
-#include "gui/widgets/section_header.hpp"
 #include "gui/ui_manager.hpp"
+#include "gui/widgets/section_header.hpp"
 #include "imgui.h"
 
-settings_window::settings_window(clrsync::gui::ui_manager* ui_mgr)
-    : m_ui_manager(ui_mgr)
+settings_window::settings_window(clrsync::gui::ui_manager *ui_mgr) : m_ui_manager(ui_mgr)
 {
     if (m_ui_manager)
         m_available_fonts = m_ui_manager->get_system_fonts();
@@ -17,7 +16,7 @@ settings_window::settings_window(clrsync::gui::ui_manager* ui_mgr)
 
 void settings_window::setup_widgets()
 {
-    m_form.set_path_browse_callback([this](const std::string& current_path) -> std::string {
+    m_form.set_path_browse_callback([this](const std::string &current_path) -> std::string {
         if (m_ui_manager)
             return m_ui_manager->select_folder_dialog("Select Directory", current_path);
         return "";
@@ -57,25 +56,27 @@ void settings_window::render()
         ImGui::Separator();
 
         clrsync::gui::widgets::settings_buttons_callbacks callbacks{
-            .on_ok = [this]() {
-                apply_settings();
-                if (!m_error.has_error())
-                {
-                    m_visible = false;
-                    m_settings_changed = false;
-                }
-            },
-            .on_apply = [this]() {
-                apply_settings();
-                if (!m_error.has_error())
-                    m_settings_changed = false;
-            },
+            .on_ok =
+                [this]() {
+                    apply_settings();
+                    if (!m_error.has_error())
+                    {
+                        m_visible = false;
+                        m_settings_changed = false;
+                    }
+                },
+            .on_apply =
+                [this]() {
+                    apply_settings();
+                    if (!m_error.has_error())
+                        m_settings_changed = false;
+                },
             .on_reset = [this]() { reset_to_defaults(); },
-            .on_cancel = [this]() {
-                load_settings();
-                m_visible = false;
-            }
-        };
+            .on_cancel =
+                [this]() {
+                    load_settings();
+                    m_visible = false;
+                }};
         m_buttons.render(callbacks, m_settings_changed);
     }
     ImGui::End();
@@ -83,7 +84,7 @@ void settings_window::render()
 
 void settings_window::load_settings()
 {
-    auto& cfg = clrsync::core::config::instance();
+    auto &cfg = clrsync::core::config::instance();
 
     m_default_theme = cfg.default_theme();
     m_palettes_path = cfg.palettes_path();
@@ -106,7 +107,7 @@ void settings_window::load_settings()
 
 void settings_window::apply_settings()
 {
-    auto& cfg = clrsync::core::config::instance();
+    auto &cfg = clrsync::core::config::instance();
 
     if (m_default_theme.empty())
     {
@@ -176,22 +177,22 @@ void settings_window::render_general_tab()
 
     section_header("Theme Settings", m_current_palette);
 
-    form_field_config theme_cfg{
-        .label = "Default Theme",
-        .tooltip = "The default color scheme to load on startup",
-        .field_width = -100.0f
-    };
+    form_field_config theme_cfg;
+    theme_cfg.label = "Default Theme";
+    theme_cfg.label_width = 150.0f;
+    theme_cfg.tooltip = "The default color scheme to load on startup";
+    theme_cfg.field_width = -100.0f;
     if (m_form.render_text(theme_cfg, m_default_theme))
         m_settings_changed = true;
 
     section_header("Path Settings", m_current_palette);
 
-    form_field_config path_cfg{
-        .label = "Palettes Directory",
-        .tooltip = "Directory where color palettes are stored\nSupports ~ for home directory",
-        .field_width = -1.0f,
-        .type = field_type::path
-    };
+    form_field_config path_cfg;
+    path_cfg.label = "Palettes Directory";
+    path_cfg.label_width = 150.0f;
+    path_cfg.tooltip = "Directory where color palettes are stored\nSupports ~ for home directory";
+    path_cfg.field_width = -1.0f;
+    path_cfg.type = field_type::path;
     if (m_form.render_path(path_cfg, m_palettes_path))
         m_settings_changed = true;
 }
@@ -202,28 +203,28 @@ void settings_window::render_appearance_tab()
 
     section_header("Font Settings", m_current_palette);
 
-    form_field_config font_cfg{
-        .label = "Font Family",
-        .tooltip = "Select font family for the application interface",
-        .field_width = -1.0f,
-        .type = field_type::combo
-    };
+    form_field_config font_cfg;
+    font_cfg.label = "Font Family";
+    font_cfg.label_width = 150.0f;
+    font_cfg.tooltip = "Select font family for the application interface";
+    font_cfg.field_width = -1.0f;
+    font_cfg.type = field_type::combo;
     if (m_form.render_combo(font_cfg, m_available_fonts, m_selected_font_idx, m_font))
         m_settings_changed = true;
 
     ImGui::Spacing();
 
-    form_field_config size_cfg{
-        .label = "Font Size",
-        .tooltip = "Font size for the application interface (8-48)",
-        .field_width = 120.0f,
-        .type = field_type::slider,
-        .min_value = 8.0f,
-        .max_value = 48.0f,
-        .format = "%d px",
-        .show_reset = true,
-        .default_value = 14
-    };
+    form_field_config size_cfg;
+    size_cfg.label = "Font Size",
+    size_cfg.label_width = 150.0f;
+    size_cfg.tooltip = "Font size for the application interface (8-48)";
+    size_cfg.field_width = 120.0f;
+    size_cfg.type = field_type::slider;
+    size_cfg.min_value = 8.0f;
+    size_cfg.max_value = 48.0f;
+    size_cfg.format = "%d px";
+    size_cfg.show_reset = true;
+    size_cfg.default_value = 14;
     if (m_form.render_slider(size_cfg, m_font_size))
         m_settings_changed = true;
 }

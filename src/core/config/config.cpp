@@ -198,7 +198,7 @@ Result<void> config::save_config_value(const std::string &section, const std::st
         if (!m_temp_file)
         {
             m_temp_file = std::make_unique<clrsync::core::io::toml_file>(m_temp_config_path);
-            m_temp_file->parse();
+            (void)m_temp_file->parse();
         }
         
         m_temp_file->set_value(section, key, value);
@@ -347,7 +347,7 @@ Result<void> config::remove_template(const std::string &key)
         if (!m_temp_file)
         {
             m_temp_file = std::make_unique<clrsync::core::io::toml_file>(m_temp_config_path);
-            m_temp_file->parse();
+            (void)m_temp_file->parse();
         }
         m_temp_file->remove_section("templates." + key);
         return m_temp_file->save_file();

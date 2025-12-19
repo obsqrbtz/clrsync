@@ -27,6 +27,7 @@ void main_layout::render_menu_bar()
     ImGui::Begin("##TopBar", nullptr, flags);
 
     ImGuiStyle &style = ImGui::GetStyle();
+    style.FrameBorderSize = 1.0f;
 
     const char *settings_label = "Settings";
     const char *about_label = "About";
