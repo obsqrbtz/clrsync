@@ -20,8 +20,10 @@ const std::vector<std::string> COLOR_FORMATS = {
 }
 
 template_editor::template_editor(clrsync::gui::ui_manager* ui_mgr)
-    : m_template_name("new_template"), m_ui_manager(ui_mgr)
+    : m_ui_manager(ui_mgr)
 {
+    m_control_state.name = "new_template";
+
     m_autocomplete_bg_color = ImVec4(0.12f, 0.12f, 0.15f, 0.98f);
     m_autocomplete_border_color = ImVec4(0.4f, 0.4f, 0.45f, 1.0f);
     m_autocomplete_selected_color = ImVec4(0.25f, 0.45f, 0.75f, 0.9f);
@@ -49,6 +51,33 @@ template_editor::template_editor(clrsync::gui::ui_manager* ui_mgr)
     m_editor.SetText("# Enter your template here\n# Use {color_key} for color variables\n# "
                      "Examples: {color.hex}, {color.rgb}, {color.r}\n\n");
     m_editor.SetShowWhitespaces(false);
+
+    setup_callbacks();
+}
+
+void template_editor::setup_callbacks()
+{
+    m_callbacks.on_new = [this]() { new_template(); };
+    m_callbacks.on_save = [this]() { save_template(); };
+    m_callbacks.on_delete = [this]() { delete_template(); };
+    m_callbacks.on_enabled_changed = [this](bool enabled) {
+        m_template_controller.set_template_enabled(m_control_state.name, enabled);
+    };
+    m_callbacks.on_browse_input = [this](const std::string& path) -> std::string {
+        return m_ui_manager->open_file_dialog("Select Template File", path);
+    };
+    m_callbacks.on_browse_output = [this](const std::string& path) -> std::string {
+        return m_ui_manager->save_file_dialog("Select Output File", path);
+    };
+    m_callbacks.on_input_path_changed = [this](const std::string& path) {
+        m_template_controller.set_template_input_path(m_control_state.name, path);
+    };
+    m_callbacks.on_output_path_changed = [this](const std::string& path) {
+        m_template_controller.set_template_output_path(m_control_state.name, path);
+    };
+    m_callbacks.on_reload_command_changed = [this](const std::string& cmd) {
+        m_template_controller.set_template_reload_command(m_control_state.name, cmd);
+    };
 }
 
 void template_editor::apply_current_palette(const clrsync::core::palette &pal)
@@ -361,8 +390,8 @@ void template_editor::render()
     }
 
     clrsync::gui::widgets::delete_confirmation_dialog(
-        "Delete Template?", m_template_name, "template", m_current_palette, [this]() {
-            bool success = m_template_controller.remove_template(m_template_name);
+        "Delete Template?", m_control_state.name, "template", m_current_palette, [this]() {
+            bool success = m_template_controller.remove_template(m_control_state.name);
             if (success)
             {
                 new_template();
@@ -370,7 +399,7 @@ void template_editor::render()
             }
             else
             {
-                m_validation_error = "Failed to delete template";
+                m_validation.set("Failed to delete template");
             }
         });
 
@@ -379,216 +408,20 @@ void template_editor::render()
 
 void template_editor::render_controls()
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 8));
-
-    if (ImGui::Button(" + New "))
-    {
-        new_template();
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Create a new template");
-
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
         ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_S))
     {
         save_template();
     }
 
-    ImGui::SameLine();
-    if (ImGui::Button(" Save "))
-    {
-        save_template();
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Save template (Ctrl+S)");
-
-    if (m_is_editing_existing)
-    {
-        ImGui::SameLine();
-        auto error = clrsync::gui::widgets::palette_color(m_current_palette, "error");
-        auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f, error.w);
-        auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f, error.w);
-        auto on_error = clrsync::gui::widgets::palette_color(m_current_palette, "on_error");
-        ImGui::PushStyleColor(ImGuiCol_Button, error);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, error_hover);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, error_active);
-        ImGui::PushStyleColor(ImGuiCol_Text, on_error);
-        if (ImGui::Button(" Delete "))
-        {
-            delete_template();
-        }
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Delete this template");
-        ImGui::PopStyleColor(4);
-    }
-
-    ImGui::SameLine();
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
-
-    bool enabled_changed = false;
-    if (m_enabled)
-    {
-        ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
-        ImVec4 success_on_color =
-            clrsync::gui::widgets::palette_color(m_current_palette, "on_success", "on_surface");
-        ImVec4 success_hover =
-            ImVec4(success_color.x * 1.2f, success_color.y * 1.2f, success_color.z * 1.2f, 0.6f);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg,
-                              ImVec4(success_color.x, success_color.y, success_color.z, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, success_hover);
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, success_on_color);
-    }
-    else
-    {
-        ImVec4 error_color = clrsync::gui::widgets::palette_color(m_current_palette, "error", "accent");
-        ImVec4 error_on_color =
-            clrsync::gui::widgets::palette_color(m_current_palette, "on_error", "on_surface");
-        ImVec4 error_hover =
-            ImVec4(error_color.x * 1.2f, error_color.y * 1.2f, error_color.z * 1.2f, 0.6f);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg,
-                              ImVec4(error_color.x, error_color.y, error_color.z, 0.5f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, error_hover);
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, error_on_color);
-    }
-
-    enabled_changed = ImGui::Checkbox("Enabled", &m_enabled);
-    ImGui::PopStyleColor(3);
-
-    if (enabled_changed && m_is_editing_existing)
-    {
-        m_template_controller.set_template_enabled(m_template_name, m_enabled);
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Enable/disable this template for theme application");
-
-    ImGui::PopStyleVar();
-
-    ImGui::Spacing();
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Name:");
-    ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(180.0f);
-    char name_buf[256] = {0};
-    snprintf(name_buf, sizeof(name_buf), "%s", m_template_name.c_str());
-    if (ImGui::InputText("##template_name", name_buf, sizeof(name_buf)))
-    {
-        m_template_name = name_buf;
-        if (!m_template_name.empty())
-        {
-            m_validation_error = "";
-        }
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Unique name for this template");
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Input:");
-    ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(-120.0f);
-    char input_path_buf[512] = {0};
-    snprintf(input_path_buf, sizeof(input_path_buf), "%s", m_input_path.c_str());
-    if (ImGui::InputTextWithHint("##input_path", "Path to template file...", input_path_buf,
-                                 sizeof(input_path_buf)))
-    {
-        m_input_path = input_path_buf;
-        if (!m_input_path.empty())
-        {
-            m_validation_error = "";
-        }
-        if (m_is_editing_existing)
-        {
-            m_template_controller.set_template_input_path(m_template_name, m_input_path);
-        }
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Browse##input"))
-    {
-        std::string selected_path =
-            m_ui_manager->open_file_dialog("Select Template File", m_input_path);
-        if (!selected_path.empty())
-        {
-            m_input_path = selected_path;
-            if (m_is_editing_existing)
-            {
-                m_template_controller.set_template_input_path(m_template_name, m_input_path);
-            }
-            m_validation_error = "";
-        }
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Path where the template source file is stored");
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Output:");
-    ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(-120.0f);
-    char path_buf[512] = {0};
-    snprintf(path_buf, sizeof(path_buf), "%s", m_output_path.c_str());
-    if (ImGui::InputTextWithHint("##output_path", "Path for generated config...", path_buf,
-                                 sizeof(path_buf)))
-    {
-        m_output_path = path_buf;
-        if (!m_output_path.empty())
-        {
-            m_validation_error = "";
-        }
-        if (m_is_editing_existing)
-        {
-            m_template_controller.set_template_output_path(m_template_name, m_output_path);
-        }
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Browse##output"))
-    {
-        std::string selected_path =
-            m_ui_manager->save_file_dialog("Select Output File", m_output_path);
-        if (!selected_path.empty())
-        {
-            m_output_path = selected_path;
-            if (m_is_editing_existing)
-            {
-                m_template_controller.set_template_output_path(m_template_name, m_output_path);
-            }
-            m_validation_error = "";
-        }
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Path where the processed config will be written");
-
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Reload:");
-    ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(-FLT_MIN);
-    char reload_buf[512] = {0};
-    snprintf(reload_buf, sizeof(reload_buf), "%s", m_reload_command.c_str());
-    if (ImGui::InputTextWithHint("##reload_cmd", "Command to reload app (optional)...", reload_buf,
-                                 sizeof(reload_buf)))
-    {
-        m_reload_command = reload_buf;
-        if (m_is_editing_existing)
-        {
-            m_template_controller.set_template_reload_command(m_template_name, m_reload_command);
-        }
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Shell command to run after applying theme (e.g., 'pkill -USR1 kitty')");
-
-    if (!m_validation_error.empty())
-    {
-        ImGui::Spacing();
-        ImVec4 error_color = clrsync::gui::widgets::palette_color(m_current_palette, "error", "accent");
-        ImGui::PushStyleColor(ImGuiCol_Text, error_color);
-        ImGui::TextWrapped("%s", m_validation_error.c_str());
-        ImGui::PopStyleColor();
-    }
+    m_controls.render(m_control_state, m_callbacks, m_current_palette, m_validation);
 }
 
 void template_editor::render_editor()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
 
-    if (!m_is_editing_existing)
+    if (!m_control_state.is_editing_existing)
     {
         ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
         ImGui::PushStyleColor(ImGuiCol_Text, success_color);
@@ -597,7 +430,7 @@ void template_editor::render_editor()
     }
     else
     {
-        ImGui::Text("  %s", m_template_name.c_str());
+        ImGui::Text("  %s", m_control_state.name.c_str());
         auto trim_right = [](const std::string &s) -> std::string {
             size_t end = s.find_last_not_of("\r\n");
             return (end == std::string::npos) ? "" : s.substr(0, end + 1);
@@ -697,7 +530,7 @@ void template_editor::render_template_list()
     ImGui::TextDisabled("(%d)", (int)m_template_controller.templates().size());
     ImGui::Separator();
 
-    if (!m_is_editing_existing)
+    if (!m_control_state.is_editing_existing)
     {
         ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
         ImVec4 success_bg = ImVec4(success_color.x, success_color.y, success_color.z, 0.5f);
@@ -712,7 +545,7 @@ void template_editor::render_template_list()
 
     for (const auto &[key, tmpl] : templates)
     {
-        const bool selected = (m_template_name == key && m_is_editing_existing);
+        const bool selected = (m_control_state.name == key && m_control_state.is_editing_existing);
 
         if (!tmpl.enabled())
         {
@@ -797,44 +630,43 @@ bool template_editor::is_valid_path(const std::string &path)
 
 void template_editor::save_template()
 {
-    std::string trimmed_name = m_template_name;
+    std::string trimmed_name = m_control_state.name;
     trimmed_name.erase(0, trimmed_name.find_first_not_of(" \t\n\r"));
     trimmed_name.erase(trimmed_name.find_last_not_of(" \t\n\r") + 1);
 
-    std::string trimmed_input_path = m_input_path;
+    std::string trimmed_input_path = m_control_state.input_path;
     trimmed_input_path.erase(0, trimmed_input_path.find_first_not_of(" \t\n\r"));
     trimmed_input_path.erase(trimmed_input_path.find_last_not_of(" \t\n\r") + 1);
 
-    std::string trimmed_path = m_output_path;
+    std::string trimmed_path = m_control_state.output_path;
     trimmed_path.erase(0, trimmed_path.find_first_not_of(" \t\n\r"));
     trimmed_path.erase(trimmed_path.find_last_not_of(" \t\n\r") + 1);
 
     if (trimmed_name.empty())
     {
-        m_validation_error = "Error: Template name cannot be empty!";
+        m_validation.set("Error: Template name cannot be empty!");
         return;
     }
 
     if (trimmed_input_path.empty())
     {
-        m_validation_error = "Error: Input path cannot be empty!";
+        m_validation.set("Error: Input path cannot be empty!");
         return;
     }
 
     if (trimmed_path.empty())
     {
-        m_validation_error = "Error: Output path cannot be empty!";
+        m_validation.set("Error: Output path cannot be empty!");
         return;
     }
 
     if (!is_valid_path(trimmed_path))
     {
-        m_validation_error =
-            "Error: Output path is invalid! Must be a valid file path with directory.";
+        m_validation.set("Error: Output path is invalid! Must be a valid file path with directory.");
         return;
     }
 
-    m_validation_error = "";
+    m_validation.clear();
 
     auto &cfg = clrsync::core::config::instance();
 
@@ -849,7 +681,7 @@ void template_editor::save_template()
         }
         catch (const std::exception &e)
         {
-            m_validation_error = "Error: Could not create directory for input path";
+            m_validation.set("Error: Could not create directory for input path");
             return;
         }
     }
@@ -859,7 +691,7 @@ void template_editor::save_template()
     std::ofstream out(template_file);
     if (!out.is_open())
     {
-        m_validation_error = "Failed to write template file";
+        m_validation.set("Failed to write template file");
         return;
     }
 
@@ -867,20 +699,20 @@ void template_editor::save_template()
     out.close();
 
     clrsync::core::theme_template tmpl(trimmed_name, template_file.string(), trimmed_path);
-    tmpl.set_reload_command(m_reload_command);
-    tmpl.set_enabled(m_enabled);
+    tmpl.set_reload_command(m_control_state.reload_command);
+    tmpl.set_enabled(m_control_state.enabled);
 
     auto result = cfg.update_template(trimmed_name, tmpl);
     if (!result)
     {
-        m_validation_error = "Error saving template: " + result.error().description();
+        m_validation.set("Error saving template: " + result.error().description());
         return;
     }
 
-    m_template_name = trimmed_name;
-    m_input_path = trimmed_input_path;
-    m_output_path = trimmed_path;
-    m_is_editing_existing = true;
+    m_control_state.name = trimmed_name;
+    m_control_state.input_path = trimmed_input_path;
+    m_control_state.output_path = trimmed_path;
+    m_control_state.is_editing_existing = true;
     m_saved_content = m_editor.GetText();
     m_has_unsaved_changes = false;
 
@@ -895,13 +727,13 @@ void template_editor::load_template(const std::string &name)
     if (it != templates.end())
     {
         const auto &tmpl = it->second;
-        m_template_name = name;
-        m_input_path = tmpl.template_path();
-        m_output_path = tmpl.output_path();
-        m_reload_command = tmpl.reload_command();
-        m_enabled = tmpl.enabled();
-        m_is_editing_existing = true;
-        m_validation_error = "";
+        m_control_state.name = name;
+        m_control_state.input_path = tmpl.template_path();
+        m_control_state.output_path = tmpl.output_path();
+        m_control_state.reload_command = tmpl.reload_command();
+        m_control_state.enabled = tmpl.enabled();
+        m_control_state.is_editing_existing = true;
+        m_validation.clear();
 
         std::ifstream in(tmpl.template_path());
         if (in.is_open())
@@ -920,31 +752,31 @@ void template_editor::load_template(const std::string &name)
         }
         else
         {
-            m_validation_error = "Error loading template: Failed to open file";
+            m_validation.set("Error loading template: Failed to open file");
         }
     }
 }
 
 void template_editor::new_template()
 {
-    m_template_name = "new_template";
+    m_control_state.name = "new_template";
     std::string default_content =
         "# Enter your template here\n# Use {color_key} for color variables\n# "
         "Examples: {color.hex}, {color.rgb}, {color.r}\n\n";
     m_editor.SetText(default_content);
     m_saved_content = default_content;
-    m_input_path = "";
-    m_output_path = "";
-    m_reload_command = "";
-    m_enabled = true;
-    m_is_editing_existing = false;
-    m_validation_error = "";
+    m_control_state.input_path = "";
+    m_control_state.output_path = "";
+    m_control_state.reload_command = "";
+    m_control_state.enabled = true;
+    m_control_state.is_editing_existing = false;
+    m_validation.clear();
     m_has_unsaved_changes = false;
 }
 
 void template_editor::delete_template()
 {
-    if (!m_is_editing_existing || m_template_name.empty())
+    if (!m_control_state.is_editing_existing || m_control_state.name.empty())
         return;
 
     m_show_delete_confirmation = true;

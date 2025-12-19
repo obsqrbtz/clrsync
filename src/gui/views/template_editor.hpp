@@ -4,6 +4,8 @@
 #include "color_text_edit/TextEditor.h"
 #include "core/palette/palette.hpp"
 #include "gui/controllers/template_controller.hpp"
+#include "gui/widgets/template_controls.hpp"
+#include "gui/widgets/validation_message.hpp"
 #include "imgui.h"
 #include <string>
 #include <vector>
@@ -32,22 +34,20 @@ class template_editor
     void new_template();
     void delete_template();
     void refresh_templates();
+    void setup_callbacks();
 
     bool is_valid_path(const std::string &path);
 
     template_controller m_template_controller;
     TextEditor m_editor;
 
-    std::string m_template_name;
-    std::string m_input_path;
-    std::string m_output_path;
-    std::string m_reload_command;
-    std::string m_validation_error;
-    std::string m_saved_content;
-    bool m_has_unsaved_changes = false;
+    clrsync::gui::widgets::template_control_state m_control_state;
+    clrsync::gui::widgets::template_controls m_controls;
+    clrsync::gui::widgets::template_control_callbacks m_callbacks;
+    clrsync::gui::widgets::validation_message m_validation;
 
-    bool m_enabled{true};
-    bool m_is_editing_existing{false};
+    std::string m_saved_content;
+    bool m_has_unsaved_changes{false};
     bool m_show_delete_confirmation{false};
 
     bool m_show_autocomplete{false};

@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <string>
+#include <vector>
 
 namespace clrsync::gui::widgets
 {
@@ -12,7 +13,9 @@ enum class field_type
     text,
     text_with_hint,
     number,
+    slider,
     path,
+    combo,
     readonly_text
 };
 
@@ -27,6 +30,9 @@ struct form_field_config
     std::string hint;
     float min_value = 0.0f;
     float max_value = 100.0f;
+    std::string format;
+    bool show_reset = false;
+    int default_value = 0;
 };
 
 class form_field
@@ -40,6 +46,12 @@ class form_field
     // Render a number input field
     bool render_number(const form_field_config& config, int& value);
     bool render_number(const form_field_config& config, float& value);
+    
+    // Render a slider field
+    bool render_slider(const form_field_config& config, int& value);
+    
+    // Render a combo box field
+    bool render_combo(const form_field_config& config, const std::vector<std::string>& items, int& selected_idx, std::string& value);
     
     // Render a path input field with browse button
     bool render_path(const form_field_config& config, std::string& value);

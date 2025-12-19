@@ -1,11 +1,11 @@
 #include "gui/views/about_window.hpp"
 #include "core/common/version.hpp"
+#include "gui/widgets/centered_text.hpp"
 #include "gui/widgets/colors.hpp"
+#include "gui/widgets/link_button.hpp"
 #include "imgui.h"
 
-about_window::about_window()
-{
-}
+about_window::about_window() = default;
 
 void about_window::render(const clrsync::core::palette &pal)
 {
@@ -16,21 +16,13 @@ void about_window::render(const clrsync::core::palette &pal)
 
     if (ImGui::Begin("About clrsync", &m_visible, ImGuiWindowFlags_NoResize))
     {
-        const float window_width = ImGui::GetContentRegionAvail().x;
+        using namespace clrsync::gui::widgets;
 
-        ImGui::PushFont(ImGui::GetFont());
-        const char *title = "clrsync";
-        const float title_size = ImGui::CalcTextSize(title).x;
-        ImGui::SetCursorPosX((window_width - title_size) * 0.5f);
-        ImVec4 title_color = clrsync::gui::widgets::palette_color(pal, "info", "accent");
-        ImGui::TextColored(title_color, "%s", title);
-        ImGui::PopFont();
+        ImVec4 title_color = palette_color(pal, "info", "accent");
+        centered_text("clrsync", title_color);
 
-        std::string version = "Version " + clrsync::core::version_string();
-        const float version_size = ImGui::CalcTextSize(version.c_str()).x;
-        ImGui::SetCursorPosX((window_width - version_size) * 0.5f);
-        ImVec4 subtitle_color = clrsync::gui::widgets::palette_color(pal, "editor_inactive", "foreground");
-        ImGui::TextColored(subtitle_color, "%s", version.c_str());
+        ImVec4 subtitle_color = palette_color(pal, "editor_inactive", "foreground");
+        centered_text("Version " + clrsync::core::version_string(), subtitle_color);
 
         ImGui::Spacing();
         ImGui::Separator();
@@ -40,47 +32,27 @@ void about_window::render(const clrsync::core::palette &pal)
 
         ImGui::Spacing();
         ImGui::Spacing();
-
         ImGui::Separator();
         ImGui::Spacing();
 
         ImGui::Text("Links:");
 
-        const float button_width = 200.0f;
-        const float spacing = ImGui::GetStyle().ItemSpacing.x;
-        const float total_width = 2.0f * button_width + spacing;
-        ImGui::SetCursorPosX((window_width - total_width) * 0.5f);
+        constexpr float button_width = 200.0f;
+        float spacing = ImGui::GetStyle().ItemSpacing.x;
+        float total_width = 2.0f * button_width + spacing;
 
-        if (ImGui::Button("GitHub Repository", ImVec2(button_width, 0)))
-        {
-#ifdef _WIN32
-            system("start https://github.com/obsqrbtz/clrsync");
-#elif __APPLE__
-            system("open https://github.com/obsqrbtz/clrsync");
-#else
-            system("xdg-open https://github.com/obsqrbtz/clrsync");
-#endif
-        }
-        ImGui::SameLine();
-
-        if (ImGui::Button("Documentation", ImVec2(button_width, 0)))
-        {
-#ifdef _WIN32
-            system("start https://binarygoose.dev/projects/clrsync/overview/");
-#elif __APPLE__
-            system("open https://binarygoose.dev/projects/clrsync/overview/");
-#else
-            system("xdg-open https://binarygoose.dev/projects/clrsync/overview/");
-#endif
-        }
+        centered_buttons(total_width, [button_width]() {
+            link_button("GitHub Repository", "https://github.com/obsqrbtz/clrsync", button_width);
+            ImGui::SameLine();
+            link_button("Documentation", "https://binarygoose.dev/projects/clrsync/overview/", button_width);
+        });
 
         ImGui::Spacing();
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
 
-        ImVec4 license_color = clrsync::gui::widgets::palette_color(pal, "editor_inactive", "foreground");
-        ImGui::TextColored(license_color, "MIT License");
+        ImGui::TextColored(subtitle_color, "MIT License");
         ImGui::TextWrapped(
             "Copyright (c) 2025 Daniel Dada\n\n"
             "Permission is hereby granted, free of charge, to any person obtaining a copy "

@@ -181,4 +181,66 @@ void form_field::set_path_browse_callback(const std::function<std::string(const 
     m_path_browse_callback = callback;
 }
 
+bool form_field::render_slider(const form_field_config& config, int& value)
+{
+    render_label(config);
+    
+    if (config.field_width > 0)
+        ImGui::SetNextItemWidth(config.field_width);
+    else if (config.field_width < 0)
+        ImGui::SetNextItemWidth(config.field_width);
+    
+    std::string id = "##" + config.label;
+    std::string format = config.format.empty() ? "%d" : config.format.c_str();
+    int old_value = value;
+    bool changed = ImGui::SliderInt(id.c_str(), &value, (int)config.min_value, (int)config.max_value, format.c_str());
+    
+    if (config.show_reset)
+    {
+        ImGui::SameLine();
+        std::string reset_id = "Reset##" + config.label;
+        if (ImGui::Button(reset_id.c_str()))
+        {
+            value = config.default_value;
+            changed = (old_value != value);
+        }
+    }
+    
+    render_tooltip(config);
+    return changed;
+}
+
+bool form_field::render_combo(const form_field_config& config, const std::vector<std::string>& items, int& selected_idx, std::string& value)
+{
+    render_label(config);
+    
+    if (config.field_width > 0)
+        ImGui::SetNextItemWidth(config.field_width);
+    else if (config.field_width < 0)
+        ImGui::SetNextItemWidth(config.field_width);
+    
+    std::string id = "##" + config.label;
+    bool changed = false;
+    
+    if (ImGui::BeginCombo(id.c_str(), value.c_str()))
+    {
+        for (int i = 0; i < static_cast<int>(items.size()); i++)
+        {
+            bool is_selected = (i == selected_idx);
+            if (ImGui::Selectable(items[i].c_str(), is_selected))
+            {
+                selected_idx = i;
+                value = items[i];
+                changed = true;
+            }
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    
+    render_tooltip(config);
+    return changed;
+}
+
 } // namespace clrsync::gui::widgets

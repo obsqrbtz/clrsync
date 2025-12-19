@@ -17,6 +17,13 @@ set(GUI_SOURCES
         widgets/styled_checkbox.cpp
         widgets/autocomplete.cpp
         widgets/form_field.cpp
+        widgets/error_message.cpp
+        widgets/settings_buttons.cpp
+        widgets/section_header.cpp
+        widgets/link_button.cpp
+        widgets/centered_text.cpp
+        widgets/validation_message.cpp
+        widgets/template_controls.cpp
         layout/main_layout.cpp
         platform/windows/font_loader_windows.cpp
         platform/linux/font_loader_linux.cpp
