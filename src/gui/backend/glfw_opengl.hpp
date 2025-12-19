@@ -23,6 +23,9 @@ namespace clrsync::gui::backend{
         void* get_native_window() const override;
         void* get_graphics_context() const override;
         
+        std::string get_glfw_version() const;
+        std::string get_glfw_platform() const;
+        
         bool init_imgui_backend() override;
         void shutdown_imgui_backend() override;
         void imgui_new_frame() override;

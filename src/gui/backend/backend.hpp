@@ -9,7 +9,6 @@ namespace clrsync::gui::backend{
         std::string title = "clrsync";
         int width = 1280;
         int height = 720;
-        bool resizable = true;
         bool decorated = true;
         bool transparent_framebuffer = true;
         float clear_color[4] = {0.1f, 0.1f, 0.1f, 0.0f};

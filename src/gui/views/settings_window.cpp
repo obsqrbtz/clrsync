@@ -1,21 +1,21 @@
 #include "gui/views/settings_window.hpp"
 #include "core/common/error.hpp"
 #include "core/config/config.hpp"
-#include "gui/helpers/imgui_helpers.hpp"
-#include "gui/platform/file_browser.hpp"
-#include "gui/platform/font_loader.hpp"
+#include "gui/widgets/colors.hpp"
+#include "gui/ui_manager.hpp"
 #include "imgui.h"
 #include <cstring>
 
-settings_window::settings_window()
-    : m_font_size(14), m_selected_font_idx(0), m_settings_changed(false), m_current_tab(0)
+settings_window::settings_window(clrsync::gui::ui_manager* ui_mgr)
+    : m_font_size(14), m_selected_font_idx(0), m_settings_changed(false), m_current_tab(0),
+      m_ui_manager(ui_mgr)
 {
     m_default_theme[0] = '\0';
     m_palettes_path[0] = '\0';
     m_font[0] = '\0';
 
-    font_loader loader;
-    m_available_fonts = loader.get_system_fonts();
+    if (m_ui_manager)
+        m_available_fonts = m_ui_manager->get_system_fonts();
 
     load_settings();
 }
@@ -145,10 +145,14 @@ void settings_window::apply_settings()
         return;
     }
 
-    font_loader fn_loader;
-    auto font = fn_loader.load_font(m_font, m_font_size);
-    if (font)
-        ImGui::GetIO().FontDefault = font;
+    if (m_ui_manager)
+    {
+        if (!m_ui_manager->reload_font(m_font, m_font_size))
+        {
+            m_error_message = "Failed to load font: " + std::string(m_font);
+            return;
+        }
+    }
 
     m_error_message.clear();
     m_settings_changed = false;
@@ -158,7 +162,7 @@ void settings_window::render_general_tab()
 {
     ImGui::Spacing();
 
-    auto accent_color = palette_utils::get_color(m_current_palette, "accent");
+    auto accent_color = clrsync::gui::widgets::palette_color(m_current_palette, "accent");
     ImGui::TextColored(accent_color, "Theme Settings");
     ImGui::Separator();
     ImGui::Spacing();
@@ -186,7 +190,7 @@ void settings_window::render_general_tab()
     if (ImGui::Button("Browse"))
     {
         std::string selected_path =
-            file_dialogs::select_folder_dialog("Select Palettes Directory", m_palettes_path);
+            m_ui_manager->select_folder_dialog("Select Palettes Directory", m_palettes_path);
         if (!selected_path.empty())
         {
             strncpy(m_palettes_path, selected_path.c_str(), sizeof(m_palettes_path) - 1);
@@ -200,7 +204,7 @@ void settings_window::render_appearance_tab()
 {
     ImGui::Spacing();
 
-    auto accent_color = palette_utils::get_color(m_current_palette, "accent");
+    auto accent_color = clrsync::gui::widgets::palette_color(m_current_palette, "accent");
     ImGui::TextColored(accent_color, "Font Settings");
     ImGui::Separator();
     ImGui::Spacing();
@@ -254,8 +258,8 @@ void settings_window::render_status_messages()
     {
         ImGui::Spacing();
 
-        auto error_bg_color = palette_utils::get_color(m_current_palette, "error");
-        auto error_text_color = palette_utils::get_color(m_current_palette, "on_error");
+        auto error_bg_color = clrsync::gui::widgets::palette_color(m_current_palette, "error");
+        auto error_text_color = clrsync::gui::widgets::palette_color(m_current_palette, "on_error");
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, error_bg_color);
         ImGui::PushStyleColor(ImGuiCol_Border, error_bg_color);

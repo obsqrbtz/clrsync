@@ -3,8 +3,9 @@
 #include "core/config/config.hpp"
 #include "core/palette/color_keys.hpp"
 #include "core/theme/theme_template.hpp"
-#include "gui/helpers/imgui_helpers.hpp"
-#include "gui/platform/file_browser.hpp"
+#include "gui/widgets/colors.hpp"
+#include "gui/widgets/dialogs.hpp"
+#include "gui/ui_manager.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
@@ -18,7 +19,8 @@ const std::vector<std::string> COLOR_FORMATS = {
     "l",   "hsl",          "hsla"};
 }
 
-template_editor::template_editor() : m_template_name("new_template")
+template_editor::template_editor(clrsync::gui::ui_manager* ui_mgr)
+    : m_template_name("new_template"), m_ui_manager(ui_mgr)
 {
     m_autocomplete_bg_color = ImVec4(0.12f, 0.12f, 0.15f, 0.98f);
     m_autocomplete_border_color = ImVec4(0.4f, 0.4f, 0.45f, 1.0f);
@@ -56,7 +58,7 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
     if (colors.empty())
         return;
     auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
-        return palette_utils::get_color_u32(pal, key, fallback);
+        return clrsync::gui::widgets::palette_color_u32(pal, key, fallback);
     };
 
     auto palette = m_editor.GetPalette();
@@ -99,14 +101,14 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
 
     m_editor.SetPalette(palette);
 
-    m_autocomplete_bg_color = palette_utils::get_color(pal, "surface", "background");
+    m_autocomplete_bg_color = clrsync::gui::widgets::palette_color(pal, "surface", "background");
     m_autocomplete_bg_color.w = 0.98f;
-    m_autocomplete_border_color = palette_utils::get_color(pal, "border", "surface_variant");
-    m_autocomplete_selected_color = palette_utils::get_color(pal, "accent", "surface_variant");
-    m_autocomplete_text_color = palette_utils::get_color(pal, "on_surface", "foreground");
-    m_autocomplete_selected_text_color = palette_utils::get_color(pal, "on_surface", "foreground");
+    m_autocomplete_border_color = clrsync::gui::widgets::palette_color(pal, "border", "surface_variant");
+    m_autocomplete_selected_color = clrsync::gui::widgets::palette_color(pal, "accent", "surface_variant");
+    m_autocomplete_text_color = clrsync::gui::widgets::palette_color(pal, "on_surface", "foreground");
+    m_autocomplete_selected_text_color = clrsync::gui::widgets::palette_color(pal, "on_surface", "foreground");
     m_autocomplete_dim_text_color =
-        palette_utils::get_color(pal, "on_surface_variant", "editor_inactive");
+        clrsync::gui::widgets::palette_color(pal, "on_surface_variant", "editor_inactive");
 }
 
 void template_editor::update_autocomplete_suggestions()
@@ -358,7 +360,7 @@ void template_editor::render()
         m_show_delete_confirmation = false;
     }
 
-    palette_utils::render_delete_confirmation_popup(
+    clrsync::gui::widgets::delete_confirmation_dialog(
         "Delete Template?", m_template_name, "template", m_current_palette, [this]() {
             bool success = m_template_controller.remove_template(m_template_name);
             if (success)
@@ -403,10 +405,10 @@ void template_editor::render_controls()
     if (m_is_editing_existing)
     {
         ImGui::SameLine();
-        auto error = palette_utils::get_color(m_current_palette, "error");
+        auto error = clrsync::gui::widgets::palette_color(m_current_palette, "error");
         auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f, error.w);
         auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f, error.w);
-        auto on_error = palette_utils::get_color(m_current_palette, "on_error");
+        auto on_error = clrsync::gui::widgets::palette_color(m_current_palette, "on_error");
         ImGui::PushStyleColor(ImGuiCol_Button, error);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, error_hover);
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, error_active);
@@ -426,9 +428,9 @@ void template_editor::render_controls()
     bool enabled_changed = false;
     if (m_enabled)
     {
-        ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
+        ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
         ImVec4 success_on_color =
-            palette_utils::get_color(m_current_palette, "on_success", "on_surface");
+            clrsync::gui::widgets::palette_color(m_current_palette, "on_success", "on_surface");
         ImVec4 success_hover =
             ImVec4(success_color.x * 1.2f, success_color.y * 1.2f, success_color.z * 1.2f, 0.6f);
         ImGui::PushStyleColor(ImGuiCol_FrameBg,
@@ -438,9 +440,9 @@ void template_editor::render_controls()
     }
     else
     {
-        ImVec4 error_color = palette_utils::get_color(m_current_palette, "error", "accent");
+        ImVec4 error_color = clrsync::gui::widgets::palette_color(m_current_palette, "error", "accent");
         ImVec4 error_on_color =
-            palette_utils::get_color(m_current_palette, "on_error", "on_surface");
+            clrsync::gui::widgets::palette_color(m_current_palette, "on_error", "on_surface");
         ImVec4 error_hover =
             ImVec4(error_color.x * 1.2f, error_color.y * 1.2f, error_color.z * 1.2f, 0.6f);
         ImGui::PushStyleColor(ImGuiCol_FrameBg,
@@ -503,7 +505,7 @@ void template_editor::render_controls()
     if (ImGui::Button("Browse##input"))
     {
         std::string selected_path =
-            file_dialogs::open_file_dialog("Select Template File", m_input_path);
+            m_ui_manager->open_file_dialog("Select Template File", m_input_path);
         if (!selected_path.empty())
         {
             m_input_path = selected_path;
@@ -540,7 +542,7 @@ void template_editor::render_controls()
     if (ImGui::Button("Browse##output"))
     {
         std::string selected_path =
-            file_dialogs::save_file_dialog("Select Output File", m_output_path);
+            m_ui_manager->save_file_dialog("Select Output File", m_output_path);
         if (!selected_path.empty())
         {
             m_output_path = selected_path;
@@ -575,7 +577,7 @@ void template_editor::render_controls()
     if (!m_validation_error.empty())
     {
         ImGui::Spacing();
-        ImVec4 error_color = palette_utils::get_color(m_current_palette, "error", "accent");
+        ImVec4 error_color = clrsync::gui::widgets::palette_color(m_current_palette, "error", "accent");
         ImGui::PushStyleColor(ImGuiCol_Text, error_color);
         ImGui::TextWrapped("%s", m_validation_error.c_str());
         ImGui::PopStyleColor();
@@ -588,7 +590,7 @@ void template_editor::render_editor()
 
     if (!m_is_editing_existing)
     {
-        ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
+        ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
         ImGui::PushStyleColor(ImGuiCol_Text, success_color);
         ImGui::Text("  New Template");
         ImGui::PopStyleColor();
@@ -608,7 +610,7 @@ void template_editor::render_editor()
         if (m_has_unsaved_changes)
         {
             ImGui::SameLine();
-            ImVec4 warning_color = palette_utils::get_color(m_current_palette, "warning", "accent");
+            ImVec4 warning_color = clrsync::gui::widgets::palette_color(m_current_palette, "warning", "accent");
             ImGui::PushStyleColor(ImGuiCol_Text, warning_color);
             ImGui::Text("(unsaved)");
             ImGui::PopStyleColor();
@@ -697,7 +699,7 @@ void template_editor::render_template_list()
 
     if (!m_is_editing_existing)
     {
-        ImVec4 success_color = palette_utils::get_color(m_current_palette, "success", "accent");
+        ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
         ImVec4 success_bg = ImVec4(success_color.x, success_color.y, success_color.z, 0.5f);
         ImGui::PushStyleColor(ImGuiCol_Text, success_color);
         ImGui::PushStyleColor(ImGuiCol_Header, success_bg);
@@ -714,7 +716,7 @@ void template_editor::render_template_list()
 
         if (!tmpl.enabled())
         {
-            ImVec4 disabled_color = palette_utils::get_color(
+            ImVec4 disabled_color = clrsync::gui::widgets::palette_color(
                 m_current_palette, "on_surface_variant", "editor_inactive");
             ImGui::PushStyleColor(ImGuiCol_Text, disabled_color);
         }

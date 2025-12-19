@@ -11,8 +11,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 file(WRITE "${CMAKE_SOURCE_DIR}/.clangd" 
-    "CompileFlags:
-    CompilationDatabase: ${CMAKE_BINARY_DIR}")
+    "CompileFlags:\n  CompilationDatabase: ${CMAKE_BINARY_DIR}\n")
 
 option(USE_SYSTEM_GLFW "Use system-installed GLFW instead of fetching it statically" OFF)
 message(STATUS "USE_SYSTEM_GLFW: ${USE_SYSTEM_GLFW}")

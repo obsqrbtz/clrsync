@@ -1,6 +1,6 @@
 #include "gui/views/preview_renderer.hpp"
 #include "gui/controllers/theme_applier.hpp"
-#include "gui/helpers/imgui_helpers.hpp"
+#include "gui/widgets/colors.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <array>
@@ -236,7 +236,7 @@ void preview_renderer::render(const clrsync::core::palette &current)
 {
     if (current.colors().empty())
     {
-        ImVec4 error_color = palette_utils::get_color(current, "error", "accent");
+        ImVec4 error_color = clrsync::gui::widgets::palette_color(current, "error", "accent");
         ImGui::TextColored(error_color, "Current palette is empty");
         return;
     }

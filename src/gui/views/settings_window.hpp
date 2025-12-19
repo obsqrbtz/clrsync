@@ -5,10 +5,15 @@
 #include <string>
 #include <vector>
 
+namespace clrsync::gui
+{
+class ui_manager;
+}
+
 class settings_window
 {
   public:
-    settings_window();
+    settings_window(clrsync::gui::ui_manager* ui_mgr);
     void render();
     void show()
     {
@@ -55,6 +60,7 @@ class settings_window
     int m_current_tab;
 
     clrsync::core::palette m_current_palette;
+    clrsync::gui::ui_manager* m_ui_manager;
 };
 
 #endif // CLRSYNC_GUI_SETTINGS_WINDOW_HPP

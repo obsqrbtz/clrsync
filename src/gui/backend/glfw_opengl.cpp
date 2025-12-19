@@ -1,5 +1,6 @@
 #include "gui/backend/glfw_opengl.hpp"
 #include <iostream>
+#include <string>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -33,7 +34,7 @@ bool glfw_opengl_backend::initialize(const window_config &config)
 #else
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #endif
-    glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE,GLFW_TRUE);
     glfwWindowHint(GLFW_DECORATED, config.decorated ? GLFW_TRUE : GLFW_FALSE);
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, config.transparent_framebuffer ? GLFW_TRUE : GLFW_FALSE);
 
@@ -96,6 +97,22 @@ void *glfw_opengl_backend::get_native_window() const
 void *glfw_opengl_backend::get_graphics_context() const
 {
     return static_cast<void *>(m_window);
+}
+
+std::string glfw_opengl_backend::get_glfw_version() const
+{
+    return glfwGetVersionString();
+}
+
+std::string glfw_opengl_backend::get_glfw_platform() const
+{
+    switch (glfwGetPlatform()) {
+        case GLFW_PLATFORM_WAYLAND: return "Wayland";
+        case GLFW_PLATFORM_X11: return "X11";
+        case GLFW_PLATFORM_COCOA: return "Cocoa";
+        case GLFW_PLATFORM_WIN32: return "Win32";
+        default: return "Unknown";
+    }
 }
 
 bool glfw_opengl_backend::init_imgui_backend()

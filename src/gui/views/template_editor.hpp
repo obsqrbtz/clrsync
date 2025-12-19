@@ -8,10 +8,15 @@
 #include <string>
 #include <vector>
 
+namespace clrsync::gui
+{
+class ui_manager;
+}
+
 class template_editor
 {
   public:
-    template_editor();
+    template_editor(clrsync::gui::ui_manager* ui_mgr);
     void render();
     void apply_current_palette(const clrsync::core::palette &pal);
 
@@ -62,6 +67,7 @@ class template_editor
     ImVec4 m_autocomplete_dim_text_color;
 
     clrsync::core::palette m_current_palette;
+    clrsync::gui::ui_manager* m_ui_manager;
 };
 
 #endif // CLRSYNC_GUI_TEMPLATE_EDITOR_HPP

@@ -7,19 +7,23 @@ set(GUI_SOURCES
         views/template_editor.cpp
         controllers/palette_controller.cpp
         controllers/template_controller.cpp
-        helpers/imgui_helpers.cpp
-        helpers/imgui_helpers.hpp
         views/about_window.cpp
         views/settings_window.cpp
+        widgets/colors.cpp
+        widgets/dialogs.cpp
+        widgets/palette_selector.cpp
+        widgets/input_dialog.cpp
+        widgets/action_buttons.cpp
+        widgets/styled_checkbox.cpp
+        widgets/autocomplete.cpp
+        widgets/form_field.cpp
+        layout/main_layout.cpp
         platform/windows/font_loader_windows.cpp
         platform/linux/font_loader_linux.cpp
         platform/macos/font_loader_macos.cpp
         platform/linux/file_browser_linux.cpp
         platform/windows/file_browser_windows.cpp
         ${CMAKE_SOURCE_DIR}/lib/color_text_edit/TextEditor.cpp
-        platform/linux/font_loader_linux.cpp
-        platform/macos/font_loader_macos.cpp
-        platform/windows/font_loader_windows.cpp
         backend/glfw_opengl.cpp
         ui_manager.cpp
 )

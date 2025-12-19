@@ -1,6 +1,6 @@
 #include "gui/views/about_window.hpp"
 #include "core/common/version.hpp"
-#include "gui/helpers/imgui_helpers.hpp"
+#include "gui/widgets/colors.hpp"
 #include "imgui.h"
 
 about_window::about_window()
@@ -22,14 +22,14 @@ void about_window::render(const clrsync::core::palette &pal)
         const char *title = "clrsync";
         const float title_size = ImGui::CalcTextSize(title).x;
         ImGui::SetCursorPosX((window_width - title_size) * 0.5f);
-        ImVec4 title_color = palette_utils::get_color(pal, "info", "accent");
+        ImVec4 title_color = clrsync::gui::widgets::palette_color(pal, "info", "accent");
         ImGui::TextColored(title_color, "%s", title);
         ImGui::PopFont();
 
         std::string version = "Version " + clrsync::core::version_string();
         const float version_size = ImGui::CalcTextSize(version.c_str()).x;
         ImGui::SetCursorPosX((window_width - version_size) * 0.5f);
-        ImVec4 subtitle_color = palette_utils::get_color(pal, "editor_inactive", "foreground");
+        ImVec4 subtitle_color = clrsync::gui::widgets::palette_color(pal, "editor_inactive", "foreground");
         ImGui::TextColored(subtitle_color, "%s", version.c_str());
 
         ImGui::Spacing();
@@ -79,7 +79,7 @@ void about_window::render(const clrsync::core::palette &pal)
         ImGui::Separator();
         ImGui::Spacing();
 
-        ImVec4 license_color = palette_utils::get_color(pal, "editor_inactive", "foreground");
+        ImVec4 license_color = clrsync::gui::widgets::palette_color(pal, "editor_inactive", "foreground");
         ImGui::TextColored(license_color, "MIT License");
         ImGui::TextWrapped(
             "Copyright (c) 2025 Daniel Dada\n\n"
