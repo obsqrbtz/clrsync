@@ -47,6 +47,14 @@ A theme management tool for synchronizing color schemes across multiple applicat
 
 ### Linux
 
+#### Arch Linux
+
+Install the package from AUR using any helper or install manually
+
+```shell
+yay -S clrsync-git
+```
+
 #### Ubuntu
 
 1. Download the latest .deb from the [releases page](https://github.com/obsqrbtz/clrsync/releases)
