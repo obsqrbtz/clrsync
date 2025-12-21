@@ -12,7 +12,7 @@ output_path = '~/.config/clrsync/formats-demo'
 [templates.kitty]
 enabled = true
 input_path = '~/.config/clrsync/templates/kitty.conf'
-output_path = '~/.config/kitty/kitty_test.conf'
+output_path = '~/.config/kitty/clrsync.conf'
 reload_cmd = 'pkill -SIGUSR1 kitty'
 
 [templates.nvim]
