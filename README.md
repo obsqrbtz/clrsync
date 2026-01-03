@@ -32,6 +32,7 @@ A theme management tool for synchronizing color schemes across multiple applicat
 - [Usage](#usage)
   - [CLI](#cli)
   - [GUI](#gui)
+- [Extras](#extras)
 - [Acknowledgments](#acknowledgments)
 
 ## Features
@@ -463,6 +464,10 @@ The GUI provides:
 - **Template Editor**: Edit template files
 - **Live Preview**: See changes in real-time
 
+## Extras
+
+You may find some pre-configured color schemes and templates in [extra](extra) directory of this repository.
+
 ## Acknowledgments
 
 - **[matugen](https://github.com/InioX/matugen)** - A material you color generation tool
@@ -471,4 +476,3 @@ The GUI provides:
 - **[toml++](https://github.com/marzer/tomlplusplus)** - Header-only TOML config file parser and serializer for C++17
 - **[argparse](https://github.com/p-ranav/argparse)** - Argument Parser for Modern C++
 - **[ImGuiColorTextEdit](https://github.com/BalazsJako/ImGuiColorTextEdit)** - Syntax highlighting text editor for ImGui
-- **cursed** by **[pyratebeard](https://pyratebeard.net)** - Color scheme

@@ -1,0 +1,69 @@
+[colors.primary]
+background = '{background}'
+foreground = '{foreground}'
+
+[colors.cursor]
+text = '{background}'
+cursor = '{cursor}'
+
+[colors.vi_mode_cursor]
+text = '{background}'
+cursor = '{cursor}'
+
+[colors.selection]
+text = 'CellForeground'
+background = '{editor_selected}'
+
+[colors.search.matches]
+foreground = '{background}'
+background = '{base0A}'
+
+[colors.search.focused_match]
+foreground = '{background}'
+background = '{accent}'
+
+[colors.footer_bar]
+foreground = '{foreground}'
+background = '{surface}'
+
+[colors.hints.start]
+foreground = '{background}'
+background = '{warning}'
+
+[colors.hints.end]
+foreground = '{background}'
+background = '{surface_variant}'
+
+[colors.line_indicator]
+foreground = 'None'
+background = 'None'
+
+[colors.normal]
+black = '{base00}'
+red = '{base08}'
+green = '{base01}'
+yellow = '{base02}'
+blue = '{base06}'
+magenta = '{base05}'
+cyan = '{base0E}'
+white = '{base07}'
+
+[colors.bright]
+black = '{border_focused}'
+red = '{editor_error}'
+green = '{editor_success}'
+yellow = '{base0A}'
+blue = '{editor_link}'
+magenta = '{base0D}'
+cyan = '{editor_comment}'
+white = '{base0F}'
+
+[colors.dim]
+black = '{border}'
+red = '{base0C}'
+green = '{base01}'
+yellow = '{editor_string}'
+blue = '{base06}'
+magenta = '{base05}'
+cyan = '{base0E}'
+white = '{base07}'

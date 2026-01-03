@@ -1,0 +1,26 @@
+background = {background}
+foreground = {foreground}
+
+cursor-color = {cursor}
+cursor-text = {foreground}
+
+selection-background = {editor_selected}
+selection-foreground = {foreground}
+
+palette = 0={base00}
+palette = 1={base08}
+palette = 2={base01}
+palette = 3={base02}
+palette = 4={base06}
+palette = 5={base05}
+palette = 6={base0E}
+palette = 7={base07}
+
+palette = 8={border_focused}
+palette = 9={editor_error}
+palette = 10={editor_success}
+palette = 11={base0A}
+palette = 12={editor_link}
+palette = 13={base0D}
+palette = 14={editor_comment}
+palette = 15={base0F}
