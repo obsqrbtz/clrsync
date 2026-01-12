@@ -32,6 +32,8 @@ namespace clrsync::gui::backend{
         void imgui_render_draw_data(void* draw_data) override;
 
     private:
+        static void focus_callback(GLFWwindow* window, int focused);
+        
         GLFWwindow* m_window = nullptr;
     };
 }

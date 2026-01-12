@@ -9,9 +9,7 @@
 #include <GLFW/glfw3.h>
 
 std::string font_loader::find_font_linux(const char *font_name)
-{
-    glfwPollEvents();
-    
+{   
     FcInit();
 
     FcPattern *pattern = FcNameParse(reinterpret_cast<const FcChar8 *>(font_name));
@@ -67,9 +65,6 @@ void font_loader::pop_font()
 std::vector<std::string> font_loader::get_system_fonts()
 {
     std::vector<std::string> fonts;
-
-    glfwPollEvents();
-    
     FcInit();
     FcPattern *pattern = FcPatternCreate();
     FcObjectSet *os = FcObjectSetBuild(FC_FAMILY, nullptr);
@@ -78,13 +73,7 @@ std::vector<std::string> font_loader::get_system_fonts()
     if (fs)
     {
         for (int i = 0; i < fs->nfont; i++)
-        {
-            // TODO: should change this to something sane
-            if (i % 100 == 0)
-            {
-                glfwPollEvents();
-            }
-            
+        {            
             FcChar8 *family = nullptr;
             if (FcPatternGetString(fs->fonts[i], FC_FAMILY, 0, &family) == FcResultMatch)
             {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(clrsync VERSION 1.0.4 LANGUAGES CXX)
+project(clrsync VERSION 1.0.5 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 

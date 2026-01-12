@@ -16,6 +16,11 @@ glfw_opengl_backend::~glfw_opengl_backend()
     glfw_opengl_backend::shutdown();
 }
 
+void glfw_opengl_backend::focus_callback(GLFWwindow*, int focused)
+{
+    glfwSwapInterval(focused ? 1 : 0);
+}
+
 bool glfw_opengl_backend::initialize(const window_config &config)
 {
     glfwSetErrorCallback([](int error, const char* description) {
@@ -48,6 +53,7 @@ bool glfw_opengl_backend::initialize(const window_config &config)
 
     glfwMakeContextCurrent(m_window);
     glfwSwapInterval(1);
+    glfwSetWindowFocusCallback(m_window, focus_callback);
 
     return true;
 }
