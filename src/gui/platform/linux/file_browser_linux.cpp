@@ -3,6 +3,7 @@
 #include "gui/platform/file_browser.hpp"
 #include <gtk/gtk.h>
 #include <filesystem>
+#include <GLFW/glfw3.h>
 
 namespace file_dialogs
 {
@@ -38,7 +39,16 @@ std::string open_file_dialog(const std::string &title, const std::string &initia
     }
 
     std::string result;
-    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(native)) == GTK_RESPONSE_ACCEPT)
+    
+    gint response = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
+    
+    while (gtk_events_pending())
+    {
+        gtk_main_iteration();
+        glfwPollEvents();
+    }
+    
+    if (response == GTK_RESPONSE_ACCEPT)
     {
         char *filename = gtk_file_chooser_get_filename(chooser);
         if (filename)
@@ -79,7 +89,16 @@ std::string save_file_dialog(const std::string &title, const std::string &initia
     }
 
     std::string result;
-    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(native)) == GTK_RESPONSE_ACCEPT)
+    
+    gint response = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
+    
+    while (gtk_events_pending())
+    {
+        gtk_main_iteration();
+        glfwPollEvents();
+    }
+    
+    if (response == GTK_RESPONSE_ACCEPT)
     {
         char *filename = gtk_file_chooser_get_filename(chooser);
         if (filename)
@@ -113,7 +132,16 @@ std::string select_folder_dialog(const std::string &title, const std::string &in
     }
 
     std::string result;
-    if (gtk_native_dialog_run(GTK_NATIVE_DIALOG(native)) == GTK_RESPONSE_ACCEPT)
+    
+    gint response = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
+    
+    while (gtk_events_pending())
+    {
+        gtk_main_iteration();
+        glfwPollEvents();
+    }
+    
+    if (response == GTK_RESPONSE_ACCEPT)
     {
         char *filename = gtk_file_chooser_get_filename(chooser);
         if (filename)
