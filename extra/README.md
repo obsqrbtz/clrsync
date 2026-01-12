@@ -123,15 +123,15 @@ reload_cmd = ''
 
 ### Firefox
 
-**1. Go to `about:config` and set `toolkit.legacyUserProfileCustomizations.stylesheets` to `true`
+**1. Go to `about:config` and set `toolkit.legacyUserProfileCustomizations.stylesheets` to `true`**
 
-**2. Go to `about:support` and find your profile directory
+**2. Go to `about:support` and find your profile directory**
 
-**3. Create `chrome` directory in your profile
+**3. Create `chrome` directory in your profile**
 
-**4. Get [template file](templates/userChrome.css)
+**4. Get [template file](templates/userChrome.css)**
 
-**4. Configure clrsync to output to `<profile>/chrome/userChrome.css`
+**4. Configure clrsync to output to `<profile>/chrome/userChrome.css`**
 
 ```toml
 [templates.firefox]
@@ -140,3 +140,22 @@ input_path = '~/.config/clrsync/templates/firefox.json'
 output_path = '<profile directory>\chrome\userChrome.css'
 reload_cmd = ''
 ```
+
+### Telegram
+
+**1. Get the [template file](templates/telegram.tdesktop-theme)**
+
+**2. Configure template in `~/.config/clrsync/config.toml`**
+
+```toml
+[templates.telegram]
+enabled = true
+input_path = '~/.config/clrsync/templates/telegram.tdesktop-theme'
+output_path = '~/clrsync.tdesktop-theme'
+reload_cmd = ''
+```
+
+**3. Apply palette with clrsync and send generated `clrsync.tdesktop-theme` to yourself in telegram**
+
+**4. Click on the theme in the telegram dialogue to apply**
+
