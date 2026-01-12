@@ -6,6 +6,7 @@
 #include "core/theme/template_manager.hpp"
 #include <iostream>
 #include <string>
+#include <thread>
 
 namespace clrsync::core
 {
@@ -58,12 +59,15 @@ template <typename FileType> class theme_renderer
 
             if (!tmpl.reload_command().empty())
             {
-                int result = std::system(tmpl.reload_command().c_str());
-                if (result != 0)
-                {
-                    std::cerr << "Warning: Command " << tmpl.reload_command()
-                              << " failed with code " << result << "\n";
-                }
+                std::string cmd = tmpl.reload_command();
+                std::thread([cmd]() {
+                    int result = std::system(cmd.c_str());
+                    if (result != 0)
+                    {
+                        std::cerr << "Warning: Reload command '" << cmd
+                                  << "' failed with code " << result << "\n";
+                    }
+                }).detach();
             }
         }
         return Ok();
