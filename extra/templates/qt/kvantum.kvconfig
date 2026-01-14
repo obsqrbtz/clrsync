@@ -76,7 +76,7 @@ menu_blur_radius=0
 tooltip_blur_radius=0
 
 [GeneralColors]
-window.color={background}
+window.color={surface}
 base.color={surface}
 alt.base.color={surface}
 button.color={surface_variant}
@@ -86,14 +86,14 @@ dark.color={surface_variant}
 mid.color={surface_variant}
 highlight.color={accent}
 inactive.highlight.color={accent}
-text.color={on_background}
-window.text.color={on_background}
-button.text.color={on_surface_variant}
+text.color={on_surface}
+window.text.color={on_surface}
+button.text.color={on_surface}
 disabled.text.color={editor_disabled}
 tooltip.text.color={on_surface}
 highlight.text.color={on_surface}
-link.color={base04}
-link.visited.color={base05}
+link.color={base06}
+link.visited.color={base0D}
 progress.indicator.text.color={on_surface}
 
 [Hacks]
