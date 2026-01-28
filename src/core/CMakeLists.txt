@@ -1,5 +1,7 @@
 set(CORE_SOURCES
     palette/color.cpp
+    palette/hellwal_generator.cpp
+    palette/matugen_generator.cpp
     io/toml_file.cpp
     config/config.cpp
         common/utils.cpp

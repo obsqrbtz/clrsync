@@ -1,6 +1,7 @@
 #include "input_dialog.hpp"
 #include "imgui.h"
 #include <cstring>
+#include <string>
 
 namespace clrsync::gui::widgets
 {
@@ -40,6 +41,21 @@ bool input_dialog::render()
         bool enter_pressed = ImGui::InputTextWithHint("##input", m_hint.c_str(), m_input_buffer,
                                                      IM_ARRAYSIZE(m_input_buffer), 
                                                      ImGuiInputTextFlags_EnterReturnsTrue);
+
+        ImGui::SameLine();
+        if (ImGui::Button("Browse"))
+        {
+            if (m_on_browse)
+            {
+                std::string initial = m_input_buffer;
+                std::string res = m_on_browse(initial);
+                if (!res.empty())
+                {
+                    std::strncpy(m_input_buffer, res.c_str(), IM_ARRAYSIZE(m_input_buffer) - 1);
+                    m_input_buffer[IM_ARRAYSIZE(m_input_buffer) - 1] = '\0';
+                }
+            }
+        }
 
         ImGui::Spacing();
         ImGui::Separator();
@@ -106,6 +122,11 @@ void input_dialog::set_on_submit(const std::function<void(const std::string &)> 
 void input_dialog::set_on_cancel(const std::function<void()> &callback)
 {
     m_on_cancel = callback;
+}
+
+void input_dialog::set_path_browse_callback(const std::function<std::string(const std::string &)> &callback)
+{
+    m_on_browse = callback;
 }
 
 } // namespace clrsync::gui::widgets

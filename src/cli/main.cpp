@@ -9,6 +9,8 @@
 #include "core/common/version.hpp"
 #include "core/config/config.hpp"
 #include "core/io/toml_file.hpp"
+#include "core/palette/hellwal_generator.hpp"
+#include "core/palette/matugen_generator.hpp"
 #include "core/palette/palette_file.hpp"
 #include "core/palette/palette_manager.hpp"
 #include "core/theme/theme_renderer.hpp"
@@ -91,6 +93,48 @@ void setup_argument_parser(argparse::ArgumentParser &program)
     auto &group = program.add_mutually_exclusive_group();
     group.add_argument("-t", "--theme").help("sets theme <theme_name> to apply");
     group.add_argument("-p", "--path").help("sets theme file <path/to/theme> to apply");
+
+    program.add_argument("-g", "--generate").nargs(1).help("generate palette from <image path>");
+    program.add_argument("--generate-color")
+        .nargs(1)
+        .help("generate palette from a color (hex), used with --generator matugen");
+
+    program.add_argument("--generator")
+        .default_value(std::string("hellwal"))
+        .help("palette generator to use (hellwal)")
+        .metavar("GENERATOR");
+
+    program.add_argument("--matugen-type")
+        .default_value(std::string("scheme-tonal-spot"))
+        .help("matugen: Sets a custom color scheme type")
+        .metavar("TYPE");
+    program.add_argument("--matugen-mode")
+        .default_value(std::string("dark"))
+        .help("matugen: Which mode to use for the color scheme (light,dark)")
+        .metavar("MODE");
+    program.add_argument("--matugen-contrast")
+        .default_value(std::string("0.0"))
+        .help("matugen: contrast value from -1 to 1")
+        .metavar("FLOAT");
+
+    // hellwal generator options
+    program.add_argument("--hellwal-neon").help("hellwal: enable neon mode").flag();
+    program.add_argument("--hellwal-dark").help("hellwal: prefer dark palettes").flag();
+    program.add_argument("--hellwal-light").help("hellwal: prefer light palettes").flag();
+    program.add_argument("--hellwal-color").help("hellwal: enable color mode").flag();
+    program.add_argument("--hellwal-invert").help("hellwal: invert colors").flag();
+    program.add_argument("--hellwal-dark-offset")
+        .default_value(std::string("0.0"))
+        .help("hellwal: dark offset (float)")
+        .metavar("FLOAT");
+    program.add_argument("--hellwal-bright-offset")
+        .default_value(std::string("0.0"))
+        .help("hellwal: bright offset (float)")
+        .metavar("FLOAT");
+    program.add_argument("--hellwal-gray-scale")
+        .default_value(std::string("0.0"))
+        .help("hellwal: gray scale factor (float)")
+        .metavar("FLOAT");
 }
 
 int main(int argc, char *argv[])
@@ -134,6 +178,136 @@ int main(int argc, char *argv[])
     {
         const std::string default_theme = clrsync::core::config::instance().default_theme();
         return handle_apply_theme(program, default_theme);
+    }
+
+    if (program.is_used("--generate"))
+    {
+        std::string image_path;
+        if (program.is_used("--generate"))
+            image_path = program.get<std::string>("--generate");
+        std::string generator_name = program.get<std::string>("--generator");
+
+        clrsync::core::palette pal;
+        if (generator_name == "hellwal")
+        {
+            clrsync::core::hellwal_generator gen;
+            clrsync::core::hellwal_generator::options opts{};
+
+            if (program.is_used("--hellwal-neon"))
+                opts.neon = true;
+            if (program.is_used("--hellwal-dark"))
+                opts.dark = true;
+            if (program.is_used("--hellwal-light"))
+                opts.light = true;
+            if (program.is_used("--hellwal-color"))
+                opts.color = true;
+            if (program.is_used("--hellwal-invert"))
+                opts.invert = true;
+
+            try
+            {
+                std::string s1 = program.get<std::string>("--hellwal-dark-offset");
+                opts.dark_offset = std::stof(s1);
+            }
+            catch (...)
+            {
+            }
+
+            try
+            {
+                std::string s2 = program.get<std::string>("--hellwal-bright-offset");
+                opts.bright_offset = std::stof(s2);
+            }
+            catch (...)
+            {
+            }
+
+            try
+            {
+                std::string s3 = program.get<std::string>("--hellwal-gray-scale");
+                opts.gray_scale = std::stof(s3);
+            }
+            catch (...)
+            {
+            }
+
+            pal = gen.generate_from_image(image_path, opts);
+        }
+        else if (generator_name == "matugen")
+        {
+            clrsync::core::matugen_generator gen;
+            clrsync::core::matugen_generator::options opts{};
+
+            try
+            {
+                opts.type = program.get<std::string>("--matugen-type");
+            }
+            catch (...)
+            {
+            }
+
+            try
+            {
+                opts.type = program.get<std::string>("--matugen-type");
+            }
+            catch (...)
+            {
+            }
+
+            try
+            {
+                opts.mode = program.get<std::string>("--matugen-mode");
+            }
+            catch (...)
+            {
+            }
+
+            try
+            {
+                std::string s = program.get<std::string>("--matugen-contrast");
+                opts.contrast = std::stof(s);
+            }
+            catch (...)
+            {
+            }
+
+            if (program.is_used("--generate-color"))
+            {
+                std::string color = program.get<std::string>("--generate-color");
+                pal = gen.generate_from_color(color, opts);
+            }
+            else
+            {
+                pal = gen.generate_from_image(image_path, opts);
+            }
+        }
+        else
+        {
+            std::cerr << "Unknown generator: " << generator_name << std::endl;
+            return 1;
+        }
+
+        if (pal.name().empty())
+        {
+            std::filesystem::path p(image_path);
+            pal.set_name("generated:" + p.filename().string());
+        }
+
+        auto dir = clrsync::core::config::instance().palettes_path();
+        clrsync::core::palette_manager<clrsync::core::io::toml_file> pal_mgr;
+        pal_mgr.save_palette_to_file(pal, dir);
+
+        clrsync::core::theme_renderer<clrsync::core::io::toml_file> renderer;
+        std::filesystem::path file_path = std::filesystem::path(dir) / (pal.name() + ".toml");
+        auto res = renderer.apply_theme_from_path(file_path.string());
+        if (!res)
+        {
+            std::cerr << "Failed to apply generated palette: " << res.error().description()
+                      << std::endl;
+            return 1;
+        }
+        std::cout << "Generated and applied palette: " << pal.name() << std::endl;
+        return 0;
     }
 
     std::cout << program << std::endl;

@@ -18,6 +18,7 @@ class input_dialog
 
     void set_on_submit(const std::function<void(const std::string &)> &callback);
     void set_on_cancel(const std::function<void()> &callback);
+    void set_path_browse_callback(const std::function<std::string(const std::string &)> &callback);
 
     bool is_open() const { return m_is_open; }
 
@@ -31,6 +32,7 @@ class input_dialog
     
     std::function<void(const std::string &)> m_on_submit;
     std::function<void()> m_on_cancel;
+    std::function<std::string(const std::string &)> m_on_browse;
 };
 
 } // namespace clrsync::gui::widgets

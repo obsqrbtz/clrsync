@@ -118,11 +118,8 @@ void color_table_renderer::render(const clrsync::core::palette &current,
     ImGui::Text("Filter:");
     ImGui::SameLine();
     ImGui::SetNextItemWidth(200);
-    bool filter_changed =
-        ImGui::InputTextWithHint("##color_filter",
-                                "Search colors...",
-                                m_filter_text,
-                                sizeof(m_filter_text));
+    bool filter_changed = ImGui::InputTextWithHint("##color_filter", "Search colors...",
+                                                   m_filter_text, sizeof(m_filter_text));
 
     if (m_filter_text[0] != '\0')
     {
@@ -157,7 +154,8 @@ void color_table_renderer::render(const clrsync::core::palette &current,
         if (!has_matches)
             return;
 
-        ImGui::PushStyleColor(ImGuiCol_Text, clrsync::gui::widgets::palette_color(current, "accent"));
+        ImGui::PushStyleColor(ImGuiCol_Text,
+                              clrsync::gui::widgets::palette_color(current, "accent"));
         bool header_open = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_DefaultOpen |
                                                         ImGuiTreeNodeFlags_SpanAvailWidth);
         ImGui::PopStyleColor();
@@ -186,7 +184,7 @@ void color_table_renderer::render(const clrsync::core::palette &current,
 
     draw_table("General UI", "##general_ui",
                {"background", "on_background", "surface", "on_surface", "surface_variant",
-                "on_surface_variant", "foreground", "cursor", "accent"});
+                "on_surface_variant", "foreground", "cursor", "accent", "accent_secondary"});
 
     draw_table("Borders", "##borders", {"border_focused", "border"});
 

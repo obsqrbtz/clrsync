@@ -25,6 +25,7 @@ class palette_controller
     void save_current_palette();
     void delete_current_palette();
     void apply_current_theme() const;
+    void import_palette(const clrsync::core::palette &pal);
     void set_color(const std::string &key, const clrsync::core::color &color);
 
   private:

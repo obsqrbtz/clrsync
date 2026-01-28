@@ -26,6 +26,7 @@ constexpr const char *COLOR_KEYS[] = {
 
     "cursor",
     "accent",
+    "accent_secondary",
 
     // Semantic
     "success",
@@ -93,6 +94,7 @@ inline const std::unordered_map<std::string, uint32_t> DEFAULT_COLORS = {
 
     {"cursor", 0xd2d2d2ff},
     {"accent", 0x9a8652ff},
+    {"accent_secondary", 0x9a8652ff},
 
     {"success", 0x668a51ff},
     {"info", 0x3a898cff},

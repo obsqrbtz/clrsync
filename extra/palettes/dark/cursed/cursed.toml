@@ -1,5 +1,6 @@
 [colors]
 accent = '#95A328FF'
+accent_secondary = '#95A328FF'
 background = '#151515FF'
 base00 = '#151515FF'
 base01 = '#B44242FF'

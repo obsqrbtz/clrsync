@@ -39,7 +39,7 @@ dialogsDraftFgActive: {foreground}; // Draft label for active chat
 dialogsDraftFgOver: {foreground}; // Draft label on hover
 
 dialogsVerifiedIconBg: {accent}; // Verified badge background
-dialogsVerifiedIconBgActive: {accent}; // Verified badge for active chat
+dialogsVerifiedIconBgActive: {accent_secondary}; // Verified badge for active chat
 dialogsVerifiedIconBgOver: {accent}; // Verified badge on hover
 dialogsVerifiedIconFg: {background}; // Verified icon
 dialogsVerifiedIconFgActive: {background}; // Verified icon for active chat
@@ -50,11 +50,11 @@ dialogsSendingIconFgActive: {foreground}; // Sending icon for active chat
 dialogsSendingIconFgOver: {foreground}; // Sending icon on hover
 
 dialogsSentIconFg: {accent}; // Sent icon (tick)
-dialogsSentIconFgActive: {accent}; // Sent icon for active chat
+dialogsSentIconFgActive: {accent_secondary}; // Sent icon for active chat
 dialogsSentIconFgOver: {accent}; // Sent icon on hover
 
 dialogsUnreadBg: {accent}; // Unread badge background
-dialogsUnreadBgActive: {accent}; // Unread badge for active chat
+dialogsUnreadBgActive: {accent_secondary}; // Unread badge for active chat
 dialogsUnreadBgOver: {accent}; // Unread badge on hover
 dialogsUnreadBgMuted: {foreground}; // Muted unread badge
 dialogsUnreadBgMutedActive: {foreground}; // Muted unread badge for active chat
@@ -79,7 +79,7 @@ windowBoldFg: {on_background}; // Bold text
 windowBoldFgOver: {on_surface_variant}; // Bold text on hover
 windowBgActive: {surface}; // Active items background
 windowFgActive: {foreground}; // Active items text
-windowActiveTextFg: {accent}; // Active items text
+windowActiveTextFg: {accent_secondary}; // Active items text
 windowShadowFg: {border}; // Window shadow
 windowShadowFgFallback: {border}; // Fallback for shadow
 historyOutIconFg: {accent};
@@ -105,7 +105,7 @@ slideFadeOutShadowFg: {border};
 imageBg: {surface};
 imageBgTransparent: {surface};
 
-activeButtonBg: {accent}; // Active button background
+activeButtonBg: {accent_secondary}; // Active button background
 activeButtonBgOver: {surface_variant}; // Active button hover background
 activeButtonBgRipple: {on_surface_variant}; // Active button ripple
 activeButtonFg: {on_background}; // Active button text
@@ -128,12 +128,12 @@ attentionButtonBgRipple: {on_surface};
 
 outlineButtonBg: {surface}; // Outline button background
 outlineButtonBgOver: {surface_variant}; // Outline button hover background
-outlineButtonOutlineFg: {accent}; // Outline button color
-outlineButtonBgRipple: {accent}; // Outline button ripple
+outlineButtonOutlineFg: {accent_secondary}; // Outline button color
+outlineButtonBgRipple: {accent_secondary}; // Outline button ripple
 
 menuBg: {surface};
 menuBgOver: {surface_variant};
-menuBgRipple: {accent};
+menuBgRipple: {accent_secondary};
 menuIconFg: {on_surface};
 menuIconFgOver: {on_surface_variant};
 menuSubmenuArrowFg: {border};
@@ -141,22 +141,22 @@ menuFgDisabled: {border};
 menuSeparatorFg: {border};
 
 scrollBarBg: {accent}40; // Scroll bar background (40% opacity)
-scrollBarBgOver: {accent}60; // Scroll bar hover background (60% opacity)
+scrollBarBgOver: {accent_secondary}60; // Scroll bar hover background (60% opacity)
 scrollBg: {surface_variant}40; // Scroll bar track (40% opacity)
 scrollBgOver: {surface_variant}60; // Scroll bar track on hover (60% opacity)
 
 smallCloseIconFg: {border};
 smallCloseIconFgOver: {on_surface_variant};
 
-radialFg: {accent};
+radialFg: {accent_secondary};
 radialBg: {surface};
 
 placeholderFg: {border}; // Placeholder text
-placeholderFgActive: {accent}; // Active placeholder text
+placeholderFgActive: {accent_secondary}; // Active placeholder text
 inputBorderFg: {border}; // Input border
 filterInputBorderFg: {border}; // Search input border
 filterInputInactiveBg: {surface}; // Inactive search input background
-checkboxFg: {accent}; // Checkbox color
+checkboxFg: {accent_secondary}; // Checkbox color
 
 // Filters sidebar (left side bar with folder filters)
 sideBarBg: {surface}; // Filters sidebar background
@@ -192,7 +192,7 @@ cancelIconFgOver: {error}; // Cancel icon on hover
 
 boxBg: {surface}; // Box background
 boxTextFg: {on_surface}; // Box text
-boxTextFgGood: {accent}; // Box good text
+boxTextFgGood: {accent_secondary}; // Box good text
 boxTextFgError: {error}; // Box error text
 boxTitleFg: {on_surface}; // Box title text
 boxSearchBg: {surface}; // Box search field background
@@ -204,10 +204,10 @@ contactsBgOver: {surface_variant}; // Contacts background on hover
 contactsNameFg: {on_surface}; // Contact name
 contactsStatusFg: {border}; // Contact status
 contactsStatusFgOver: {on_surface_variant}; // Contact status on hover
-contactsStatusFgOnline: {accent}; // Online contact status
+contactsStatusFgOnline: {accent_secondary}; // Online contact status
 
 photoCropFadeBg: {surface}cc; // Photo crop fade background
-photoCropPointFg: {accent}; // Photo crop points
+photoCropPointFg: {accent_secondary}; // Photo crop points
 
 chat_inBubbleSelected: {surface_variant}; // inbox selected chat background
 chat_outBubbleSelected: {surface_variant}; // outbox selected chat background
