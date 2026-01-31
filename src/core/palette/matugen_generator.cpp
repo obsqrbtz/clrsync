@@ -9,6 +9,11 @@
 #include <string>
 #include <unordered_map>
 
+#ifdef _WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
+
 namespace clrsync::core
 {
 static std::string run_command_capture_output(const std::string &cmd)
