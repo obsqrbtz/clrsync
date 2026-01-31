@@ -3,6 +3,7 @@
 #include "core/config/config.hpp"
 #include "core/palette/color_keys.hpp"
 #include "core/theme/theme_template.hpp"
+#include "gui/theme/app_theme.hpp"
 #include "gui/widgets/colors.hpp"
 #include "gui/widgets/dialogs.hpp"
 #include "gui/ui_manager.hpp"
@@ -24,12 +25,7 @@ template_editor::template_editor(clrsync::gui::ui_manager* ui_mgr)
 {
     m_control_state.name = "new_template";
 
-    m_autocomplete_bg_color = ImVec4(0.12f, 0.12f, 0.15f, 0.98f);
-    m_autocomplete_border_color = ImVec4(0.4f, 0.4f, 0.45f, 1.0f);
-    m_autocomplete_selected_color = ImVec4(0.25f, 0.45f, 0.75f, 0.9f);
-    m_autocomplete_text_color = ImVec4(0.85f, 0.85f, 0.9f, 1.0f);
-    m_autocomplete_selected_text_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-    m_autocomplete_dim_text_color = ImVec4(0.6f, 0.6f, 0.7f, 1.0f);
+    update_autocomplete_colors();
 
     TextEditor::LanguageDefinition lang;
     lang.mName = "Template";
@@ -80,12 +76,26 @@ void template_editor::setup_callbacks()
     };
 }
 
+void template_editor::update_autocomplete_colors()
+{
+    const auto &t = clrsync::gui::theme::current_theme();
+    m_autocomplete_bg_color = t.autocomplete_bg();
+    m_autocomplete_border_color = t.autocomplete_border();
+    m_autocomplete_selected_color = t.autocomplete_selected();
+    m_autocomplete_text_color = t.autocomplete_text();
+    m_autocomplete_selected_text_color = t.autocomplete_selected_text();
+    m_autocomplete_dim_text_color = t.autocomplete_dim_text();
+}
+
 void template_editor::apply_current_palette(const clrsync::core::palette &pal)
 {
     m_current_palette = pal;
     auto colors = pal.colors();
     if (colors.empty())
         return;
+
+    using namespace clrsync::gui::theme;
+
     auto get_color_u32 = [&](const std::string &key, const std::string &fallback = "") -> uint32_t {
         return clrsync::gui::widgets::palette_color_u32(pal, key, fallback);
     };
@@ -97,47 +107,30 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
     palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("editor_warning", "warning");
     palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("editor_string", "success");
     palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("editor_string", "success");
-    palette[int(TextEditor::PaletteIndex::Punctuation)] =
-        get_color_u32("editor_main", "foreground");
-    palette[int(TextEditor::PaletteIndex::Preprocessor)] =
-        get_color_u32("editor_emphasis", "accent");
+    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("editor_main", "foreground");
+    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("editor_emphasis", "accent");
     palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("editor_main", "foreground");
     palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("editor_link", "info");
-    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] =
-        get_color_u32("editor_link", "info");
+    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("editor_link", "info");
 
-    palette[int(TextEditor::PaletteIndex::Comment)] =
-        get_color_u32("editor_comment", "editor_inactive");
-    palette[int(TextEditor::PaletteIndex::MultiLineComment)] =
-        get_color_u32("editor_comment", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("editor_comment", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("editor_comment", "editor_inactive");
 
-    palette[int(TextEditor::PaletteIndex::Background)] =
-        get_color_u32("editor_background", "background");
+    palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32("editor_background", "background");
     palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("cursor", "accent");
 
-    palette[int(TextEditor::PaletteIndex::Selection)] =
-        get_color_u32("editor_selected", "surface_variant");
+    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("editor_selected", "surface_variant");
     palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("editor_error", "error");
     palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("editor_error", "error");
 
-    palette[int(TextEditor::PaletteIndex::LineNumber)] =
-        get_color_u32("editor_line_number", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("editor_line_number", "editor_inactive");
     palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32("surface_variant");
     palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32("surface");
-
-    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] =
-        get_color_u32("border_focused", "border");
+    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_focused", "border");
 
     m_editor.SetPalette(palette);
 
-    m_autocomplete_bg_color = clrsync::gui::widgets::palette_color(pal, "surface", "background");
-    m_autocomplete_bg_color.w = 0.98f;
-    m_autocomplete_border_color = clrsync::gui::widgets::palette_color(pal, "border", "surface_variant");
-    m_autocomplete_selected_color = clrsync::gui::widgets::palette_color(pal, "accent", "surface_variant");
-    m_autocomplete_text_color = clrsync::gui::widgets::palette_color(pal, "on_surface", "foreground");
-    m_autocomplete_selected_text_color = clrsync::gui::widgets::palette_color(pal, "on_surface", "foreground");
-    m_autocomplete_dim_text_color =
-        clrsync::gui::widgets::palette_color(pal, "on_surface_variant", "editor_inactive");
+    update_autocomplete_colors();
 }
 
 void template_editor::update_autocomplete_suggestions()

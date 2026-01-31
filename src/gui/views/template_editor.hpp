@@ -28,6 +28,7 @@ class template_editor
     void render_template_list();
     void render_autocomplete(const ImVec2 &editor_pos);
     void update_autocomplete_suggestions();
+    void update_autocomplete_colors();
 
     void save_template();
     void load_template(const std::string &name);

@@ -7,6 +7,7 @@
 namespace theme_applier
 {
 void apply_to_imgui(const clrsync::core::palette &pal);
+
 void apply_to_editor(TextEditor &editor, const clrsync::core::palette &pal);
 } // namespace theme_applier
 

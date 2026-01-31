@@ -12,20 +12,11 @@ ImVec4 palette_color(const core::palette &pal, const std::string &key,
 
     auto it = colors.find(key);
     if (it == colors.end() && !fallback.empty())
-    {
         it = colors.find(fallback);
-    }
 
     if (it != colors.end())
-    {
-        const auto &col = it->second;
-        const uint32_t hex = col.hex();
-        const float r = ((hex >> 24) & 0xFF) / 255.0f;
-        const float g = ((hex >> 16) & 0xFF) / 255.0f;
-        const float b = ((hex >> 8) & 0xFF) / 255.0f;
-        const float a = (hex & 0xFF) / 255.0f;
-        return ImVec4(r, g, b, a);
-    }
+        return theme::color_utils::from_hex(it->second.hex());
+
     return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
@@ -38,21 +29,53 @@ uint32_t palette_color_u32(const core::palette &pal, const std::string &key,
 
     auto it = colors.find(key);
     if (it == colors.end() && !fallback.empty())
-    {
         it = colors.find(fallback);
-    }
 
     if (it != colors.end())
-    {
-        const auto &col = it->second;
-        const uint32_t hex = col.hex();
-        const uint32_t r = (hex >> 24) & 0xFF;
-        const uint32_t g = (hex >> 16) & 0xFF;
-        const uint32_t b = (hex >> 8) & 0xFF;
-        const uint32_t a = hex & 0xFF;
-        return (a << 24) | (b << 16) | (g << 8) | r;
-    }
+        return theme::color_utils::to_imgui_u32(it->second.hex());
+
     return 0xFFFFFFFF;
+}
+
+void push_success_button_style()
+{
+    const auto &t = theme::current_theme();
+    ImGui::PushStyleColor(ImGuiCol_Button, t.success());
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, t.success_hovered());
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, t.success_active());
+    ImGui::PushStyleColor(ImGuiCol_Text, t.on_success());
+}
+
+void push_error_button_style()
+{
+    const auto &t = theme::current_theme();
+    ImGui::PushStyleColor(ImGuiCol_Button, t.error());
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, t.error_hovered());
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, t.error_active());
+    ImGui::PushStyleColor(ImGuiCol_Text, t.on_error());
+}
+
+void push_warning_button_style()
+{
+    const auto &t = theme::current_theme();
+    ImGui::PushStyleColor(ImGuiCol_Button, t.warning());
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, t.warning_hovered());
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, t.warning_active());
+    ImGui::PushStyleColor(ImGuiCol_Text, t.on_warning());
+}
+
+void push_info_button_style()
+{
+    const auto &t = theme::current_theme();
+    ImGui::PushStyleColor(ImGuiCol_Button, t.info());
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, t.info_hovered());
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, t.info_active());
+    ImGui::PushStyleColor(ImGuiCol_Text, t.on_info());
+}
+
+void pop_button_style()
+{
+    ImGui::PopStyleColor(4);
 }
 
 } // namespace clrsync::gui::widgets

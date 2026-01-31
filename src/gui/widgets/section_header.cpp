@@ -5,11 +5,10 @@
 namespace clrsync::gui::widgets
 {
 
-void section_header(const std::string& title, const core::palette& palette)
+void section_header(const std::string &title, const core::palette &)
 {
     ImGui::Spacing();
-    auto accent_color = palette_color(palette, "accent");
-    ImGui::TextColored(accent_color, "%s", title.c_str());
+    ImGui::TextColored(theme().accent(), "%s", title.c_str());
     ImGui::Separator();
     ImGui::Spacing();
 }
