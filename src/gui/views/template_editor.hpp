@@ -55,6 +55,7 @@ class template_editor
     bool m_autocomplete_dismissed{false};
     TextEditor::Coordinates m_dismiss_position;
     int m_dismiss_brace_pos{-1};
+    int m_autocomplete_end_brace_pos{-1};
     std::vector<std::string> m_autocomplete_suggestions;
     int m_autocomplete_selected{0};
     std::string m_autocomplete_prefix;

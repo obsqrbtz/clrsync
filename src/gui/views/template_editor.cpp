@@ -9,6 +9,7 @@
 #include "gui/ui_manager.hpp"
 #include "imgui.h"
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <ranges>
@@ -166,6 +167,20 @@ void template_editor::update_autocomplete_suggestions()
         return;
     }
 
+    m_autocomplete_end_brace_pos = -1;
+    for (int i = col; i < (int)line.length(); ++i)
+    {
+        if (line[i] == '}')
+        {
+            m_autocomplete_end_brace_pos = i;
+            break;
+        }
+        else if (line[i] == '{' || line[i] == ' ' || line[i] == '\t')
+        {
+            break;
+        }
+    }
+
     if (m_autocomplete_dismissed)
     {
         bool should_reset_dismissal = false;
@@ -211,8 +226,7 @@ void template_editor::update_autocomplete_suggestions()
         {
             for (const auto &fmt : COLOR_FORMATS)
             {
-                if (format_prefix.empty() || fmt.find(format_prefix) == 0 ||
-                    fmt.find(format_prefix) != std::string::npos)
+                if (format_prefix.empty() || fmt.find(format_prefix) == 0)
                 {
                     m_autocomplete_suggestions.push_back(color_key + "." + fmt);
                 }
@@ -221,25 +235,49 @@ void template_editor::update_autocomplete_suggestions()
     }
     else
     {
+        std::vector<std::pair<std::string, int>> scored_suggestions;
+        
         for (size_t i = 0; i < clrsync::core::NUM_COLOR_KEYS; ++i)
         {
             std::string key = clrsync::core::COLOR_KEYS[i];
-            if (m_autocomplete_prefix.empty() || key.find(m_autocomplete_prefix) == 0 ||
-                key.find(m_autocomplete_prefix) != std::string::npos)
+            
+            if (m_autocomplete_prefix.empty())
             {
-                m_autocomplete_suggestions.push_back(key);
+                scored_suggestions.push_back({key, 0});
+            }
+            else
+            {
+                if (key.find(m_autocomplete_prefix) == 0)
+                {
+                    scored_suggestions.push_back({key, 100});
+                }
+                else
+                {
+                    size_t pos = key.find("_" + m_autocomplete_prefix);
+                    if (pos != std::string::npos)
+                    {
+                        scored_suggestions.push_back({key, 50});
+                    }
+                    else if (key.find(m_autocomplete_prefix) != std::string::npos)
+                    {
+                        scored_suggestions.push_back({key, 25});
+                    }
+                }
             }
         }
+        
+        std::sort(scored_suggestions.begin(), scored_suggestions.end(),
+                  [](const auto &a, const auto &b) {
+                      if (a.second != b.second)
+                          return a.second > b.second;
+                      return a.first < b.first;
+                  });
+        
+        for (const auto &[key, score] : scored_suggestions)
+        {
+            m_autocomplete_suggestions.push_back(key);
+        }
     }
-
-    std::sort(m_autocomplete_suggestions.begin(), m_autocomplete_suggestions.end(),
-              [this](const std::string &a, const std::string &b) {
-                  bool a_prefix = a.find(m_autocomplete_prefix) == 0;
-                  bool b_prefix = b.find(m_autocomplete_prefix) == 0;
-                  if (a_prefix != b_prefix)
-                      return a_prefix;
-                  return a < b;
-              });
 
     m_show_autocomplete = !m_autocomplete_suggestions.empty();
     if (m_show_autocomplete && m_autocomplete_selected >= (int)m_autocomplete_suggestions.size())
@@ -265,16 +303,19 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
     popup_pos.y = editor_pos.y + ((cursor.mLine + 1) * line_height);
 
     ImGui::SetNextWindowPos(popup_pos, ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(300, 0));
+    
+    float max_width = 350.0f;
+    float min_width = 250.0f;
+    ImGui::SetNextWindowSize(ImVec2(max_width, 0));
 
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
                              ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
                              ImGuiWindowFlags_NoFocusOnAppearing |
                              ImGuiWindowFlags_AlwaysAutoResize;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(6, 6));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 6.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 2));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 8.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 3));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, m_autocomplete_bg_color);
     ImGui::PushStyleColor(ImGuiCol_Border, m_autocomplete_border_color);
 
@@ -282,15 +323,20 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
     {
         ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
         if (m_autocomplete_prefix.find('.') != std::string::npos)
-            ImGui::Text("Formats");
+            ImGui::Text("Color Formats");
         else
-            ImGui::Text("Color Keys");
+            ImGui::Text("Color Keys (%d)", (int)m_autocomplete_suggestions.size());
         ImGui::PopStyleColor();
         ImGui::Separator();
 
-        int max_items = std::min((int)m_autocomplete_suggestions.size(), 8);
+        int max_visible = std::min((int)m_autocomplete_suggestions.size(), 12);
+        
+        if (m_autocomplete_selected >= max_visible)
+        {
+            m_autocomplete_selected = max_visible - 1;
+        }
 
-        for (int i = 0; i < max_items; ++i)
+        for (int i = 0; i < max_visible; ++i)
         {
             const auto &suggestion = m_autocomplete_suggestions[i];
             bool is_selected = (i == m_autocomplete_selected);
@@ -316,16 +362,126 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
 
             std::string display_text = "  " + suggestion;
 
+            std::string color_key = suggestion;
+            size_t dot_pos = suggestion.find('.');
+            if (dot_pos != std::string::npos)
+            {
+                color_key = suggestion.substr(0, dot_pos);
+            }
+
+            bool has_color = false;
+            clrsync::core::color palette_color;
+            if (m_current_palette.colors().count(color_key) > 0)
+            {
+                has_color = true;
+                palette_color = m_current_palette.colors().at(color_key);
+            }
+
             if (ImGui::Selectable(display_text.c_str(), is_selected, ImGuiSelectableFlags_None,
                                   ImVec2(0, 0)))
             {
                 auto start = m_autocomplete_start_pos;
-                auto end = m_editor.GetCursorPosition();
+                auto cursor_pos = m_editor.GetCursorPosition();
+                
+                TextEditor::Coordinates end;
+                if (m_autocomplete_end_brace_pos >= 0)
+                {
+                    end = TextEditor::Coordinates(cursor_pos.mLine, m_autocomplete_end_brace_pos);
+                }
+                else
+                {
+                    end = cursor_pos;
+                }
+                
+                std::string insert_text = suggestion;
+                if (m_autocomplete_end_brace_pos < 0)
+                {
+                    insert_text += "}";
+                }
+                
+                const char* old_clipboard = ImGui::GetClipboardText();
+                std::string saved_clipboard = old_clipboard ? old_clipboard : "";
+                
+                ImGui::SetClipboardText(insert_text.c_str());
+                
                 m_editor.SetSelection(start, end);
-                m_editor.Delete();
-                m_editor.InsertText(suggestion + "}");
+                m_editor.Paste();
+                
+                ImGui::SetClipboardText(saved_clipboard.c_str());
+                
                 m_show_autocomplete = false;
                 m_autocomplete_dismissed = false;
+            }
+
+            if (has_color)
+            {
+                ImVec2 item_min = ImGui::GetItemRectMin();
+                ImVec2 item_max = ImGui::GetItemRectMax();
+                
+                const float preview_size = ImGui::GetTextLineHeight() * 0.7f;
+                const float padding = 4.0f;
+                
+                ImVec2 preview_pos;
+                preview_pos.x = item_max.x - preview_size - padding;
+                preview_pos.y = item_min.y + (item_max.y - item_min.y - preview_size) * 0.5f;
+                
+                ImDrawList* draw_list = ImGui::GetWindowDrawList();
+                
+                auto rgba = palette_color.to_rgba();
+                ImU32 color_u32 = IM_COL32(rgba.r, rgba.g, rgba.b, rgba.a);
+                
+                float r = rgba.r / 255.0f;
+                float g = rgba.g / 255.0f;
+                float b = rgba.b / 255.0f;
+                
+                r = (r <= 0.03928f) ? r / 12.92f : std::pow((r + 0.055f) / 1.055f, 2.4f);
+                g = (g <= 0.03928f) ? g / 12.92f : std::pow((g + 0.055f) / 1.055f, 2.4f);
+                b = (b <= 0.03928f) ? b / 12.92f : std::pow((b + 0.055f) / 1.055f, 2.4f);
+                
+                float luminance = 0.2126f * r + 0.7152f * g + 0.0722f * b;
+                
+                ImVec4 bg_color = is_selected ? m_autocomplete_selected_color : m_autocomplete_bg_color;
+                float bg_r = bg_color.x;
+                float bg_g = bg_color.y;
+                float bg_b = bg_color.z;
+                
+                bg_r = (bg_r <= 0.03928f) ? bg_r / 12.92f : std::pow((bg_r + 0.055f) / 1.055f, 2.4f);
+                bg_g = (bg_g <= 0.03928f) ? bg_g / 12.92f : std::pow((bg_g + 0.055f) / 1.055f, 2.4f);
+                bg_b = (bg_b <= 0.03928f) ? bg_b / 12.92f : std::pow((bg_b + 0.055f) / 1.055f, 2.4f);
+                
+                float bg_luminance = 0.2126f * bg_r + 0.7152f * bg_g + 0.0722f * bg_b;
+                
+                float contrast = (std::max(luminance, bg_luminance) + 0.05f) / 
+                                (std::min(luminance, bg_luminance) + 0.05f);
+                
+                if (contrast < 2.0f)
+                {
+                    ImU32 contrast_bg = (bg_luminance > 0.5f) ? IM_COL32(0, 0, 0, 180) : IM_COL32(255, 255, 255, 180);
+                    const float bg_padding = 2.0f;
+                    draw_list->AddRectFilled(
+                        ImVec2(preview_pos.x - bg_padding, preview_pos.y - bg_padding),
+                        ImVec2(preview_pos.x + preview_size + bg_padding, preview_pos.y + preview_size + bg_padding),
+                        contrast_bg,
+                        2.0f
+                    );
+                }
+                
+                draw_list->AddRectFilled(
+                    preview_pos,
+                    ImVec2(preview_pos.x + preview_size, preview_pos.y + preview_size),
+                    color_u32,
+                    2.0f
+                );
+                
+                ImU32 border_color = IM_COL32(255, 255, 255, 60);
+                draw_list->AddRect(
+                    preview_pos,
+                    ImVec2(preview_pos.x + preview_size, preview_pos.y + preview_size),
+                    border_color,
+                    2.0f,
+                    0,
+                    1.0f
+                );
             }
 
             ImGui::PopStyleColor(3);
@@ -336,17 +492,17 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
             }
         }
 
-        if (m_autocomplete_suggestions.size() > 8)
+        if (m_autocomplete_suggestions.size() > 12)
         {
             ImGui::Separator();
             ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
-            ImGui::Text("  +%d more", (int)m_autocomplete_suggestions.size() - 8);
+            ImGui::Text("  +%d more (keep typing to filter)", (int)m_autocomplete_suggestions.size() - 12);
             ImGui::PopStyleColor();
         }
 
         ImGui::Separator();
         ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
-        ImGui::Text("  Tab/Enter: accept | Esc: dismiss");
+        ImGui::Text("  Tab/Enter: accept  |  Esc: dismiss  |  \u2191\u2193: navigate");
         ImGui::PopStyleColor();
     }
     ImGui::End();
@@ -470,7 +626,7 @@ void template_editor::render_editor()
     }
     else if (m_show_autocomplete && !m_autocomplete_suggestions.empty())
     {
-        int max_visible = std::min((int)m_autocomplete_suggestions.size(), 8);
+        int max_visible = std::min((int)m_autocomplete_suggestions.size(), 12);
 
         if (ImGui::IsKeyPressed(ImGuiKey_DownArrow, false))
         {
@@ -485,13 +641,40 @@ void template_editor::render_editor()
         else if (ImGui::IsKeyPressed(ImGuiKey_Tab, false) ||
                  ImGui::IsKeyPressed(ImGuiKey_Enter, false))
         {
-            auto start = m_autocomplete_start_pos;
-            auto end = m_editor.GetCursorPosition();
-            m_editor.SetSelection(start, end);
-            m_editor.Delete();
-            m_editor.InsertText(m_autocomplete_suggestions[m_autocomplete_selected] + "}");
-            m_show_autocomplete = false;
-            m_autocomplete_dismissed = false;
+            if (m_autocomplete_selected >= 0 && m_autocomplete_selected < (int)m_autocomplete_suggestions.size())
+            {
+                auto start = m_autocomplete_start_pos;
+                auto cursor_pos = m_editor.GetCursorPosition();
+                
+                TextEditor::Coordinates end;
+                if (m_autocomplete_end_brace_pos >= 0)
+                {
+                    end = TextEditor::Coordinates(cursor_pos.mLine, m_autocomplete_end_brace_pos);
+                }
+                else
+                {
+                    end = cursor_pos;
+                }
+                
+                std::string insert_text = m_autocomplete_suggestions[m_autocomplete_selected];
+                if (m_autocomplete_end_brace_pos < 0)
+                {
+                    insert_text += "}";
+                }
+                
+                const char* old_clipboard = ImGui::GetClipboardText();
+                std::string saved_clipboard = old_clipboard ? old_clipboard : "";
+                
+                ImGui::SetClipboardText(insert_text.c_str());
+                
+                m_editor.SetSelection(start, end);
+                m_editor.Paste();
+                
+                ImGui::SetClipboardText(saved_clipboard.c_str());
+                
+                m_show_autocomplete = false;
+                m_autocomplete_dismissed = false;
+            }
             consume_keys = true;
         }
     }
@@ -504,6 +687,54 @@ void template_editor::render_editor()
     ImVec2 editor_pos = ImGui::GetCursorScreenPos();
 
     m_editor.Render("##TemplateEditor", ImVec2(0, 0), true);
+
+    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editor.HasSelection())
+    {
+        std::string selected_text = m_editor.GetSelectedText();
+        
+        if (!selected_text.empty())
+        {
+            bool starts_with_brace = selected_text.front() == '{';
+            bool ends_with_brace = selected_text.back() == '}';
+            
+            if (starts_with_brace || ends_with_brace)
+            {
+                auto cursor = m_editor.GetCursorPosition();
+                std::string line = m_editor.GetCurrentLineText();
+                
+                int brace_start = -1;
+                int brace_end = -1;
+                
+                for (int i = cursor.mColumn - 1; i >= 0; --i)
+                {
+                    if (i < (int)line.length() && line[i] == '{')
+                    {
+                        brace_start = i;
+                        break;
+                    }
+                }
+                
+                if (brace_start >= 0)
+                {
+                    for (int i = brace_start + 1; i < (int)line.length(); ++i)
+                    {
+                        if (line[i] == '}')
+                        {
+                            brace_end = i;
+                            break;
+                        }
+                    }
+                }
+                
+                if (brace_start >= 0 && brace_end > brace_start + 1)
+                {
+                    TextEditor::Coordinates sel_start(cursor.mLine, brace_start + 1);
+                    TextEditor::Coordinates sel_end(cursor.mLine, brace_end);
+                    m_editor.SetSelection(sel_start, sel_end);
+                }
+            }
+        }
+    }
 
     if (consume_keys)
     {
