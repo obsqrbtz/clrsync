@@ -471,6 +471,7 @@ You may find some pre-configured color schemes and templates in [extra](extra) d
 ## Acknowledgments
 
 - **[matugen](https://github.com/InioX/matugen)** - A material you color generation tool
+- **[hellwal](https://github.com/danihek/hellwal)** - Pywal-like color palette generator, but faster and in C 
 - **[Dear ImGui](https://github.com/ocornut/imgui)** - Bloat-free graphical user interface library for C++
 - **[GLFW](https://www.glfw.org/)** - Multi-platform library for OpenGL, OpenGL ES and Vulkan development
 - **[toml++](https://github.com/marzer/tomlplusplus)** - Header-only TOML config file parser and serializer for C++17

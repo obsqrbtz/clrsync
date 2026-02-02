@@ -184,19 +184,43 @@ void color_table_renderer::render(const clrsync::core::palette &current,
 
     draw_table("General UI", "##general_ui",
                {"background", "on_background", "surface", "on_surface", "surface_variant",
-                "on_surface_variant", "foreground", "cursor", "accent", "accent_secondary"});
-
-    draw_table("Borders", "##borders", {"border_focused", "border"});
+                "on_surface_variant", "border_focused", "border", "foreground", "cursor", "accent",
+                "accent_secondary"});
 
     draw_table(
         "Semantic Colors", "##semantic",
         {"success", "info", "warning", "error", "on_success", "on_info", "on_warning", "on_error"});
 
-    draw_table("Editor", "##editor",
-               {"editor_background", "editor_command", "editor_comment", "editor_disabled",
-                "editor_emphasis", "editor_error", "editor_inactive", "editor_line_number",
-                "editor_link", "editor_main", "editor_selected", "editor_selection_inactive",
-                "editor_string", "editor_success", "editor_warning"});
+    draw_table("Editor - Basic", "##editor_basic",
+               {"editor_background", "editor_foreground", "editor_line_highlight",
+                "editor_selection", "editor_selection_inactive", "editor_cursor",
+                "editor_whitespace"});
+
+    draw_table("Editor - Gutter", "##editor_gutter",
+               {"editor_gutter_background", "editor_gutter_foreground", "editor_line_number",
+                "editor_line_number_active"});
+
+    draw_table("Editor - Syntax", "##editor_syntax",
+               {"editor_comment", "editor_string", "editor_number", "editor_boolean",
+                "editor_keyword", "editor_operator", "editor_function", "editor_variable",
+                "editor_parameter", "editor_property", "editor_constant", "editor_type",
+                "editor_class", "editor_interface", "editor_enum", "editor_namespace",
+                "editor_attribute", "editor_decorator", "editor_tag", "editor_punctuation",
+                "editor_link", "editor_regex", "editor_escape_character"});
+
+    draw_table("Editor - Diagnostics", "##editor_diagnostics",
+               {"editor_invalid", "editor_error", "editor_error_background", "editor_warning",
+                "editor_warning_background", "editor_info", "editor_info_background",
+                "editor_hint", "editor_hint_background"});
+
+    draw_table("Editor - UI Elements", "##editor_ui",
+               {"editor_active_line_border", "editor_indent_guide", "editor_indent_guide_active",
+                "editor_bracket_match", "editor_search_match", "editor_search_match_active",
+                "editor_find_range_highlight"});
+
+    draw_table("Editor - Diff", "##editor_diff",
+               {"editor_deleted", "editor_inserted", "editor_modified", "editor_ignored",
+                "editor_folded_background"});
 
     draw_table("Terminal (Base16)", "##terminal",
                {"base00", "base01", "base02", "base03", "base04", "base05", "base06", "base07",
