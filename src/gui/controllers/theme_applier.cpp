@@ -15,32 +15,38 @@ void apply_to_editor(TextEditor &editor, const clrsync::core::palette &current)
 
     auto palette = editor.GetPalette();
 
-    palette[int(TextEditor::PaletteIndex::Default)] = get_color_u32("editor_main");
-    palette[int(TextEditor::PaletteIndex::Keyword)] = get_color_u32("editor_command");
-    palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("editor_warning");
+    // Basic syntax
+    palette[int(TextEditor::PaletteIndex::Default)] = get_color_u32("editor_foreground");
+    palette[int(TextEditor::PaletteIndex::Keyword)] = get_color_u32("editor_keyword");
+    palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("editor_number");
     palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("editor_string");
     palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("editor_string");
-    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("editor_main");
-    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("editor_emphasis");
-    palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("editor_main");
-    palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("editor_link");
-    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("editor_link");
+    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("editor_punctuation");
+    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("editor_attribute");
+    palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("editor_variable");
+    palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("editor_function");
+    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("editor_constant");
 
+    // Comments
     palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("editor_comment");
     palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("editor_comment");
 
+    // Background and cursor
     palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32("editor_background");
-    palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("cursor");
+    palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("editor_cursor");
 
-    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("editor_selected");
-    palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("editor_error");
+    // Selection
+    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("editor_selection");
+    palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("editor_error_background");
     palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("editor_error");
 
+    // Line numbers
     palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("editor_line_number");
 
-    palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32("surface_variant");
-    palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32("surface");
-    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_focused");
+    // Current line highlight
+    palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32("editor_line_highlight");
+    palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32("editor_folded_background");
+    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("editor_active_line_border");
 
     editor.SetPalette(palette);
 }

@@ -159,21 +159,72 @@ palette hellwal_generator::generate_from_image(const std::string &image_path, co
     pal.set_color("on_surface_variant", get_color_by_index(7));
     pal.set_color("on_background", get_color_by_index(7));
 
+    // Editor - Basic
     pal.set_color("editor_background", get_color_by_index(0));
-    pal.set_color("editor_main", get_color_by_index(7));
-    pal.set_color("editor_comment", get_color_by_index(8));
-    pal.set_color("editor_disabled", get_color_by_index(8));
-    pal.set_color("editor_inactive", get_color_by_index(8));
-    pal.set_color("editor_string", get_color_by_index(2));
-    pal.set_color("editor_command", get_color_by_index(5));
-    pal.set_color("editor_emphasis", get_color_by_index(11));
-    pal.set_color("editor_link", get_color_by_index(4));
-    pal.set_color("editor_line_number", get_color_by_index(8));
-    pal.set_color("editor_selected", get_color_by_index(8));
+    pal.set_color("editor_foreground", get_color_by_index(7));
+    pal.set_color("editor_line_highlight", get_color_by_index(8));
+    pal.set_color("editor_selection", get_color_by_index(8));
     pal.set_color("editor_selection_inactive", get_color_by_index(8));
+    pal.set_color("editor_cursor", get_color_by_index(7));
+    pal.set_color("editor_whitespace", get_color_by_index(8));
+
+    // Editor - Gutter
+    pal.set_color("editor_gutter_background", get_color_by_index(0));
+    pal.set_color("editor_gutter_foreground", get_color_by_index(8));
+    pal.set_color("editor_line_number", get_color_by_index(8));
+    pal.set_color("editor_line_number_active", get_color_by_index(7));
+
+    // Editor - Syntax
+    pal.set_color("editor_comment", get_color_by_index(8));
+    pal.set_color("editor_string", get_color_by_index(2));
+    pal.set_color("editor_number", get_color_by_index(3));
+    pal.set_color("editor_boolean", get_color_by_index(3));
+    pal.set_color("editor_keyword", get_color_by_index(5));
+    pal.set_color("editor_operator", get_color_by_index(7));
+    pal.set_color("editor_function", get_color_by_index(11));
+    pal.set_color("editor_variable", get_color_by_index(7));
+    pal.set_color("editor_parameter", get_color_by_index(4));
+    pal.set_color("editor_property", get_color_by_index(2));
+    pal.set_color("editor_constant", get_color_by_index(3));
+    pal.set_color("editor_type", get_color_by_index(6));
+    pal.set_color("editor_class", get_color_by_index(6));
+    pal.set_color("editor_interface", get_color_by_index(6));
+    pal.set_color("editor_enum", get_color_by_index(6));
+    pal.set_color("editor_namespace", get_color_by_index(4));
+    pal.set_color("editor_attribute", get_color_by_index(11));
+    pal.set_color("editor_decorator", get_color_by_index(11));
+    pal.set_color("editor_tag", get_color_by_index(1));
+    pal.set_color("editor_punctuation", get_color_by_index(7));
+    pal.set_color("editor_link", get_color_by_index(4));
+    pal.set_color("editor_regex", get_color_by_index(5));
+    pal.set_color("editor_escape_character", get_color_by_index(3));
+
+    // Editor - Diagnostics
+    pal.set_color("editor_invalid", get_color_by_index(1));
     pal.set_color("editor_error", get_color_by_index(1));
+    pal.set_color("editor_error_background", get_color_by_index(0));
     pal.set_color("editor_warning", get_color_by_index(3));
-    pal.set_color("editor_success", get_color_by_index(2));
+    pal.set_color("editor_warning_background", get_color_by_index(0));
+    pal.set_color("editor_info", get_color_by_index(4));
+    pal.set_color("editor_info_background", get_color_by_index(0));
+    pal.set_color("editor_hint", get_color_by_index(2));
+    pal.set_color("editor_hint_background", get_color_by_index(0));
+
+    // Editor - UI Elements
+    pal.set_color("editor_active_line_border", get_color_by_index(8));
+    pal.set_color("editor_indent_guide", get_color_by_index(8));
+    pal.set_color("editor_indent_guide_active", get_color_by_index(7));
+    pal.set_color("editor_bracket_match", get_color_by_index(6));
+    pal.set_color("editor_search_match", get_color_by_index(3));
+    pal.set_color("editor_search_match_active", get_color_by_index(3));
+    pal.set_color("editor_find_range_highlight", get_color_by_index(3));
+
+    // Editor - Diff
+    pal.set_color("editor_deleted", get_color_by_index(1));
+    pal.set_color("editor_inserted", get_color_by_index(2));
+    pal.set_color("editor_modified", get_color_by_index(3));
+    pal.set_color("editor_ignored", get_color_by_index(8));
+    pal.set_color("editor_folded_background", get_color_by_index(8));
 
     return pal;
 }
