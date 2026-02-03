@@ -41,6 +41,7 @@ A theme management tool for synchronizing color schemes across multiple applicat
 - **CLI & GUI**: Choose between a command-line interface or a graphical editor
 - **Live Reload**: Define post-apply hooks (configurable per template)
 - **Flexible Color Formats**: Support for HEX, RGB, HSL with multi-component access (e.g., `{color.r}`, `{color.hex}`, `{color.hsl}`)
+- **Color generation**: integration with `hellwal` and `matugen`
 
 ## Installation
 
@@ -421,6 +422,8 @@ Format colors using dot notation:
 
 ### CLI
 
+#### Basic Commands
+
 List available themes:
 ```bash
 clrsync_cli --list-themes
@@ -449,6 +452,61 @@ clrsync_cli --show-vars
 Use a custom config file:
 ```bash
 clrsync_cli --config /path/to/config.toml --apply
+```
+
+#### Palette Generation
+
+Generate a palette from an image:
+```bash
+clrsync_cli --generate /path/to/image.png
+```
+
+Generate a palette from a color (hex):
+```bash
+clrsync_cli --generate-color "#B44242" --generator matugen
+```
+
+#### Generator Options
+
+**Hellwal Generator** (default):
+```bash
+clrsync_cli --generate image.png --generator hellwal --hellwal-neon --hellwal-dark
+```
+
+Available hellwal options:
+- `--hellwal-neon` - Enable neon mode
+- `--hellwal-dark` - Prefer dark palettes
+- `--hellwal-light` - Prefer light palettes
+- `--hellwal-color` - Enable color mode
+- `--hellwal-invert` - Invert colors
+- `--hellwal-dark-offset <float>` - Dark offset (default: 0.0)
+- `--hellwal-bright-offset <float>` - Bright offset (default: 0.0)
+- `--hellwal-gray-scale <float>` - Gray scale factor (default: 0.0)
+
+**Matugen Generator**:
+```bash
+clrsync_cli --generate image.png --generator matugen --matugen-mode dark --matugen-contrast 0.5
+```
+
+Available matugen options:
+- `--matugen-type <type>` - Color scheme type (default: "scheme-tonal-spot")
+- `--matugen-mode <mode>` - Light or dark mode (default: "dark")
+- `--matugen-contrast <float>` - Contrast value from -1 to 1 (default: 0.0)
+
+#### All Options
+
+```
+-h, --help               Show help message and exit
+-v, --version            Print version information and exit
+-a, --apply              Apply default theme
+-c, --config             Set config file path (default: ~/.config/clrsync/config.toml)
+-l, --list-themes        List available themes
+-s, --show-vars          Show color keys
+-t, --theme              Set theme <theme_name> to apply
+-p, --path               Set theme file <path/to/theme> to apply
+-g, --generate           Generate palette from <image path>
+--generate-color         Generate palette from a color (hex), used with --generator matugen
+--generator              Palette generator to use (default: "hellwal")
 ```
 
 ### GUI

@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
         return handle_apply_theme(program, default_theme);
     }
 
-    if (program.is_used("--generate"))
+    if (program.is_used("--generate") || program.is_used("--generate-color"))
     {
         std::string image_path;
         if (program.is_used("--generate"))
@@ -190,6 +190,12 @@ int main(int argc, char *argv[])
         clrsync::core::palette pal;
         if (generator_name == "hellwal")
         {
+            if (program.is_used("--generate-color"))
+            {
+                std::cerr << "Error: --generate-color is only supported with --generator matugen" << std::endl;
+                return 1;
+            }
+
             clrsync::core::hellwal_generator gen;
             clrsync::core::hellwal_generator::options opts{};
 
@@ -289,8 +295,16 @@ int main(int argc, char *argv[])
 
         if (pal.name().empty())
         {
-            std::filesystem::path p(image_path);
-            pal.set_name("generated:" + p.filename().string());
+            if (program.is_used("--generate-color"))
+            {
+                std::string color = program.get<std::string>("--generate-color");
+                pal.set_name("generated:" + color);
+            }
+            else
+            {
+                std::filesystem::path p(image_path);
+                pal.set_name("generated:" + p.filename().string());
+            }
         }
 
         auto dir = clrsync::core::config::instance().palettes_path();
