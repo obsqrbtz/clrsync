@@ -456,6 +456,9 @@ clrsync_cli --config /path/to/config.toml --apply
 
 #### Palette Generation
 
+>
+> Requires hellwal and/or matugen installed
+
 Generate a palette from an image:
 ```bash
 clrsync_cli --generate /path/to/image.png
