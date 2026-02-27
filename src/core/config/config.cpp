@@ -4,6 +4,7 @@
 #include "core/io/toml_file.hpp"
 
 #include "core/palette/color.hpp"
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 
@@ -68,6 +69,9 @@ Result<void> config::initialize(std::unique_ptr<clrsync::core::io::file> file)
 
 std::filesystem::path config::get_user_config_dir()
 {
+    const char *xdg_config_home = std::getenv("XDG_CONFIG_HOME");
+    if (xdg_config_home && xdg_config_home[0] != '\0')
+        return normalize_path(xdg_config_home) / "clrsync";
     std::filesystem::path home = normalize_path("~");
     return home / ".config" / "clrsync";
 }
