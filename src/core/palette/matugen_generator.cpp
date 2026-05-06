@@ -34,61 +34,6 @@ static std::string run_command_capture_output(const std::string &cmd)
     return result;
 }
 
-static const json *find_object_member(const json &node, const std::string &key)
-{
-    if (node.is_object())
-    {
-        auto it = node.find(key);
-        if (it != node.end() && it->is_object())
-            return &(*it);
-        for (const auto &entry : node.items())
-        {
-            if (const json *found = find_object_member(entry.value(), key))
-                return found;
-        }
-    }
-    else if (node.is_array())
-    {
-        for (const auto &entry : node)
-        {
-            if (const json *found = find_object_member(entry, key))
-                return found;
-        }
-    }
-    return nullptr;
-}
-
-static void collect_hex_values(const json &node, std::unordered_map<std::string, std::string> &out)
-{
-    if (node.is_object())
-    {
-        for (const auto &entry : node.items())
-        {
-            const std::string key = entry.key();
-            const json &value = entry.value();
-            if (value.is_string())
-            {
-                const std::string hex = json_utils::normalize_hex_string(value.get<std::string>());
-                if (!hex.empty())
-                {
-                    std::string normalized_key = key;
-                    for (auto &c : normalized_key)
-                        if (c == '-')
-                            c = '_';
-                    out[normalized_key] = hex;
-                }
-            }
-
-            collect_hex_values(value, out);
-        }
-    }
-    else if (node.is_array())
-    {
-        for (const auto &value : node)
-            collect_hex_values(value, out);
-    }
-}
-
 static palette parse_matugen_output(const std::string &out, const matugen_generator::options &opts,
                                     const std::string &pal_name, const std::string &file_path)
 {
@@ -98,22 +43,6 @@ static palette parse_matugen_output(const std::string &out, const matugen_genera
     json doc;
     if (!json_utils::parse_json_output(out, doc))
         return {};
-
-    const json *section = nullptr;
-    if (const json *colors = find_object_member(doc, "colors"))
-    {
-        auto it = colors->find(opts.mode);
-        if (it != colors->end() && it->is_object())
-            section = &(*it);
-    }
-    if (!section)
-    {
-        auto it = doc.find(opts.mode);
-        if (it != doc.end() && it->is_object())
-            section = &(*it);
-    }
-    if (!section)
-        section = &doc;
 
     std::unordered_map<std::string, std::string> clrsync_to_matu = {
         {"accent", "primary"},
@@ -208,25 +137,22 @@ static palette parse_matugen_output(const std::string &out, const matugen_genera
         {"editor_folded_background", "surface_container"},
         
         {"base00", "background"},
-        {"base01", "surface_container_lowest"},
-        {"base02", "surface_container_low"},
-        {"base03", "outline_variant"},
-        {"base04", "on_surface_variant"},
-        {"base05", "on_surface"},
-        {"base06", "inverse_on_surface"},
-        {"base07", "surface_bright"},
-        {"base08", "error"},
-        {"base09", "tertiary"},
-        {"base0A", "secondary"},
-        {"base0B", "primary"},
-        {"base0C", "tertiary_container"},
-        {"base0D", "primary_container"},
-        {"base0E", "secondary_container"},
-        {"base0F", "on_primary_container"},
+        {"base01", "base16.base01"},
+        {"base02", "base16.base02"},
+        {"base03", "base16.base03"},
+        {"base04", "base16.base04"},
+        {"base05", "base16.base05"},
+        {"base06", "base16.base06"},
+        {"base07", "base16.base07"},
+        {"base08", "base16.base08"},
+        {"base09", "base16.base09"},
+        {"base0A", "base16.base0A"},
+        {"base0B", "base16.base0B"},
+        {"base0C", "base16.base0C"},
+        {"base0D", "base16.base0D"},
+        {"base0E", "base16.base0E"},
+        {"base0F", "base16.base0F"},
     };
-
-    std::unordered_map<std::string, std::string> matu_kv_map;
-    collect_hex_values(*section, matu_kv_map);
 
     palette pal;
     pal.set_name(pal_name);
@@ -234,12 +160,36 @@ static palette parse_matugen_output(const std::string &out, const matugen_genera
 
     for (const auto &[clrsync_key, matu_key] : clrsync_to_matu)
     {
-        auto matu_it = matu_kv_map.find(matu_key);
-        if (matu_it == matu_kv_map.end())
-            continue;
-        color col;
-        col.from_hex_string(matu_it->second);
-        pal.set_color(clrsync_key, col);
+        std::string hex;
+        if (matu_key.find("base16.") == 0)
+        {
+            std::string base_key = matu_key.substr(7);
+            if (doc.contains("base16") && doc["base16"].contains(base_key) &&
+                doc["base16"][base_key].contains(opts.mode) &&
+                doc["base16"][base_key][opts.mode].contains("color"))
+            {
+                hex = doc["base16"][base_key][opts.mode]["color"];
+            }
+        }
+        else
+        {
+            if (doc.contains("colors") && doc["colors"].contains(matu_key) &&
+                doc["colors"][matu_key].contains(opts.mode) &&
+                doc["colors"][matu_key][opts.mode].contains("color"))
+            {
+                hex = doc["colors"][matu_key][opts.mode]["color"];
+            }
+        }
+        if (!hex.empty())
+        {
+            hex = json_utils::normalize_hex_string(hex);
+            if (!hex.empty())
+            {
+                color col;
+                col.from_hex_string(hex);
+                pal.set_color(clrsync_key, col);
+            }
+        }
     }
 
     return pal;
@@ -261,7 +211,7 @@ palette matugen_generator::generate_from_image(const std::string &image_path, co
         cmd += " --mode " + opts.mode;
     if (opts.contrast != 0.0f)
         cmd += " --contrast " + std::to_string(opts.contrast);
-    cmd += " --json hex --dry-run";
+    cmd += " --json hex --dry-run --source-color-index 0";
 
 
     std::string out = run_command_capture_output(cmd);
