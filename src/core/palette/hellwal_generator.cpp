@@ -124,11 +124,7 @@ palette hellwal_generator::generate_from_image(const std::string &image_path, co
         collect_palette_colors(doc, pal);
 
     auto get_color_by_index = [&](int idx) -> const color & {
-        std::string key = "base0";
-        if (idx < 10)
-            key += std::to_string(idx);
-        else
-            key += static_cast<char>('A' + (idx - 10));
+        std::string key = "color" + std::to_string(idx);
         return pal.get_color(key);
     };
 
