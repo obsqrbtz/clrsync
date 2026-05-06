@@ -16,6 +16,12 @@ std::string save_file_dialog(const std::string &title = "Save File",
 
 std::string select_folder_dialog(const std::string &title = "Select Folder",
                                  const std::string &initial_path = "");
+
+inline const std::vector<std::string> &image_file_filters()
+{
+    static const std::vector<std::string> filters = {"png", "jpg", "jpeg", "bmp"};
+    return filters;
+}
 } // namespace file_dialogs
 
 #endif // CLRSYNC_GUI_FILE_BROWSER_HPP

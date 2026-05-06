@@ -10,6 +10,64 @@
 
 #include "gui/platform/file_browser.hpp"
 #include <filesystem>
+#include <sstream>
+
+namespace
+{
+std::string normalize_filter_pattern(const std::string &filter)
+{
+    if (filter.empty())
+        return {};
+
+    if (filter.find_first_of("*?;") != std::string::npos)
+        return filter;
+
+    if (filter[0] == '.')
+        return "*" + filter;
+
+    return "*." + filter;
+}
+
+std::string build_filter_buffer(const std::vector<std::string> &filters)
+{
+    std::string buffer;
+
+    auto append_entry = [&](const std::string &label, const std::string &pattern) {
+        buffer.append(label);
+        buffer.push_back('\0');
+        buffer.append(pattern);
+        buffer.push_back('\0');
+    };
+
+    if (filters.empty())
+    {
+        append_entry("All Files (*.*)", "*.*");
+        buffer.push_back('\0');
+        return buffer;
+    }
+
+    std::ostringstream patterns;
+    bool first = true;
+    for (const auto &filter : filters)
+    {
+        const std::string pattern = normalize_filter_pattern(filter);
+        if (pattern.empty())
+            continue;
+
+        if (!first)
+            patterns << ';';
+        patterns << pattern;
+        first = false;
+    }
+
+    const std::string pattern_list = patterns.str();
+    if (!pattern_list.empty())
+        append_entry("Image Files", pattern_list);
+    append_entry("All Files (*.*)", "*.*");
+    buffer.push_back('\0');
+    return buffer;
+}
+} // namespace
 
 namespace file_dialogs
 {
@@ -20,7 +78,7 @@ std::string open_file_dialog(const std::string &title, const std::string &initia
     OPENFILENAMEA ofn;
     char file[MAX_PATH] = "";
 
-    std::string filter_str = "All Files (*.*)\0*.*\0";
+    std::string filter_str = build_filter_buffer(filters);
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
@@ -61,7 +119,7 @@ std::string save_file_dialog(const std::string &title, const std::string &initia
     OPENFILENAMEA ofn;
     char file[MAX_PATH] = "";
 
-    std::string filter_str = "All Files\0*.*\0\0";
+    std::string filter_str = build_filter_buffer(filters);
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);

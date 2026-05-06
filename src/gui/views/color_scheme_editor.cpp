@@ -149,8 +149,9 @@ void color_scheme_editor::render_controls()
             ImGui::SameLine();
             if (ImGui::Button("Browse##gen_image"))
             {
-                std::string res = file_dialogs::open_file_dialog("Select Image", m_gen_image_path,
-                                                                 {"png", "jpg", "jpeg", "bmp"});
+                std::string res =
+                    file_dialogs::open_file_dialog("Select Image", m_gen_image_path,
+                                                   file_dialogs::image_file_filters());
                 if (!res.empty())
                     m_gen_image_path = res;
             }
@@ -191,8 +192,9 @@ void color_scheme_editor::render_controls()
             ImGui::SameLine();
             if (ImGui::Button("Browse##gen_image"))
             {
-                std::string res = file_dialogs::open_file_dialog("Select Image", m_gen_image_path,
-                                                                 {"png", "jpg", "jpeg", "bmp"});
+                std::string res =
+                    file_dialogs::open_file_dialog("Select Image", m_gen_image_path,
+                                                   file_dialogs::image_file_filters());
                 if (!res.empty())
                     m_gen_image_path = res;
             }
@@ -265,8 +267,9 @@ void color_scheme_editor::render_controls()
                     auto image_path = m_gen_image_path;
                     if (image_path.empty())
                     {
-                        image_path = file_dialogs::open_file_dialog("Select Image", "",
-                                                                    {"png", "jpg", "jpeg", "bmp"});
+                        image_path =
+                            file_dialogs::open_file_dialog("Select Image", "",
+                                                           file_dialogs::image_file_filters());
                     }
 
                     auto pal = gen.generate_from_image(image_path, opts);
@@ -308,7 +311,7 @@ void color_scheme_editor::render_controls()
                         if (image_path.empty())
                         {
                             image_path = file_dialogs::open_file_dialog(
-                                "Select Image", "", {"png", "jpg", "jpeg", "bmp"});
+                                "Select Image", "", file_dialogs::image_file_filters());
                         }
                         pal = gen.generate_from_image(image_path, opts);
                         if (pal.name().empty())
@@ -392,7 +395,7 @@ void color_scheme_editor::setup_widgets()
     m_generate_dialog.set_path_browse_callback(
         [this](const std::string &current_path) -> std::string {
             return file_dialogs::open_file_dialog("Select Image", current_path,
-                                                  {"png", "jpg", "jpeg", "bmp"});
+                                                  file_dialogs::image_file_filters());
         });
 
     m_action_buttons.add_button({" Save ", "Save current palette to file",

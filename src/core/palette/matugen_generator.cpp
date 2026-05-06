@@ -1,38 +1,16 @@
 #include "matugen_generator.hpp"
 
+#include "core/common/process.hpp"
 #include "core/palette/color.hpp"
 #include "core/palette/json_utils.hpp"
 
-#include <array>
-#include <cstdio>
 #include <filesystem>
 #include <string>
 #include <unordered_map>
 
-#ifdef _WIN32
-#define popen _popen
-#define pclose _pclose
-#endif
-
 namespace clrsync::core
 {
 using json = json_utils::json;
-
-static std::string run_command_capture_output(const std::string &cmd)
-{
-    std::array<char, 4096> buffer;
-    std::string result;
-    FILE *pipe = popen(cmd.c_str(), "r");
-    if (!pipe)
-        return {};
-    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr)
-    {
-        result += buffer.data();
-    }
-    int rc = pclose(pipe);
-    (void)rc;
-    return result;
-}
 
 static palette parse_matugen_output(const std::string &out, const matugen_generator::options &opts,
                                     const std::string &pal_name, const std::string &file_path)
@@ -204,22 +182,33 @@ palette matugen_generator::generate_from_image(const std::string &image_path)
 palette matugen_generator::generate_from_image(const std::string &image_path, const options &opts)
 {
     std::filesystem::path p(image_path);
-    std::string cmd = "matugen image '" + image_path + "'";
+    std::vector<std::string> args = {"matugen", "image", image_path};
     if (!opts.type.empty())
-        cmd += " --type '" + opts.type + "'";
+    {
+        args.push_back("--type");
+        args.push_back(opts.type);
+    }
     if (!opts.mode.empty())
-        cmd += " --mode " + opts.mode;
+    {
+        args.push_back("--mode");
+        args.push_back(opts.mode);
+    }
     if (opts.contrast != 0.0f)
-        cmd += " --contrast " + std::to_string(opts.contrast);
-    cmd += " --json hex --dry-run";
+    {
+        args.push_back("--contrast");
+        args.push_back(std::to_string(opts.contrast));
+    }
+    args.push_back("--json");
+    args.push_back("hex");
+    args.push_back("--dry-run");
     if (opts.source_color_index >= 0 && opts.source_color_index <= 3)
     {
-        cmd += " --source-color-index ";
-        cmd += std::to_string(opts.source_color_index);
+        args.push_back("--source-color-index");
+        args.push_back(std::to_string(opts.source_color_index));
     }
 
 
-    std::string out = run_command_capture_output(cmd);
+    std::string out = run_process_capture_output(args);
     if (out.empty())
         return {};
     return parse_matugen_output(out, opts, std::string("matugen:") + p.filename().string(),
@@ -237,17 +226,28 @@ palette matugen_generator::generate_from_color(const std::string &color_hex, con
     std::string c = color_hex;
     if (!c.empty() && c[0] == '#')
         c = c.substr(1);
-    std::string cmd = "matugen color hex '" + c + "'";
+    std::vector<std::string> args = {"matugen", "color", "hex", c};
     if (!opts.type.empty())
-        cmd += " --type '" + opts.type + "'";
+    {
+        args.push_back("--type");
+        args.push_back(opts.type);
+    }
     if (!opts.mode.empty())
-        cmd += " --mode " + opts.mode;
+    {
+        args.push_back("--mode");
+        args.push_back(opts.mode);
+    }
     if (opts.contrast != 0.0f)
-        cmd += " --contrast " + std::to_string(opts.contrast);
-    cmd += " --json hex --dry-run";
+    {
+        args.push_back("--contrast");
+        args.push_back(std::to_string(opts.contrast));
+    }
+    args.push_back("--json");
+    args.push_back("hex");
+    args.push_back("--dry-run");
 
 
-    std::string out = run_command_capture_output(cmd);
+    std::string out = run_process_capture_output(args);
     if (out.empty())
         return {};
 

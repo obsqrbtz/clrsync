@@ -4,8 +4,9 @@ set(CORE_SOURCES
     palette/matugen_generator.cpp
     io/toml_file.cpp
     config/config.cpp
-        common/utils.cpp
-        common/version.cpp
+    common/process.cpp
+    common/utils.cpp
+    common/version.cpp
     theme/theme_template.cpp
 )
 
