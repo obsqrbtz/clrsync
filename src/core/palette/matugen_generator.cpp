@@ -1,11 +1,11 @@
 #include "matugen_generator.hpp"
 
 #include "core/palette/color.hpp"
+#include "core/palette/json_utils.hpp"
 
 #include <array>
 #include <cstdio>
 #include <filesystem>
-#include <regex>
 #include <string>
 #include <unordered_map>
 
@@ -16,6 +16,8 @@
 
 namespace clrsync::core
 {
+using json = json_utils::json;
+
 static std::string run_command_capture_output(const std::string &cmd)
 {
     std::array<char, 4096> buffer;
@@ -32,53 +34,86 @@ static std::string run_command_capture_output(const std::string &cmd)
     return result;
 }
 
+static const json *find_object_member(const json &node, const std::string &key)
+{
+    if (node.is_object())
+    {
+        auto it = node.find(key);
+        if (it != node.end() && it->is_object())
+            return &(*it);
+        for (const auto &entry : node.items())
+        {
+            if (const json *found = find_object_member(entry.value(), key))
+                return found;
+        }
+    }
+    else if (node.is_array())
+    {
+        for (const auto &entry : node)
+        {
+            if (const json *found = find_object_member(entry, key))
+                return found;
+        }
+    }
+    return nullptr;
+}
+
+static void collect_hex_values(const json &node, std::unordered_map<std::string, std::string> &out)
+{
+    if (node.is_object())
+    {
+        for (const auto &entry : node.items())
+        {
+            const std::string key = entry.key();
+            const json &value = entry.value();
+            if (value.is_string())
+            {
+                const std::string hex = json_utils::normalize_hex_string(value.get<std::string>());
+                if (!hex.empty())
+                {
+                    std::string normalized_key = key;
+                    for (auto &c : normalized_key)
+                        if (c == '-')
+                            c = '_';
+                    out[normalized_key] = hex;
+                }
+            }
+
+            collect_hex_values(value, out);
+        }
+    }
+    else if (node.is_array())
+    {
+        for (const auto &value : node)
+            collect_hex_values(value, out);
+    }
+}
+
 static palette parse_matugen_output(const std::string &out, const matugen_generator::options &opts,
                                     const std::string &pal_name, const std::string &file_path)
 {
     if (out.empty())
         return {};
 
-    auto extract_json_object = [&](const std::string &s,
-                                   const std::string &obj_key) -> std::string {
-        std::regex re("\"" + obj_key + "\"\\s*:\\s*\\{");
-        std::smatch m;
-        if (!std::regex_search(s, m, re))
-            return {};
-        size_t open_pos = s.find('{', m.position(0));
-        if (open_pos == std::string::npos)
-            return {};
-        size_t i = open_pos + 1;
-        int depth = 1;
-        for (; i < s.size(); ++i)
-        {
-            if (s[i] == '{')
-                ++depth;
-            else if (s[i] == '}')
-            {
-                --depth;
-                if (depth == 0)
-                    break;
-            }
-        }
-        if (depth != 0)
-            return {};
-        return s.substr(open_pos + 1, i - open_pos - 1);
-    };
+    json doc;
+    if (!json_utils::parse_json_output(out, doc))
+        return {};
 
-    std::string mode_section = extract_json_object(out, "colors");
-    std::string target_section;
-    if (!mode_section.empty())
+    const json *section = nullptr;
+    if (const json *colors = find_object_member(doc, "colors"))
     {
-        std::string wrapped = std::string("{") + mode_section + std::string("}");
-        target_section = extract_json_object(wrapped, opts.mode);
+        auto it = colors->find(opts.mode);
+        if (it != colors->end() && it->is_object())
+            section = &(*it);
     }
-    if (target_section.empty())
+    if (!section)
     {
-        target_section = extract_json_object(out, opts.mode);
+        auto it = doc.find(opts.mode);
+        if (it != doc.end() && it->is_object())
+            section = &(*it);
     }
-    const std::string &parse_src = (target_section.empty() ? out : target_section);
-
-    std::regex kv_re("\"([a-zA-Z0-9_-]+)\"\\s*:\\s*\"(#?[A-Fa-f0-9]{6,8})\"");
+    if (!section)
+        section = &doc;
 
     std::unordered_map<std::string, std::string> clrsync_to_matu = {
         {"accent", "primary"},
@@ -191,18 +226,7 @@ static palette parse_matugen_output(const std::string &out, const matugen_genera
     };
 
     std::unordered_map<std::string, std::string> matu_kv_map;
-    auto begin = std::sregex_iterator(parse_src.begin(), parse_src.end(), kv_re);
-    auto endit = std::sregex_iterator();
-    for (auto it = begin; it != endit; ++it)
-    {
-        std::smatch match = *it;
-        std::string key = match[1].str();
-        for (auto &c : key)
-            if (c == '-')
-                c = '_';
-        std::string val = match[2].str();
-        matu_kv_map[key] = val;
-    }
+    collect_hex_values(*section, matu_kv_map);
 
     palette pal;
     pal.set_name(pal_name);

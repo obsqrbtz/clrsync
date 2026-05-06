@@ -1,11 +1,13 @@
 #include "hellwal_generator.hpp"
 
 #include "core/palette/color.hpp"
+#include "core/palette/json_utils.hpp"
 
 #include <array>
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <filesystem>
-#include <regex>
 #include <string>
 
 #ifdef _WIN32
@@ -15,6 +17,8 @@
 
 namespace clrsync::core
 {
+using json = json_utils::json;
+
 static std::string run_command_capture_output(const std::string &cmd)
 {
     std::array<char, 4096> buffer;
@@ -29,6 +33,54 @@ static std::string run_command_capture_output(const std::string &cmd)
     int rc = pclose(pipe);
     (void)rc;
     return result;
+}
+
+static void collect_palette_colors(const json &node, palette &pal)
+{
+    if (node.is_object())
+    {
+        for (const auto &entry : node.items())
+        {
+            const std::string key = entry.key();
+            const json &value = entry.value();
+
+            if (value.is_string())
+            {
+                const std::string hex = json_utils::normalize_hex_string(value.get<std::string>());
+                if (!hex.empty())
+                {
+                    const bool is_special_key = key == "background" || key == "foreground" ||
+                                                key == "cursor" || key == "border";
+                    const bool is_color_key =
+                        key.size() >= 6 && key.rfind("color", 0) == 0 &&
+                        key.size() <= 7 &&
+                        std::all_of(key.begin() + 5, key.end(), [](unsigned char c) {
+                            return std::isdigit(c) != 0;
+                        });
+
+                    if (is_special_key || is_color_key)
+                    {
+                        try
+                        {
+                            color col;
+                            col.from_hex_string(hex);
+                            pal.set_color(key, col);
+                        }
+                        catch (...)
+                        {
+                        }
+                    }
+                }
+            }
+
+            collect_palette_colors(value, pal);
+        }
+    }
+    else if (node.is_array())
+    {
+        for (const auto &value : node)
+            collect_palette_colors(value, pal);
+    }
 }
 
 palette hellwal_generator::generate_from_image(const std::string &image_path)
@@ -67,49 +119,9 @@ palette hellwal_generator::generate_from_image(const std::string &image_path, co
     if (out.empty())
         return {};
 
-    std::regex special_re(
-        "\"(background|foreground|cursor|border)\"\\s*:\\s*\"(#[0-9A-Fa-f]{6,8})\"");
-    for (std::sregex_iterator it(out.begin(), out.end(), special_re), end; it != end; ++it)
-    {
-        std::smatch m = *it;
-        std::string key = m[1].str();
-        std::string hex = m[2].str();
-        try
-        {
-            color col;
-            col.from_hex_string(hex);
-            pal.set_color(key, col);
-        }
-        catch (...)
-        {
-        }
-    }
-
-    std::regex color_re("\"color(\\d{1,2})\"\\s*:\\s*\"(#[0-9A-Fa-f]{6,8})\"");
-    for (std::sregex_iterator it(out.begin(), out.end(), color_re), end; it != end; ++it)
-    {
-        std::smatch m = *it;
-        int idx = std::stoi(m[1].str());
-        if (idx < 0 || idx > 15)
-            continue;
-        std::string hex = m[2].str();
-
-        std::string key = "base0";
-        if (idx < 10)
-            key += std::to_string(idx);
-        else
-            key += static_cast<char>('A' + (idx - 10));
-
-        try
-        {
-            color col;
-            col.from_hex_string(hex);
-            pal.set_color(key, col);
-        }
-        catch (...)
-        {
-        }
-    }
+    json doc;
+    if (json_utils::parse_json_output(out, doc))
+        collect_palette_colors(doc, pal);
 
     auto get_color_by_index = [&](int idx) -> const color & {
         std::string key = "base0";
