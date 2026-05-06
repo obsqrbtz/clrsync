@@ -225,6 +225,8 @@ void color_scheme_editor::render_controls()
 
             ImGui::SliderFloat("Contrast", &m_matugen_contrast, -1.0f, 1.0f);
 
+            ImGui::SliderInt("Source Color Index", &m_matugen_source_color_index, 0, 3);
+
             ImGui::Spacing();
             ImGui::Checkbox("Use color (instead of image)", &m_matugen_use_color);
             if (m_matugen_use_color)
@@ -284,6 +286,7 @@ void color_scheme_editor::render_controls()
                     opts.mode = m_matugen_mode;
                     opts.type = m_matugen_type;
                     opts.contrast = m_matugen_contrast;
+                    opts.source_color_index = m_matugen_source_color_index;
 
                     auto image_path = m_gen_image_path;
 

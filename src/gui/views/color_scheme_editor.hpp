@@ -63,6 +63,7 @@ class color_scheme_editor
     std::string m_matugen_mode{"dark"};
     std::string m_matugen_type{"scheme-tonal-spot"};
     float m_matugen_contrast{0.0f};
+    int m_matugen_source_color_index{0};
     // matugen color option
     bool m_matugen_use_color{false};
     float m_matugen_color_vec[3]{1.0f, 0.0f, 0.0f};

@@ -495,6 +495,7 @@ Available matugen options:
 - `--matugen-type <type>` - Color scheme type (default: "scheme-tonal-spot")
 - `--matugen-mode <mode>` - Light or dark mode (default: "dark")
 - `--matugen-contrast <float>` - Contrast value from -1 to 1 (default: 0.0)
+- `--matugen-source-color-index <int>` - Source color index for image (0..3, default: 0)
 
 #### All Options
 

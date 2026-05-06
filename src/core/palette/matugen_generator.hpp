@@ -17,6 +17,7 @@ class matugen_generator : public generator
         std::string type = "scheme-tonal-spot";
         std::string mode = "dark";
         float contrast = 0.0f; // -1..1
+      int source_color_index = 0; // 0..3
     };
 
     palette generate_from_image(const std::string &image_path) override;

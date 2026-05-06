@@ -211,7 +211,12 @@ palette matugen_generator::generate_from_image(const std::string &image_path, co
         cmd += " --mode " + opts.mode;
     if (opts.contrast != 0.0f)
         cmd += " --contrast " + std::to_string(opts.contrast);
-    cmd += " --json hex --dry-run --source-color-index 0";
+    cmd += " --json hex --dry-run";
+    if (opts.source_color_index >= 0 && opts.source_color_index <= 3)
+    {
+        cmd += " --source-color-index ";
+        cmd += std::to_string(opts.source_color_index);
+    }
 
 
     std::string out = run_command_capture_output(cmd);

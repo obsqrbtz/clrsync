@@ -116,6 +116,10 @@ void setup_argument_parser(argparse::ArgumentParser &program)
         .default_value(std::string("0.0"))
         .help("matugen: contrast value from -1 to 1")
         .metavar("FLOAT");
+    program.add_argument("--matugen-source-color-index")
+        .default_value(std::string("0"))
+        .help("matugen: source color index (0..3)")
+        .metavar("INT");
 
     // hellwal generator options
     program.add_argument("--hellwal-neon").help("hellwal: enable neon mode").flag();
@@ -272,6 +276,20 @@ int main(int argc, char *argv[])
             {
                 std::string s = program.get<std::string>("--matugen-contrast");
                 opts.contrast = std::stof(s);
+            }
+            catch (...)
+            {
+            }
+
+            try
+            {
+                std::string s = program.get<std::string>("--matugen-source-color-index");
+                int idx = std::stoi(s);
+                if (idx < 0)
+                    idx = 0;
+                if (idx > 3)
+                    idx = 3;
+                opts.source_color_index = idx;
             }
             catch (...)
             {
