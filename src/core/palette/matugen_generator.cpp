@@ -181,6 +181,8 @@ palette matugen_generator::generate_from_image(const std::string &image_path)
 
 palette matugen_generator::generate_from_image(const std::string &image_path, const options &opts)
 {
+    ensure_supported("matugen");
+
     std::filesystem::path p(image_path);
     std::vector<std::string> args = {"matugen", "image", image_path};
     if (!opts.type.empty())
@@ -223,6 +225,8 @@ palette matugen_generator::generate_from_color(const std::string &color_hex)
 
 palette matugen_generator::generate_from_color(const std::string &color_hex, const options &opts)
 {
+    ensure_supported("matugen");
+
     std::string c = color_hex;
     if (!c.empty() && c[0] == '#')
         c = c.substr(1);

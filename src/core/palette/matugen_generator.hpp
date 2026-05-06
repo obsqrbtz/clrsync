@@ -9,7 +9,11 @@ namespace clrsync::core
 class matugen_generator : public generator
 {
   public:
-    matugen_generator() = default;
+    matugen_generator()
+        : generator({generator::system::windows, generator::system::linux,
+                     generator::system::macos})
+    {
+    }
     ~matugen_generator() override = default;
 
     struct options

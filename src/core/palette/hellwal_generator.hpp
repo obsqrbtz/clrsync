@@ -9,7 +9,10 @@ namespace clrsync::core
 class hellwal_generator : public generator
 {
   public:
-    hellwal_generator() = default;
+    hellwal_generator()
+        : generator({generator::system::linux, generator::system::macos})
+    {
+    }
     ~hellwal_generator() override = default;
 
     struct options

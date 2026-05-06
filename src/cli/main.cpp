@@ -194,13 +194,23 @@ int main(int argc, char *argv[])
         clrsync::core::palette pal;
         if (generator_name == "hellwal")
         {
+            clrsync::core::hellwal_generator gen;
+            if (!gen.supports_current_system())
+            {
+                std::cerr << "Error: hellwal is not supported on "
+                          << clrsync::core::generator::system_name(
+                                 clrsync::core::generator::current_system())
+                          << ". Supported systems: " << gen.supported_systems_description()
+                          << std::endl;
+                return 1;
+            }
+
             if (program.is_used("--generate-color"))
             {
                 std::cerr << "Error: --generate-color is only supported with --generator matugen" << std::endl;
                 return 1;
             }
 
-            clrsync::core::hellwal_generator gen;
             clrsync::core::hellwal_generator::options opts{};
 
             if (program.is_used("--hellwal-neon"))
@@ -246,6 +256,16 @@ int main(int argc, char *argv[])
         else if (generator_name == "matugen")
         {
             clrsync::core::matugen_generator gen;
+            if (!gen.supports_current_system())
+            {
+                std::cerr << "Error: matugen is not supported on "
+                          << clrsync::core::generator::system_name(
+                                 clrsync::core::generator::current_system())
+                          << ". Supported systems: " << gen.supported_systems_description()
+                          << std::endl;
+                return 1;
+            }
+
             clrsync::core::matugen_generator::options opts{};
 
             try

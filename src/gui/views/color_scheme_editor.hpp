@@ -7,6 +7,9 @@
 #include "gui/widgets/action_buttons.hpp"
 #include "gui/widgets/input_dialog.hpp"
 #include "gui/widgets/palette_selector.hpp"
+#include <string>
+#include <optional>
+#include <vector>
 
 class template_editor;
 class settings_window;
@@ -14,6 +17,12 @@ class settings_window;
 class color_scheme_editor
 {
   public:
+    enum class generator_kind
+    {
+        hellwal,
+        matugen
+    };
+
     color_scheme_editor();
 
     void render_controls_and_colors();
@@ -36,6 +45,8 @@ class color_scheme_editor
     void apply_themes();
     void notify_palette_changed();
     void setup_widgets();
+    void refresh_available_generators();
+    [[nodiscard]] std::optional<generator_kind> selected_generator_kind() const;
 
     palette_controller m_controller;
     color_table_renderer m_color_table;
@@ -68,6 +79,8 @@ class color_scheme_editor
     bool m_matugen_use_color{false};
     float m_matugen_color_vec[3]{1.0f, 0.0f, 0.0f};
     std::string m_matugen_color_hex{"FF0000"};
+    std::vector<generator_kind> m_available_generators;
+    std::vector<std::string> m_generator_labels;
     clrsync::gui::widgets::action_buttons m_action_buttons;
 };
 

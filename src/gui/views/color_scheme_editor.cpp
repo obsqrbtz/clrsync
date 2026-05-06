@@ -14,6 +14,37 @@
 #include <filesystem>
 #include <iostream>
 
+void color_scheme_editor::refresh_available_generators()
+{
+    m_available_generators.clear();
+    m_generator_labels.clear();
+
+    clrsync::core::hellwal_generator hellwal_gen;
+    if (hellwal_gen.supports_current_system())
+    {
+        m_available_generators.push_back(generator_kind::hellwal);
+        m_generator_labels.push_back("hellwal");
+    }
+
+    clrsync::core::matugen_generator matugen_gen;
+    if (matugen_gen.supports_current_system())
+    {
+        m_available_generators.push_back(generator_kind::matugen);
+        m_generator_labels.push_back("matugen");
+    }
+
+    if (m_generator_idx < 0 || m_generator_idx >= static_cast<int>(m_available_generators.size()))
+        m_generator_idx = 0;
+}
+
+std::optional<color_scheme_editor::generator_kind> color_scheme_editor::selected_generator_kind() const
+{
+    if (m_generator_idx < 0 || m_generator_idx >= static_cast<int>(m_available_generators.size()))
+        return std::nullopt;
+
+    return m_available_generators[m_generator_idx];
+}
+
 color_scheme_editor::color_scheme_editor()
 {
     const auto &current = m_controller.current_palette();
@@ -28,6 +59,7 @@ color_scheme_editor::color_scheme_editor()
         std::cout << "WARNING: No palette loaded, skipping theme application\n";
     }
 
+    refresh_available_generators();
     setup_widgets();
 }
 
@@ -122,12 +154,27 @@ void color_scheme_editor::render_controls()
     if (ImGui::BeginPopupModal("Generate Palette", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::Text("Generator:");
-        const char *generators[] = {"hellwal", "matugen"};
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(160.0f);
-        ImGui::Combo("##gen_select", &m_generator_idx, generators, IM_ARRAYSIZE(generators));
+        std::vector<const char *> generator_items;
+        generator_items.reserve(m_generator_labels.size());
+        for (const auto &label : m_generator_labels)
+            generator_items.push_back(label.c_str());
 
-        if (m_generator_idx == 0) // hellwal
+        if (!generator_items.empty())
+        {
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(160.0f);
+            ImGui::Combo("##gen_select", &m_generator_idx, generator_items.data(),
+                         static_cast<int>(generator_items.size()));
+        }
+        else
+        {
+            ImGui::SameLine();
+            ImGui::TextDisabled("No supported generators");
+        }
+
+        const auto selected_kind = selected_generator_kind();
+
+        if (selected_kind && *selected_kind == generator_kind::hellwal)
         {
             ImGui::Separator();
             ImGui::Text("hellwal options");
@@ -171,7 +218,7 @@ void color_scheme_editor::render_controls()
             ImGui::SliderFloat("Gray scale", &m_gen_gray_scale, 0.0f, 1.0f);
         }
 
-        if (m_generator_idx == 1) // matugen
+        if (selected_kind && *selected_kind == generator_kind::matugen)
         {
             ImGui::Separator();
             ImGui::Text("matugen options");
@@ -247,13 +294,27 @@ void color_scheme_editor::render_controls()
         }
 
         ImGui::Separator();
+        const bool can_generate = selected_kind.has_value();
+        if (!can_generate)
+            ImGui::BeginDisabled();
         if (ImGui::Button("Generate", ImVec2(120, 0)))
         {
             try
             {
-                if (m_generator_idx == 0)
+                if (selected_kind && *selected_kind == generator_kind::hellwal)
                 {
                     clrsync::core::hellwal_generator gen;
+                    if (!gen.supports_current_system())
+                    {
+                        std::cerr << "Generation failed: hellwal is not supported on "
+                                  << clrsync::core::generator::system_name(
+                                         clrsync::core::generator::current_system())
+                                  << std::endl;
+                        ImGui::CloseCurrentPopup();
+                        if (!can_generate)
+                            ImGui::EndDisabled();
+                        return;
+                    }
                     clrsync::core::hellwal_generator::options opts;
                     opts.neon = m_gen_neon;
                     opts.dark = m_gen_dark;
@@ -282,9 +343,20 @@ void color_scheme_editor::render_controls()
                     m_controller.select_palette(pal.name());
                     apply_themes();
                 }
-                else if (m_generator_idx == 1)
+                else if (selected_kind && *selected_kind == generator_kind::matugen)
                 {
                     clrsync::core::matugen_generator gen;
+                    if (!gen.supports_current_system())
+                    {
+                        std::cerr << "Generation failed: matugen is not supported on "
+                                  << clrsync::core::generator::system_name(
+                                         clrsync::core::generator::current_system())
+                                  << std::endl;
+                        ImGui::CloseCurrentPopup();
+                        if (!can_generate)
+                            ImGui::EndDisabled();
+                        return;
+                    }
                     clrsync::core::matugen_generator::options opts;
                     opts.mode = m_matugen_mode;
                     opts.type = m_matugen_type;
@@ -334,7 +406,13 @@ void color_scheme_editor::render_controls()
             {
                 std::cerr << "Generation failed: " << e.what() << std::endl;
             }
+            if (!can_generate)
+                ImGui::EndDisabled();
             ImGui::CloseCurrentPopup();
+        }
+        else if (!can_generate)
+        {
+            ImGui::EndDisabled();
         }
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0)))
@@ -377,6 +455,14 @@ void color_scheme_editor::setup_widgets()
         try
         {
             clrsync::core::hellwal_generator gen;
+            if (!gen.supports_current_system())
+            {
+                std::cerr << "Failed to generate palette: hellwal is not supported on "
+                          << clrsync::core::generator::system_name(
+                                 clrsync::core::generator::current_system())
+                          << std::endl;
+                return;
+            }
             auto pal = gen.generate_from_image(image_path);
             if (pal.name().empty())
             {

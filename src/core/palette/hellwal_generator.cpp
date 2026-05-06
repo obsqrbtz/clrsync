@@ -69,6 +69,8 @@ palette hellwal_generator::generate_from_image(const std::string &image_path)
 
 palette hellwal_generator::generate_from_image(const std::string &image_path, const options &opts)
 {
+    ensure_supported("hellwal");
+
     palette pal;
 
     std::filesystem::path p(image_path);
