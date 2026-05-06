@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+// Delete this include when https://github.com/BalazsJako/ImGuiColorTextEdit/pull/170 is merged
+#include <cstdint>
 
 class TextEditor
 {
