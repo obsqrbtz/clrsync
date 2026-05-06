@@ -10,7 +10,7 @@ class hellwal_generator : public generator
 {
   public:
     hellwal_generator()
-        : generator({generator::system::linux, generator::system::macos})
+        : generator({generator::system::linux_os, generator::system::macos})
     {
     }
     ~hellwal_generator() override = default;

@@ -16,7 +16,7 @@ class generator
     enum class system
     {
         windows,
-        linux,
+        linux_os,
         macos,
         unknown
     };
@@ -65,7 +65,7 @@ class generator
 #elif defined(__APPLE__)
         return system::macos;
 #elif defined(__linux__)
-        return system::linux;
+        return system::linux_os;
 #else
         return system::unknown;
 #endif
@@ -77,7 +77,7 @@ class generator
         {
         case system::windows:
             return "Windows";
-        case system::linux:
+        case system::linux_os:
             return "Linux";
         case system::macos:
             return "macOS";

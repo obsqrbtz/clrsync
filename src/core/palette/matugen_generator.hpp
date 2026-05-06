@@ -10,7 +10,7 @@ class matugen_generator : public generator
 {
   public:
     matugen_generator()
-        : generator({generator::system::windows, generator::system::linux,
+        : generator({generator::system::windows, generator::system::linux_os,
                      generator::system::macos})
     {
     }
