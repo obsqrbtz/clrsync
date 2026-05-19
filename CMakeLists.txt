@@ -85,6 +85,12 @@ add_subdirectory(src/core)
 add_subdirectory(src/cli)
 add_subdirectory(src/gui)
 
+if(WIN32)
+    set(CLRSYNC_WINDOWS_RC ${CMAKE_SOURCE_DIR}/assets/icons/clrsync.rc)
+    target_sources(clrsync_cli PRIVATE ${CLRSYNC_WINDOWS_RC})
+    target_sources(clrsync_gui PRIVATE ${CLRSYNC_WINDOWS_RC})
+endif()
+
 include(Install)
 include(Packaging)
 

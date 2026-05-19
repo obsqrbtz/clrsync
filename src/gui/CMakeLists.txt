@@ -31,6 +31,9 @@ set(GUI_SOURCES
     platform/macos/font_loader_macos.cpp
     platform/linux/file_browser_linux.cpp
     platform/windows/file_browser_windows.cpp
+    platform/windows/window_icon_windows.cpp
+    platform/linux/window_icon_linux.cpp
+    platform/macos/window_icon_macos.cpp
     ${CMAKE_SOURCE_DIR}/lib/color_text_edit/TextEditor.cpp
     backend/glfw_opengl.cpp
     ui_manager.cpp

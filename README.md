@@ -1,9 +1,17 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Nix Flake](https://img.shields.io/badge/Nix-Flake-blue.svg)](https://nixos.wiki/wiki/Flakes)
+<p align="center">
+  <img src="assets/icons/web/logo-256.png" alt="clrsync logo" width="128" height="128">
+</p>
 
-# clrsync
+<h1 align="center">clrsync</h1>
 
-A theme management tool for synchronizing color schemes across multiple applications. clrsync allows to define color palettes once and apply them consistently to all configurable applications.
+<p align="center">
+  A theme management tool for synchronizing color schemes across multiple applications. clrsync allows to define color palettes once and apply them consistently to all configurable applications.
+</p>
+
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://nixos.wiki/wiki/Flakes"><img src="https://img.shields.io/badge/Nix-Flake-blue.svg" alt="Nix Flake"></a>
+</p>
 
 ![Preview](assets/screenshot.png)
 

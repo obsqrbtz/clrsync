@@ -1,39 +1,17 @@
 #include "hellwal_generator.hpp"
 
+#include "core/common/process.hpp"
 #include "core/palette/color.hpp"
 #include "core/palette/json_utils.hpp"
 
-#include <array>
 #include <algorithm>
 #include <cctype>
-#include <cstdio>
 #include <filesystem>
 #include <string>
-
-#ifdef _WIN32
-#define popen _popen
-#define pclose _pclose
-#endif
 
 namespace clrsync::core
 {
 using json = json_utils::json;
-
-static std::string run_command_capture_output(const std::string &cmd)
-{
-    std::array<char, 4096> buffer;
-    std::string result;
-    FILE *pipe = popen(cmd.c_str(), "r");
-    if (!pipe)
-        return {};
-    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr)
-    {
-        result += buffer.data();
-    }
-    int rc = pclose(pipe);
-    (void)rc;
-    return result;
-}
 
 static void collect_palette_colors(const json &node, palette &pal)
 {
@@ -91,31 +69,42 @@ palette hellwal_generator::generate_from_image(const std::string &image_path)
 
 palette hellwal_generator::generate_from_image(const std::string &image_path, const options &opts)
 {
+    ensure_supported("hellwal");
+
     palette pal;
 
     std::filesystem::path p(image_path);
     pal.set_name("hellwal:" + p.filename().string());
     pal.set_file_path(image_path);
 
-    std::string cmd = "hellwal -i '" + image_path + "' --json";
+    std::vector<std::string> args = {"hellwal", "-i", image_path, "--json"};
     if (opts.neon)
-        cmd += " --neon-mode";
+        args.push_back("--neon-mode");
     if (opts.dark)
-        cmd += " --dark";
+        args.push_back("--dark");
     if (opts.light)
-        cmd += " --light";
+        args.push_back("--light");
     if (opts.color)
-        cmd += " --color";
+        args.push_back("--color");
     if (opts.dark_offset > 0.0f)
-        cmd += " --dark-offset " + std::to_string(opts.dark_offset);
+    {
+        args.push_back("--dark-offset");
+        args.push_back(std::to_string(opts.dark_offset));
+    }
     if (opts.bright_offset > 0.0f)
-        cmd += " --bright-offset " + std::to_string(opts.bright_offset);
+    {
+        args.push_back("--bright-offset");
+        args.push_back(std::to_string(opts.bright_offset));
+    }
     if (opts.invert)
-        cmd += " --invert";
+        args.push_back("--invert");
     if (opts.gray_scale > 0.0f)
-        cmd += " --gray-scale " + std::to_string(opts.gray_scale);
+    {
+        args.push_back("--gray-scale");
+        args.push_back(std::to_string(opts.gray_scale));
+    }
 
-    std::string out = run_command_capture_output(cmd);
+    std::string out = run_process_capture_output(args);
     if (out.empty())
         return {};
 

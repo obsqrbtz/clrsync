@@ -1,4 +1,5 @@
 #include "gui/backend/glfw_opengl.hpp"
+#include "gui/platform/window_icon.hpp"
 #include <iostream>
 #include <string>
 #include <GLFW/glfw3.h>
@@ -54,6 +55,7 @@ bool glfw_opengl_backend::initialize(const window_config &config)
     glfwMakeContextCurrent(m_window);
     glfwSwapInterval(1);
     glfwSetWindowFocusCallback(m_window, focus_callback);
+    platform::set_window_icon(m_window);
 
     return true;
 }
