@@ -11,7 +11,6 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
-*.cmake
 
 AUR/clrsync-git
 AUR/pkg
