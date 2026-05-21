@@ -9,6 +9,7 @@ license=('MIT')
 
 depends=(
     glfw
+    libpng
     freetype2
     fontconfig
     mesa
@@ -19,6 +20,7 @@ depends=(
 
 makedepends=(
   cmake
+  xxd
   glfw
   libx11
   libxrandr

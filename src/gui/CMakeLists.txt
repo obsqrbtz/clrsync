@@ -95,4 +95,7 @@ else()
     
     target_include_directories(clrsync_gui PRIVATE ${GTK3_INCLUDE_DIRS})
     target_compile_options(clrsync_gui PRIVATE ${GTK3_CFLAGS_OTHER})
+
+    include(${CMAKE_SOURCE_DIR}/cmake/Icons.cmake)
+    clrsync_embed_window_icons(clrsync_gui)
 endif()

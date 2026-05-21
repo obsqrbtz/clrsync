@@ -54,11 +54,13 @@ stdenv.mkDerivation rec {
     makeWrapper
     wrapGAppsHook3
     wayland-protocols
+    xxd
   ];
 
   buildInputs = [
     glfw
     freetype
+    libpng
     fontconfig
     xorg.libXcursor
     mesa
