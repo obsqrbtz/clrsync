@@ -47,6 +47,8 @@ namespace clrsync::gui::platform
 
 void set_window_icon(GLFWwindow *window)
 {
+    if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND)
+        return;
     const EmbeddedIcon resources[] = {
         {clrsync_icon_32_png, clrsync_icon_32_png_len},
         {clrsync_icon_256_png, clrsync_icon_256_png_len},
