@@ -8,6 +8,7 @@ url="https://github.com/obsqrbtz/clrsync"
 license=('MIT')
 depends=(
     glfw
+    libpng
     freetype2
     fontconfig
     zlib
@@ -21,6 +22,7 @@ depends=(
 makedepends=(
   cmake
   git
+  xxd
   glfw
   libx11
   libxrandr

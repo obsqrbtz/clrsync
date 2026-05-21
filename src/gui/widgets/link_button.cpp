@@ -14,7 +14,7 @@ void open_url(const std::string& url)
 #else
     std::string cmd = "xdg-open " + url;
 #endif
-    std::system(cmd.c_str());
+    (void)std::system(cmd.c_str());
 }
 
 bool link_button(const std::string& label, const std::string& url, float width)
