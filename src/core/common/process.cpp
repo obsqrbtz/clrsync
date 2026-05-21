@@ -127,7 +127,7 @@ std::wstring build_windows_command_line(const std::vector<std::string> &args)
     return command_line;
 }
 
-std::string run_windows_process(const std::vector<std::string> &args)
+std::string run_windows_process(const std::vector<std::string> &args, int *exit_code)
 {
     SECURITY_ATTRIBUTES sa{};
     sa.nLength = sizeof(sa);
@@ -159,6 +159,8 @@ std::string run_windows_process(const std::vector<std::string> &args)
     if (!CreateProcessW(nullptr, mutable_command_line.data(), nullptr, nullptr, TRUE,
                         CREATE_NO_WINDOW, nullptr, nullptr, &startup, &process_info))
     {
+        if (exit_code)
+            *exit_code = -1;
         return {};
     }
 
@@ -177,20 +179,34 @@ std::string run_windows_process(const std::vector<std::string> &args)
     }
 
     WaitForSingleObject(process_handle.get(), INFINITE);
+    if (exit_code)
+    {
+        DWORD code = STILL_ACTIVE;
+        if (GetExitCodeProcess(process_handle.get(), &code))
+            *exit_code = static_cast<int>(code);
+        else
+            *exit_code = -1;
+    }
     return output;
 }
 #else
-std::string run_posix_process(const std::vector<std::string> &args)
+std::string run_posix_process(const std::vector<std::string> &args, int *exit_code)
 {
     int pipe_fds[2];
     if (pipe(pipe_fds) != 0)
+    {
+        if (exit_code)
+            *exit_code = -1;
         return {};
+    }
 
     pid_t pid = fork();
     if (pid < 0)
     {
         close(pipe_fds[0]);
         close(pipe_fds[1]);
+        if (exit_code)
+            *exit_code = -1;
         return {};
     }
 
@@ -225,22 +241,90 @@ std::string run_posix_process(const std::vector<std::string> &args)
     close(pipe_fds[0]);
     int status = 0;
     (void)waitpid(pid, &status, 0);
+    if (exit_code)
+    {
+        if (WIFEXITED(status))
+            *exit_code = WEXITSTATUS(status);
+        else if (WIFSIGNALED(status))
+            *exit_code = 128 + WTERMSIG(status);
+        else
+            *exit_code = -1;
+    }
     return output;
 }
 #endif
 } // namespace
 
+namespace
+{
+bool is_ansi_bracket_param_char(unsigned char c)
+{
+    return (c >= '0' && c <= '9') || c == ';';
+}
+
+void skip_ansi_brackets(const std::string &text, size_t &index)
+{
+    while (index < text.size() &&
+           is_ansi_bracket_param_char(static_cast<unsigned char>(text[index])))
+        ++index;
+    if (index < text.size() && text[index] >= 0x40 && text[index] <= 0x7E)
+        ++index;
+}
+} // namespace
+
 namespace clrsync::core
 {
-std::string run_process_capture_output(const std::vector<std::string> &args)
+std::string strip_ansi_escapes(const std::string &text)
+{
+    std::string result;
+    result.reserve(text.size());
+    for (size_t i = 0; i < text.size();)
+    {
+        const unsigned char c = static_cast<unsigned char>(text[i]);
+        if (c == 0x1B || c == 0x9B)
+        {
+            if (c == 0x1B)
+                ++i;
+            if (i < text.size() && text[i] == '[')
+            {
+                ++i;
+                skip_ansi_brackets(text, i);
+            }
+            continue;
+        }
+        if (i + 1 < text.size() && text[i] == '?' && text[i + 1] == '[')
+        {
+            i += 2;
+            skip_ansi_brackets(text, i);
+            continue;
+        }
+        result.push_back(text[i]);
+        ++i;
+    }
+    return result;
+}
+
+std::string process_failure_message(const std::string &output, const char *fallback_message)
+{
+    const std::string cleaned = strip_ansi_escapes(output);
+    if (!cleaned.empty())
+        return cleaned;
+    return fallback_message ? fallback_message : "command failed";
+}
+
+std::string run_process_capture_output(const std::vector<std::string> &args, int *exit_code)
 {
     if (args.empty())
+    {
+        if (exit_code)
+            *exit_code = -1;
         return {};
+    }
 
 #ifdef _WIN32
-    return run_windows_process(args);
+    return run_windows_process(args, exit_code);
 #else
-    return run_posix_process(args);
+    return run_posix_process(args, exit_code);
 #endif
 }
 } // namespace clrsync::core

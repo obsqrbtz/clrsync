@@ -41,7 +41,7 @@ class color_scheme_editor
     void notify_palette_changed();
     void setup_widgets();
     void refresh_available_generators();
-    void execute_palette_generation();
+    [[nodiscard]] std::optional<std::string> execute_palette_generation();
     [[nodiscard]] std::optional<clrsync::gui::widgets::palette_generator_kind>
     selected_generator_kind() const;
 

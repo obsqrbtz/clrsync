@@ -2,6 +2,7 @@
 #include "gui/layout/ui_layout.hpp"
 #include "core/palette/hellwal_generator.hpp"
 #include "core/palette/matugen_generator.hpp"
+#include "core/palette/pywal16_generator.hpp"
 #include "gui/controllers/theme_applier.hpp"
 #include "gui/platform/file_browser.hpp"
 #include "gui/widgets/action_buttons.hpp"
@@ -13,6 +14,7 @@
 #include "template_editor.hpp"
 #include <filesystem>
 #include <iostream>
+#include <optional>
 
 void color_scheme_editor::refresh_available_generators()
 {
@@ -33,6 +35,13 @@ void color_scheme_editor::refresh_available_generators()
         m_generator_labels.push_back("matugen");
     }
 
+    clrsync::core::pywal16_generator pywal16_gen;
+    if (pywal16_gen.supports_current_system())
+    {
+        m_available_generators.push_back(clrsync::gui::widgets::palette_generator_kind::pywal16);
+        m_generator_labels.push_back("pywal16");
+    }
+
     if (m_generate_state.generator_idx < 0 ||
         m_generate_state.generator_idx >= static_cast<int>(m_available_generators.size()))
         m_generate_state.generator_idx = 0;
@@ -48,11 +57,19 @@ color_scheme_editor::selected_generator_kind() const
     return m_available_generators[m_generate_state.generator_idx];
 }
 
-void color_scheme_editor::execute_palette_generation()
+namespace
+{
+bool palette_has_colors(const clrsync::core::palette &pal)
+{
+    return !pal.colors().empty();
+}
+} // namespace
+
+std::optional<std::string> color_scheme_editor::execute_palette_generation()
 {
     const auto selected_kind = selected_generator_kind();
     if (!selected_kind)
-        return;
+        return "No palette generator is available on this system.";
 
     try
     {
@@ -61,11 +78,9 @@ void color_scheme_editor::execute_palette_generation()
             clrsync::core::hellwal_generator gen;
             if (!gen.supports_current_system())
             {
-                std::cerr << "Generation failed: hellwal is not supported on "
-                          << clrsync::core::generator::system_name(
-                                 clrsync::core::generator::current_system())
-                          << std::endl;
-                return;
+                return std::string("hellwal is not supported on ") +
+                       clrsync::core::generator::system_name(
+                           clrsync::core::generator::current_system());
             }
             clrsync::core::hellwal_generator::options opts;
             opts.neon = m_generate_state.neon;
@@ -85,6 +100,8 @@ void color_scheme_editor::execute_palette_generation()
             }
 
             auto pal = gen.generate_from_image(image_path, opts);
+            if (!palette_has_colors(pal))
+                return "hellwal did not produce any colors.";
             if (pal.name().empty())
             {
                 std::filesystem::path p(image_path);
@@ -99,11 +116,9 @@ void color_scheme_editor::execute_palette_generation()
             clrsync::core::matugen_generator gen;
             if (!gen.supports_current_system())
             {
-                std::cerr << "Generation failed: matugen is not supported on "
-                          << clrsync::core::generator::system_name(
-                                 clrsync::core::generator::current_system())
-                          << std::endl;
-                return;
+                return std::string("matugen is not supported on ") +
+                       clrsync::core::generator::system_name(
+                           clrsync::core::generator::current_system());
             }
             clrsync::core::matugen_generator::options opts;
             opts.mode = m_generate_state.matugen_mode;
@@ -118,6 +133,8 @@ void color_scheme_editor::execute_palette_generation()
                 if (!hex.empty() && hex[0] == '#')
                     hex = hex.substr(1);
                 pal = gen.generate_from_color(hex, opts);
+                if (!palette_has_colors(pal))
+                    return "matugen did not produce any colors.";
                 if (pal.name().empty())
                     pal.set_name(std::string("matugen:color:") + hex);
             }
@@ -130,6 +147,8 @@ void color_scheme_editor::execute_palette_generation()
                                                                   file_dialogs::image_file_filters());
                 }
                 pal = gen.generate_from_image(image_path, opts);
+                if (!palette_has_colors(pal))
+                    return "matugen did not produce any colors.";
                 if (pal.name().empty())
                 {
                     std::filesystem::path p(image_path);
@@ -140,11 +159,51 @@ void color_scheme_editor::execute_palette_generation()
             m_controller.select_palette(pal.name());
             apply_themes();
         }
+        else if (*selected_kind == clrsync::gui::widgets::palette_generator_kind::pywal16)
+        {
+            clrsync::core::pywal16_generator gen;
+            if (!gen.supports_current_system())
+            {
+                return std::string("pywal16 is not supported on ") +
+                       clrsync::core::generator::system_name(
+                           clrsync::core::generator::current_system());
+            }
+            clrsync::core::pywal16_generator::options opts;
+            if (m_generate_state.pywal16_use_background)
+                opts.background = m_generate_state.pywal16_background;
+            if (m_generate_state.pywal16_use_foreground)
+                opts.foreground = m_generate_state.pywal16_foreground;
+            opts.backend = m_generate_state.pywal16_backend;
+            opts.light = m_generate_state.pywal16_light;
+            if (m_generate_state.pywal16_use_saturate)
+                opts.saturate = m_generate_state.pywal16_saturate;
+
+            auto image_path = m_generate_state.image_path;
+            if (image_path.empty())
+            {
+                image_path = file_dialogs::open_file_dialog("Select Image", "",
+                                                            file_dialogs::image_file_filters());
+            }
+
+            auto pal = gen.generate_from_image(image_path, opts);
+            if (!palette_has_colors(pal))
+                return "pywal16 did not produce any colors.";
+            if (pal.name().empty())
+            {
+                std::filesystem::path p(image_path);
+                pal.set_name(std::string("pywal16:") + p.filename().string());
+            }
+            m_controller.import_palette(pal);
+            m_controller.select_palette(pal.name());
+            apply_themes();
+        }
     }
     catch (const std::exception &e)
     {
-        std::cerr << "Generation failed: " << e.what() << std::endl;
+        return e.what();
     }
+
+    return std::nullopt;
 }
 
 color_scheme_editor::color_scheme_editor()
@@ -245,7 +304,7 @@ void color_scheme_editor::render_controls()
         m_generate_palette_dialog.open();
 
     m_generate_palette_dialog.render(m_generate_state, m_available_generators, m_generator_labels,
-                                     current, [this]() { execute_palette_generation(); });
+                                     current, [this]() { return execute_palette_generation(); });
 
     if (m_show_delete_confirmation)
     {
@@ -286,7 +345,8 @@ void color_scheme_editor::setup_widgets()
                 break;
             }
         }
-        execute_palette_generation();
+        if (const std::optional<std::string> error = execute_palette_generation())
+            m_generate_palette_dialog.set_error(*error);
     });
     m_generate_dialog.set_path_browse_callback(
         [this](const std::string &current_path) -> std::string {

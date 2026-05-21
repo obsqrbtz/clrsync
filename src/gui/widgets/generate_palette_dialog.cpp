@@ -1,5 +1,6 @@
 #include "generate_palette_dialog.hpp"
 #include "colors.hpp"
+#include "core/palette/color.hpp"
 #include "gui/layout/ui_layout.hpp"
 #include "section_header.hpp"
 #include "gui/platform/file_browser.hpp"
@@ -7,6 +8,7 @@
 #include <cstdio>
 #include <cstring>
 #include <optional>
+#include <string>
 
 namespace clrsync::gui::widgets
 {
@@ -56,6 +58,70 @@ void table_slider(const char* label, const char* id, float* value, float min_v, 
     ImGui::SetNextItemWidth(-FLT_MIN);
     ImGui::SliderFloat(id, value, min_v, max_v, format);
 }
+
+void sync_hex_string_to_rgb(const std::string& hex, float rgb[3])
+{
+    if (hex.empty())
+        return;
+    try
+    {
+        clrsync::core::color col;
+        col.from_hex_string(hex);
+        const clrsync::core::rgb channels = col.to_rgb();
+        rgb[0] = channels.r / 255.0f;
+        rgb[1] = channels.g / 255.0f;
+        rgb[2] = channels.b / 255.0f;
+    }
+    catch (...)
+    {
+    }
+}
+
+void sync_rgb_to_hex_string(const float rgb[3], std::string& hex)
+{
+    const int r = static_cast<int>(rgb[0] * 255.0f + 0.5f);
+    const int g = static_cast<int>(rgb[1] * 255.0f + 0.5f);
+    const int b = static_cast<int>(rgb[2] * 255.0f + 0.5f);
+    char buf[16];
+    std::snprintf(buf, sizeof(buf), "#%02X%02X%02X", r, g, b);
+    hex = buf;
+}
+
+void render_hex_color_swatch(const char* id_prefix, float rgb[3], std::string& hex_value)
+{
+    const ImVec2 swatch_size(layout::COLOR_SWATCH_SIZE, layout::COLOR_SWATCH_SIZE);
+    const ImVec4 color_vec(rgb[0], rgb[1], rgb[2], 1.0f);
+    const std::string button_id = std::string("##") + id_prefix + "_swatch";
+    const std::string popup_id = std::string("##") + id_prefix + "_picker";
+    const std::string picker_id = std::string("##") + id_prefix + "_picker3";
+    if (ImGui::ColorButton(button_id.c_str(), color_vec, ImGuiColorEditFlags_NoTooltip,
+                           swatch_size))
+        ImGui::OpenPopup(popup_id.c_str());
+    if (ImGui::BeginPopup(popup_id.c_str()))
+    {
+        if (ImGui::ColorPicker3(picker_id.c_str(), rgb,
+                               ImGuiColorEditFlags_NoSidePreview |
+                                   ImGuiColorEditFlags_DisplayRGB))
+            sync_rgb_to_hex_string(rgb, hex_value);
+        ImGui::EndPopup();
+    }
+}
+
+void render_optional_hex_color_row(const char* label, const char* id_prefix, bool& enabled,
+                                   float rgb[3], std::string& hex_value)
+{
+    table_label(label);
+    if (ImGui::Checkbox((std::string("Override##") + id_prefix).c_str(), &enabled) && enabled &&
+        hex_value.empty())
+        sync_rgb_to_hex_string(rgb, hex_value);
+    if (enabled)
+    {
+        if (!hex_value.empty())
+            sync_hex_string_to_rgb(hex_value, rgb);
+        ImGui::SameLine(0.0f, layout::BUTTON_SPACING);
+        render_hex_color_swatch(id_prefix, rgb, hex_value);
+    }
+}
 } // namespace
 
 generate_palette_dialog::generate_palette_dialog()
@@ -68,6 +134,13 @@ generate_palette_dialog::generate_palette_dialog()
 
 void generate_palette_dialog::open()
 {
+    m_error.clear();
+    m_is_open = true;
+}
+
+void generate_palette_dialog::set_error(const std::string &message)
+{
+    m_error.set(message);
     m_is_open = true;
 }
 
@@ -75,7 +148,7 @@ void generate_palette_dialog::render(generate_palette_state& state,
                                      const std::vector<palette_generator_kind>& available_generators,
                                      const std::vector<std::string>& generator_labels,
                                      const core::palette& palette,
-                                     const std::function<void()>& on_generate)
+                                     const std::function<std::optional<std::string>()>& on_generate)
 {
     if (!m_is_open)
         return;
@@ -109,6 +182,10 @@ void generate_palette_dialog::render(generate_palette_state& state,
         render_hellwal_options(state, palette);
     else if (kind == palette_generator_kind::matugen)
         render_matugen_options(state, palette);
+    else if (kind == palette_generator_kind::pywal16)
+        render_pywal16_options(state, palette);
+
+    m_error.render(palette);
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -120,7 +197,12 @@ void generate_palette_dialog::render(generate_palette_state& state,
     ImGui::PopStyleVar(3);
 
     if (submit_generate && on_generate)
-        on_generate();
+    {
+        if (const std::optional<std::string> error = on_generate())
+            m_error.set(*error);
+        else
+            m_is_open = false;
+    }
 }
 
 void generate_palette_dialog::render_generator_row(
@@ -264,6 +346,61 @@ void generate_palette_dialog::render_matugen_options(generate_palette_state& sta
     }
 }
 
+void generate_palette_dialog::render_pywal16_options(generate_palette_state& state,
+                                                     const core::palette& palette)
+{
+    section_header("pywal16 options", palette);
+
+    form_field_config image_cfg;
+    image_cfg.label = "Image";
+    image_cfg.label_width = DIALOG_LABEL_WIDTH;
+    image_cfg.field_width = -1.0f;
+    image_cfg.type = field_type::path;
+    image_cfg.hint = "Select an image file...";
+    image_cfg.tooltip = "Wallpaper or photo used as the color source";
+    m_form.render_path(image_cfg, state.image_path);
+
+    ImGui::Spacing();
+
+    if (begin_field_table("##gen_pywal16"))
+    {
+        table_label("Light scheme");
+        ImGui::Checkbox("Generate light colorscheme", &state.pywal16_light);
+
+        table_label("Backend");
+        const char* backends[] = {"default",       "haishoku",         "colorz",
+                                  "modern_colorthief", "colorthief", "wal",
+                                  "fast_colorthief",   "okthief"};
+        int backend_idx = 0;
+        for (int i = 1; i < IM_ARRAYSIZE(backends); ++i)
+        {
+            if (state.pywal16_backend == backends[i])
+            {
+                backend_idx = i;
+                break;
+            }
+        }
+        ImGui::SetNextItemWidth(-FLT_MIN);
+        if (ImGui::Combo("##pywal16_backend", &backend_idx, backends, IM_ARRAYSIZE(backends)))
+            state.pywal16_backend = (backend_idx == 0) ? "" : backends[backend_idx];
+
+        table_label("Saturation");
+        ImGui::Checkbox("Override saturation", &state.pywal16_use_saturate);
+        if (state.pywal16_use_saturate)
+        {
+            ImGui::SetNextItemWidth(-FLT_MIN);
+            ImGui::SliderFloat("##pywal16_saturate", &state.pywal16_saturate, 0.0f, 1.0f, "%.2f");
+        }
+
+        render_optional_hex_color_row("Background", "pywal16_bg", state.pywal16_use_background,
+                                      state.pywal16_background_vec, state.pywal16_background);
+        render_optional_hex_color_row("Foreground", "pywal16_fg", state.pywal16_use_foreground,
+                                      state.pywal16_foreground_vec, state.pywal16_foreground);
+
+        ImGui::EndTable();
+    }
+}
+
 bool generate_palette_dialog::render_footer(bool can_generate, const core::palette& palette)
 {
     (void)palette;
@@ -280,10 +417,7 @@ bool generate_palette_dialog::render_footer(bool can_generate, const core::palet
 
     push_success_button_style();
     if (ImGui::Button("Generate", ImVec2(MODAL_BUTTON_WIDTH, 0)))
-    {
         submit_generate = true;
-        m_is_open = false;
-    }
     pop_button_style();
 
     if (!can_generate)

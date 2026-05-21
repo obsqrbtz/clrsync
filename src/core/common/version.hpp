@@ -6,7 +6,7 @@
 namespace clrsync::core
 {
 
-const std::string GIT_SEMVER = "1.2.2+git.g6e994ee";
+const std::string GIT_SEMVER = "1.2.2+git.g591bd4c";
 
 const std::string version_string();
 } // namespace clrsync::core
