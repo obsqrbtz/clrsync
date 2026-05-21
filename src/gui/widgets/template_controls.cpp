@@ -1,10 +1,15 @@
 #include "template_controls.hpp"
 #include "colors.hpp"
+#include "gui/layout/ui_layout.hpp"
 #include "styled_checkbox.hpp"
 #include "imgui.h"
 
 namespace clrsync::gui::widgets
 {
+
+using layout::BROWSE_BUTTON_WIDTH;
+using layout::BUTTON_SPACING;
+using layout::FORM_LABEL_WIDTH;
 
 template_controls::template_controls() = default;
 
@@ -13,7 +18,7 @@ void template_controls::render(template_control_state& state,
                                const core::palette& palette,
                                validation_message& validation)
 {
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 8));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(BUTTON_SPACING, 8));
 
     render_action_buttons(state, callbacks, palette);
 
@@ -38,7 +43,7 @@ void template_controls::render_action_buttons(template_control_state& state,
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Create a new template");
 
-    ImGui::SameLine();
+    ImGui::SameLine(0, BUTTON_SPACING);
     if (ImGui::Button(" Save "))
     {
         if (callbacks.on_save)
@@ -49,7 +54,7 @@ void template_controls::render_action_buttons(template_control_state& state,
 
     if (state.is_editing_existing)
     {
-        ImGui::SameLine();
+        ImGui::SameLine(0, BUTTON_SPACING);
         auto error = palette_color(palette, "error");
         auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f, error.w);
         auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f, error.w);
@@ -68,9 +73,7 @@ void template_controls::render_action_buttons(template_control_state& state,
         ImGui::PopStyleColor(4);
     }
 
-    ImGui::SameLine();
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
-
+    ImGui::SameLine(0, BUTTON_SPACING * 2);
     bool old_enabled = state.enabled;
     styled_checkbox checkbox;
     checkbox.render("Enabled", &state.enabled, palette,
@@ -88,23 +91,33 @@ void template_controls::render_action_buttons(template_control_state& state,
 void template_controls::render_fields(template_control_state& state,
                                       const template_control_callbacks& callbacks)
 {
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Name:");
-    ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(180.0f);
+    if (!ImGui::BeginTable("##template_fields", 3,
+                           ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_PadOuterX))
+        return;
+
+    ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, FORM_LABEL_WIDTH);
+    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+    ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, BROWSE_BUTTON_WIDTH);
+
+    auto label_cell = [](const char* text) {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(text);
+        ImGui::TableSetColumnIndex(1);
+    };
+
+    label_cell("Name:");
+    ImGui::SetNextItemWidth(-FLT_MIN);
     char name_buf[256] = {0};
     snprintf(name_buf, sizeof(name_buf), "%s", state.name.c_str());
     if (ImGui::InputText("##template_name", name_buf, sizeof(name_buf)))
-    {
         state.name = name_buf;
-    }
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Unique name for this template");
 
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Input:");
-    ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(-120.0f);
+    label_cell("Input:");
+    ImGui::SetNextItemWidth(-FLT_MIN);
     char input_path_buf[512] = {0};
     snprintf(input_path_buf, sizeof(input_path_buf), "%s", state.input_path.c_str());
     if (ImGui::InputTextWithHint("##input_path", "Path to template file...", input_path_buf,
@@ -114,7 +127,9 @@ void template_controls::render_fields(template_control_state& state,
         if (state.is_editing_existing && callbacks.on_input_path_changed)
             callbacks.on_input_path_changed(state.input_path);
     }
-    ImGui::SameLine();
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Path where the template source file is stored");
+    ImGui::TableSetColumnIndex(2);
     if (ImGui::Button("Browse##input"))
     {
         if (callbacks.on_browse_input)
@@ -129,12 +144,10 @@ void template_controls::render_fields(template_control_state& state,
         }
     }
     if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Path where the template source file is stored");
+        ImGui::SetTooltip("Browse for template source file");
 
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Output:");
-    ImGui::SameLine(80);
-    ImGui::SetNextItemWidth(-120.0f);
+    label_cell("Output:");
+    ImGui::SetNextItemWidth(-FLT_MIN);
     char path_buf[512] = {0};
     snprintf(path_buf, sizeof(path_buf), "%s", state.output_path.c_str());
     if (ImGui::InputTextWithHint("##output_path", "Path for generated config...", path_buf,
@@ -144,7 +157,9 @@ void template_controls::render_fields(template_control_state& state,
         if (state.is_editing_existing && callbacks.on_output_path_changed)
             callbacks.on_output_path_changed(state.output_path);
     }
-    ImGui::SameLine();
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Path where the processed config will be written");
+    ImGui::TableSetColumnIndex(2);
     if (ImGui::Button("Browse##output"))
     {
         if (callbacks.on_browse_output)
@@ -159,11 +174,9 @@ void template_controls::render_fields(template_control_state& state,
         }
     }
     if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Path where the processed config will be written");
+        ImGui::SetTooltip("Browse for output path");
 
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Reload:");
-    ImGui::SameLine(80);
+    label_cell("Reload:");
     ImGui::SetNextItemWidth(-FLT_MIN);
     char reload_buf[512] = {0};
     snprintf(reload_buf, sizeof(reload_buf), "%s", state.reload_command.c_str());
@@ -176,6 +189,8 @@ void template_controls::render_fields(template_control_state& state,
     }
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("Shell command to run after applying theme (e.g., 'pkill -USR1 kitty')");
+
+    ImGui::EndTable();
 }
 
 } // namespace clrsync::gui::widgets

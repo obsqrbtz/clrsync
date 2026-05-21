@@ -18,6 +18,7 @@ struct action_button
     
     bool use_error_style = false;
     bool use_success_style = false;
+    bool use_info_style = false;
 };
 
 class action_buttons

@@ -1,4 +1,5 @@
 #include "gui/views/color_table_renderer.hpp"
+#include "gui/layout/ui_layout.hpp"
 #include "gui/widgets/colors.hpp"
 #include "imgui.h"
 #include <algorithm>
@@ -81,21 +82,33 @@ void color_table_renderer::render_color_row(const std::string &name,
     ImGui::PushID(name.c_str());
     float c[4] = {((col.hex() >> 24) & 0xFF) / 255.0f, ((col.hex() >> 16) & 0xFF) / 255.0f,
                   ((col.hex() >> 8) & 0xFF) / 255.0f, (col.hex() & 0xFF) / 255.0f};
+    const ImVec4 color_vec(c[0], c[1], c[2], c[3]);
+    const ImVec2 swatch_size(clrsync::gui::layout::COLOR_SWATCH_SIZE,
+                             clrsync::gui::layout::COLOR_SWATCH_SIZE);
+    const std::string popup_id = "##picker_" + name;
+    const std::string button_id = "##swatch_" + name;
 
-    ImGui::SetNextItemWidth(-FLT_MIN);
-    if (ImGui::ColorEdit4(("##color_" + name).c_str(), c,
-                          ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel |
-                              ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf))
+    if (ImGui::ColorButton(button_id.c_str(), color_vec,
+                           ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoTooltip,
+                           swatch_size))
+        ImGui::OpenPopup(popup_id.c_str());
+
+    if (ImGui::BeginPopup(popup_id.c_str()))
     {
-        uint32_t r = (uint32_t)(c[0] * 255.0f);
-        uint32_t g = (uint32_t)(c[1] * 255.0f);
-        uint32_t b = (uint32_t)(c[2] * 255.0f);
-        uint32_t a = (uint32_t)(c[3] * 255.0f);
-        uint32_t hex = (r << 24) | (g << 16) | (b << 8) | a;
-
-        controller.set_color(name, clrsync::core::color(hex));
-        if (on_changed)
-            on_changed();
+        if (ImGui::ColorPicker4(("##picker4_" + name).c_str(), c,
+                                ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf |
+                                    ImGuiColorEditFlags_DisplayRGB))
+        {
+            uint32_t r = static_cast<uint32_t>(c[0] * 255.0f);
+            uint32_t g = static_cast<uint32_t>(c[1] * 255.0f);
+            uint32_t b = static_cast<uint32_t>(c[2] * 255.0f);
+            uint32_t a = static_cast<uint32_t>(c[3] * 255.0f);
+            uint32_t hex = (r << 24) | (g << 16) | (b << 8) | a;
+            controller.set_color(name, clrsync::core::color(hex));
+            if (on_changed)
+                on_changed();
+        }
+        ImGui::EndPopup();
     }
 
     ImGui::PopID();
@@ -156,19 +169,23 @@ void color_table_renderer::render(const clrsync::core::palette &current,
 
         ImGui::PushStyleColor(ImGuiCol_Text,
                               clrsync::gui::widgets::palette_color(current, "accent"));
-        bool header_open = ImGui::TreeNodeEx(title, ImGuiTreeNodeFlags_DefaultOpen |
-                                                        ImGuiTreeNodeFlags_SpanAvailWidth);
+        constexpr ImGuiTreeNodeFlags tree_flags =
+            ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth |
+            ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_Framed;
+        bool header_open = ImGui::TreeNodeEx(title, tree_flags);
         ImGui::PopStyleColor();
 
         if (header_open)
         {
             if (ImGui::BeginTable(id, 3,
                                   ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
-                                      ImGuiTableFlags_SizingStretchProp))
+                                      ImGuiTableFlags_SizingFixedFit))
             {
-                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthFixed, 160.0f);
-                ImGui::TableSetupColumn("HEX", ImGuiTableColumnFlags_WidthFixed, 95.0f);
-                ImGui::TableSetupColumn("Color", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.0f, 2.0f);
+                ImGui::TableSetupColumn("HEX", ImGuiTableColumnFlags_WidthFixed,
+                                        clrsync::gui::layout::HEX_COLUMN_WIDTH);
+                ImGui::TableSetupColumn("Color", ImGuiTableColumnFlags_WidthFixed,
+                                        clrsync::gui::layout::COLOR_COLUMN_WIDTH);
                 ImGui::TableHeadersRow();
 
                 for (auto *k : keys)

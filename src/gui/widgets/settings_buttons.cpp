@@ -1,4 +1,5 @@
 #include "settings_buttons.hpp"
+#include "colors.hpp"
 #include "imgui.h"
 
 namespace clrsync::gui::widgets
@@ -25,16 +26,18 @@ void settings_buttons::render(const settings_buttons_callbacks& callbacks, bool 
     ImGui::SameLine();
 
     if (!apply_enabled)
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+        ImGui::BeginDisabled();
 
+    push_info_button_style();
     if (ImGui::Button("Apply", ImVec2(m_button_width, 0)) && apply_enabled)
     {
         if (callbacks.on_apply)
             callbacks.on_apply();
     }
+    pop_button_style();
 
     if (!apply_enabled)
-        ImGui::PopStyleVar();
+        ImGui::EndDisabled();
 
     ImGui::SameLine();
 

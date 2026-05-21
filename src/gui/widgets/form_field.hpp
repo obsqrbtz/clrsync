@@ -23,7 +23,7 @@ struct form_field_config
 {
     std::string label;
     std::string tooltip;
-    float label_width = 80.0f;
+    float label_width = 72.0f;
     float field_width = -1.0f;
     bool required = false;
     field_type type = field_type::text;
