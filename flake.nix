@@ -29,7 +29,10 @@
           pkgs = nixpkgsFor.${system};
         in
         rec {
-          clrsync = pkgs.callPackage ./package.nix { inherit semver; };
+          clrsync = pkgs.callPackage ./package.nix {
+            inherit semver;
+            addDriverRunpath = pkgs.addDriverRunpath;
+          };
           default = clrsync;
         }
       );

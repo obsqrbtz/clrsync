@@ -13,6 +13,7 @@
   fontconfig,
   xxd,
   mesa,
+  libglvnd,
   xorg,
   wayland,
   libxkbcommon,
@@ -22,6 +23,7 @@
   gtk3,
   glib,
   gsettings-desktop-schemas,
+  addDriverRunpath,
   semver,
 }:
 
@@ -61,6 +63,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     glfw
+    libglvnd
     freetype
     libpng
     fontconfig
@@ -96,6 +99,17 @@ stdenv.mkDerivation rec {
   '';
 
   dontWrapGApps = false;
+
+  preFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
+    gappsWrapperArgs+=(
+      "--prefix" "LD_LIBRARY_PATH" ":" "${addDriverRunpath.driverLink}/lib:${lib.makeLibraryPath [
+        libglvnd
+        mesa.out
+      ]}"
+      "--set-default" "__EGL_VENDOR_LIBRARY_FILENAMES__" "${mesa}/share/glvnd/egl_vendor.d/50_mesa.json"
+      "--prefix" "LIBGL_DRIVERS_PATH" ":" "${addDriverRunpath.driverLink}/lib/dri:${mesa}/lib/dri"
+    )
+  '';
 
   meta = with lib; {
     description = "Color scheme manager with GUI and CLI";
