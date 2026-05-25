@@ -34,7 +34,7 @@ void action_buttons::render(const core::palette &)
     for (const auto &button : m_buttons)
     {
         if (!first)
-            ImGui::SameLine();
+            ImGui::SameLine(0, m_spacing);
         first = false;
 
         bool has_style = false;
@@ -46,6 +46,11 @@ void action_buttons::render(const core::palette &)
         else if (button.use_success_style)
         {
             push_success_button_style();
+            has_style = true;
+        }
+        else if (button.use_info_style)
+        {
+            push_info_button_style();
             has_style = true;
         }
 

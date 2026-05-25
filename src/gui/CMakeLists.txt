@@ -25,6 +25,7 @@ set(GUI_SOURCES
     widgets/centered_text.cpp
     widgets/validation_message.cpp
     widgets/template_controls.cpp
+    widgets/generate_palette_dialog.cpp
     layout/main_layout.cpp
     platform/windows/font_loader_windows.cpp
     platform/linux/font_loader_linux.cpp

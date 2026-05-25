@@ -13,6 +13,7 @@
   fontconfig,
   xxd,
   mesa,
+  libglvnd,
   xorg,
   wayland,
   libxkbcommon,
@@ -61,6 +62,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     glfw
+    libglvnd
     freetype
     libpng
     fontconfig
@@ -96,6 +98,16 @@ stdenv.mkDerivation rec {
   '';
 
   dontWrapGApps = false;
+
+  postFixup = lib.optionalString stdenv.hostPlatform.isLinux ''
+    if [ -f "$out/bin/.clrsync_gui-wrapped" ]; then
+      wrapProgram "$out/bin/.clrsync_gui-wrapped" \
+        --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ mesa.out libglvnd ]}" \
+        --set-default GBM_BACKENDS_PATH "${mesa}/lib/gbm" \
+        --set-default __EGL_VENDOR_LIBRARY_FILENAMES__ "${mesa}/share/glvnd/egl_vendor.d/50_mesa.json" \
+        --prefix LIBGL_DRIVERS_PATH : "${mesa}/lib/dri"
+    fi
+  '';
 
   meta = with lib; {
     description = "Color scheme manager with GUI and CLI";

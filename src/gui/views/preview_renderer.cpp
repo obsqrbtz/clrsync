@@ -91,7 +91,12 @@ void preview_renderer::render_code_preview()
     ImGui::Text("Code Editor Preview:");
     ImGui::SameLine();
     ImGui::TextDisabled("(editor_* colors)");
-    m_editor.Render("##CodeEditor", ImVec2(0, code_preview_height), true);
+    ImGui::BeginChild("CodePreviewScroll", ImVec2(0, code_preview_height), true,
+                      ImGuiWindowFlags_HorizontalScrollbar);
+    m_editor.SetImGuiChildIgnored(true);
+    m_editor.Render("##CodeEditor", ImVec2(0, 0), false);
+    m_editor.SetImGuiChildIgnored(false);
+    ImGui::EndChild();
 }
 
 void preview_renderer::render_terminal_preview(const clrsync::core::palette &current)

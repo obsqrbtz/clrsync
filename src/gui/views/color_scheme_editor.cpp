@@ -1,6 +1,8 @@
 #include "color_scheme_editor.hpp"
+#include "gui/layout/ui_layout.hpp"
 #include "core/palette/hellwal_generator.hpp"
 #include "core/palette/matugen_generator.hpp"
+#include "core/palette/pywal16_generator.hpp"
 #include "gui/controllers/theme_applier.hpp"
 #include "gui/platform/file_browser.hpp"
 #include "gui/widgets/action_buttons.hpp"
@@ -10,9 +12,9 @@
 #include "imgui.h"
 #include "settings_window.hpp"
 #include "template_editor.hpp"
-#include <cstdio>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 
 void color_scheme_editor::refresh_available_generators()
 {
@@ -22,27 +24,186 @@ void color_scheme_editor::refresh_available_generators()
     clrsync::core::hellwal_generator hellwal_gen;
     if (hellwal_gen.supports_current_system())
     {
-        m_available_generators.push_back(generator_kind::hellwal);
+        m_available_generators.push_back(clrsync::gui::widgets::palette_generator_kind::hellwal);
         m_generator_labels.push_back("hellwal");
     }
 
     clrsync::core::matugen_generator matugen_gen;
     if (matugen_gen.supports_current_system())
     {
-        m_available_generators.push_back(generator_kind::matugen);
+        m_available_generators.push_back(clrsync::gui::widgets::palette_generator_kind::matugen);
         m_generator_labels.push_back("matugen");
     }
 
-    if (m_generator_idx < 0 || m_generator_idx >= static_cast<int>(m_available_generators.size()))
-        m_generator_idx = 0;
+    clrsync::core::pywal16_generator pywal16_gen;
+    if (pywal16_gen.supports_current_system())
+    {
+        m_available_generators.push_back(clrsync::gui::widgets::palette_generator_kind::pywal16);
+        m_generator_labels.push_back("pywal16");
+    }
+
+    if (m_generate_state.generator_idx < 0 ||
+        m_generate_state.generator_idx >= static_cast<int>(m_available_generators.size()))
+        m_generate_state.generator_idx = 0;
 }
 
-std::optional<color_scheme_editor::generator_kind> color_scheme_editor::selected_generator_kind() const
+std::optional<clrsync::gui::widgets::palette_generator_kind>
+color_scheme_editor::selected_generator_kind() const
 {
-    if (m_generator_idx < 0 || m_generator_idx >= static_cast<int>(m_available_generators.size()))
+    if (m_generate_state.generator_idx < 0 ||
+        m_generate_state.generator_idx >= static_cast<int>(m_available_generators.size()))
         return std::nullopt;
 
-    return m_available_generators[m_generator_idx];
+    return m_available_generators[m_generate_state.generator_idx];
+}
+
+namespace
+{
+bool palette_has_colors(const clrsync::core::palette &pal)
+{
+    return !pal.colors().empty();
+}
+} // namespace
+
+std::optional<std::string> color_scheme_editor::execute_palette_generation()
+{
+    const auto selected_kind = selected_generator_kind();
+    if (!selected_kind)
+        return "No palette generator is available on this system.";
+
+    try
+    {
+        if (*selected_kind == clrsync::gui::widgets::palette_generator_kind::hellwal)
+        {
+            clrsync::core::hellwal_generator gen;
+            if (!gen.supports_current_system())
+            {
+                return std::string("hellwal is not supported on ") +
+                       clrsync::core::generator::system_name(
+                           clrsync::core::generator::current_system());
+            }
+            clrsync::core::hellwal_generator::options opts;
+            opts.neon = m_generate_state.neon;
+            opts.dark = m_generate_state.dark;
+            opts.light = m_generate_state.light;
+            opts.color = m_generate_state.color;
+            opts.dark_offset = m_generate_state.dark_offset;
+            opts.bright_offset = m_generate_state.bright_offset;
+            opts.invert = m_generate_state.invert;
+            opts.gray_scale = m_generate_state.gray_scale;
+
+            auto image_path = m_generate_state.image_path;
+            if (image_path.empty())
+            {
+                image_path = file_dialogs::open_file_dialog("Select Image", "",
+                                                            file_dialogs::image_file_filters());
+            }
+
+            auto pal = gen.generate_from_image(image_path, opts);
+            if (!palette_has_colors(pal))
+                return "hellwal did not produce any colors.";
+            if (pal.name().empty())
+            {
+                std::filesystem::path p(image_path);
+                pal.set_name(std::string("hellwal:") + p.filename().string());
+            }
+            m_controller.import_palette(pal);
+            m_controller.select_palette(pal.name());
+            apply_themes();
+        }
+        else if (*selected_kind == clrsync::gui::widgets::palette_generator_kind::matugen)
+        {
+            clrsync::core::matugen_generator gen;
+            if (!gen.supports_current_system())
+            {
+                return std::string("matugen is not supported on ") +
+                       clrsync::core::generator::system_name(
+                           clrsync::core::generator::current_system());
+            }
+            clrsync::core::matugen_generator::options opts;
+            opts.mode = m_generate_state.matugen_mode;
+            opts.type = m_generate_state.matugen_type;
+            opts.contrast = m_generate_state.matugen_contrast;
+            opts.source_color_index = m_generate_state.matugen_source_color_index;
+
+            clrsync::core::palette pal;
+            if (m_generate_state.matugen_use_color)
+            {
+                std::string hex = m_generate_state.matugen_color_hex;
+                if (!hex.empty() && hex[0] == '#')
+                    hex = hex.substr(1);
+                pal = gen.generate_from_color(hex, opts);
+                if (!palette_has_colors(pal))
+                    return "matugen did not produce any colors.";
+                if (pal.name().empty())
+                    pal.set_name(std::string("matugen:color:") + hex);
+            }
+            else
+            {
+                auto image_path = m_generate_state.image_path;
+                if (image_path.empty())
+                {
+                    image_path = file_dialogs::open_file_dialog("Select Image", "",
+                                                                  file_dialogs::image_file_filters());
+                }
+                pal = gen.generate_from_image(image_path, opts);
+                if (!palette_has_colors(pal))
+                    return "matugen did not produce any colors.";
+                if (pal.name().empty())
+                {
+                    std::filesystem::path p(image_path);
+                    pal.set_name(std::string("matugen:") + p.filename().string());
+                }
+            }
+            m_controller.import_palette(pal);
+            m_controller.select_palette(pal.name());
+            apply_themes();
+        }
+        else if (*selected_kind == clrsync::gui::widgets::palette_generator_kind::pywal16)
+        {
+            clrsync::core::pywal16_generator gen;
+            if (!gen.supports_current_system())
+            {
+                return std::string("pywal16 is not supported on ") +
+                       clrsync::core::generator::system_name(
+                           clrsync::core::generator::current_system());
+            }
+            clrsync::core::pywal16_generator::options opts;
+            if (m_generate_state.pywal16_use_background)
+                opts.background = m_generate_state.pywal16_background;
+            if (m_generate_state.pywal16_use_foreground)
+                opts.foreground = m_generate_state.pywal16_foreground;
+            opts.backend = m_generate_state.pywal16_backend;
+            opts.light = m_generate_state.pywal16_light;
+            if (m_generate_state.pywal16_use_saturate)
+                opts.saturate = m_generate_state.pywal16_saturate;
+
+            auto image_path = m_generate_state.image_path;
+            if (image_path.empty())
+            {
+                image_path = file_dialogs::open_file_dialog("Select Image", "",
+                                                            file_dialogs::image_file_filters());
+            }
+
+            auto pal = gen.generate_from_image(image_path, opts);
+            if (!palette_has_colors(pal))
+                return "pywal16 did not produce any colors.";
+            if (pal.name().empty())
+            {
+                std::filesystem::path p(image_path);
+                pal.set_name(std::string("pywal16:") + p.filename().string());
+            }
+            m_controller.import_palette(pal);
+            m_controller.select_palette(pal.name());
+            apply_themes();
+        }
+    }
+    catch (const std::exception &e)
+    {
+        return e.what();
+    }
+
+    return std::nullopt;
 }
 
 color_scheme_editor::color_scheme_editor()
@@ -112,7 +273,8 @@ void color_scheme_editor::render_controls()
     const auto &current = m_controller.current_palette();
     const auto &palettes = m_controller.palettes();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6, 8));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
+                        ImVec2(clrsync::gui::layout::BUTTON_SPACING, 8));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 5));
 
     ImGui::AlignTextToFramePadding();
@@ -121,8 +283,7 @@ void color_scheme_editor::render_controls()
 
     m_palette_selector.render(m_controller, 200.0f);
 
-    ImGui::SameLine();
-    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 8);
+    ImGui::SameLine(0, clrsync::gui::layout::BUTTON_SPACING);
 
     if (ImGui::Button(" + New "))
     {
@@ -135,293 +296,15 @@ void color_scheme_editor::render_controls()
     m_new_palette_dialog.render();
     m_generate_dialog.render();
 
-    ImGui::SameLine();
+    ImGui::SameLine(0, clrsync::gui::layout::BUTTON_SPACING);
     m_action_buttons.render(current);
 
-    ImGui::SameLine();
-    ImGui::SameLine();
+    ImGui::SameLine(0, clrsync::gui::layout::BUTTON_SPACING);
     if (ImGui::Button("Generate"))
-    {
-        m_show_generate_modal = true;
-    }
+        m_generate_palette_dialog.open();
 
-    if (m_show_generate_modal)
-    {
-        ImGui::OpenPopup("Generate Palette");
-        m_show_generate_modal = false;
-    }
-
-    if (ImGui::BeginPopupModal("Generate Palette", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text("Generator:");
-        std::vector<const char *> generator_items;
-        generator_items.reserve(m_generator_labels.size());
-        for (const auto &label : m_generator_labels)
-            generator_items.push_back(label.c_str());
-
-        if (!generator_items.empty())
-        {
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(160.0f);
-            ImGui::Combo("##gen_select", &m_generator_idx, generator_items.data(),
-                         static_cast<int>(generator_items.size()));
-        }
-        else
-        {
-            ImGui::SameLine();
-            ImGui::TextDisabled("No supported generators");
-        }
-
-        const auto selected_kind = selected_generator_kind();
-
-        if (selected_kind && *selected_kind == generator_kind::hellwal)
-        {
-            ImGui::Separator();
-            ImGui::Text("hellwal options");
-            ImGui::Spacing();
-
-            // image selector
-            ImGui::Text("Image:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(300.0f);
-            {
-                char buf[1024];
-                std::strncpy(buf, m_gen_image_path.c_str(), sizeof(buf));
-                buf[sizeof(buf) - 1] = '\0';
-                if (ImGui::InputText("##gen_image", buf, sizeof(buf)))
-                {
-                    m_gen_image_path = buf;
-                }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Browse##gen_image"))
-            {
-                std::string res =
-                    file_dialogs::open_file_dialog("Select Image", m_gen_image_path,
-                                                   file_dialogs::image_file_filters());
-                if (!res.empty())
-                    m_gen_image_path = res;
-            }
-
-            ImGui::Checkbox("Neon mode", &m_gen_neon);
-
-            ImGui::Text("Modes (can combine):");
-            ImGui::Checkbox("Dark", &m_gen_dark);
-            ImGui::SameLine();
-            ImGui::Checkbox("Light", &m_gen_light);
-            ImGui::SameLine();
-            ImGui::Checkbox("Color", &m_gen_color);
-
-            ImGui::SliderFloat("Dark offset", &m_gen_dark_offset, 0.0f, 1.0f);
-            ImGui::SliderFloat("Bright offset", &m_gen_bright_offset, 0.0f, 1.0f);
-            ImGui::Checkbox("Invert colors", &m_gen_invert);
-            ImGui::SliderFloat("Gray scale", &m_gen_gray_scale, 0.0f, 1.0f);
-        }
-
-        if (selected_kind && *selected_kind == generator_kind::matugen)
-        {
-            ImGui::Separator();
-            ImGui::Text("matugen options");
-            ImGui::Spacing();
-
-            ImGui::Text("Image:");
-            ImGui::SameLine();
-            ImGui::SetNextItemWidth(300.0f);
-            {
-                char buf[1024];
-                std::strncpy(buf, m_gen_image_path.c_str(), sizeof(buf));
-                buf[sizeof(buf) - 1] = '\0';
-                if (ImGui::InputText("##gen_image", buf, sizeof(buf)))
-                {
-                    m_gen_image_path = buf;
-                }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Browse##gen_image"))
-            {
-                std::string res =
-                    file_dialogs::open_file_dialog("Select Image", m_gen_image_path,
-                                                   file_dialogs::image_file_filters());
-                if (!res.empty())
-                    m_gen_image_path = res;
-            }
-
-            ImGui::Text("Mode:");
-            ImGui::SameLine();
-            const char *modes[] = {"dark", "light"};
-            int mode_idx = (m_matugen_mode == "light") ? 1 : 0;
-            ImGui::SetNextItemWidth(120.0f);
-            ImGui::Combo("##matugen_mode", &mode_idx, modes, IM_ARRAYSIZE(modes));
-            m_matugen_mode = (mode_idx == 1) ? "light" : "dark";
-
-            ImGui::Text("Type:");
-            ImGui::SameLine();
-            const char *types[] = {"scheme-content",     "scheme-expressive", "scheme-fidelity",
-                                   "scheme-fruit-salad", "scheme-monochrome", "scheme-neutral",
-                                   "scheme-rainbow",     "scheme-tonal-spot"};
-            int type_idx = 7; // default index for scheme-tonal-spot
-            for (int i = 0; i < IM_ARRAYSIZE(types); ++i)
-            {
-                if (m_matugen_type == types[i])
-                {
-                    type_idx = i;
-                    break;
-                }
-            }
-            ImGui::SetNextItemWidth(260.0f);
-            ImGui::Combo("##matugen_type", &type_idx, types, IM_ARRAYSIZE(types));
-            m_matugen_type = types[type_idx];
-
-            ImGui::SliderFloat("Contrast", &m_matugen_contrast, -1.0f, 1.0f);
-
-            ImGui::SliderInt("Source Color Index", &m_matugen_source_color_index, 0, 3);
-
-            ImGui::Spacing();
-            ImGui::Checkbox("Use color (instead of image)", &m_matugen_use_color);
-            if (m_matugen_use_color)
-            {
-                ImGui::Text("Color:");
-                ImGui::SameLine();
-                ImGui::ColorEdit3("##matugen_color", m_matugen_color_vec);
-                // update hex string from vec
-                int r = static_cast<int>(m_matugen_color_vec[0] * 255.0f + 0.5f);
-                int g = static_cast<int>(m_matugen_color_vec[1] * 255.0f + 0.5f);
-                int b = static_cast<int>(m_matugen_color_vec[2] * 255.0f + 0.5f);
-                char hexbuf[8];
-                std::snprintf(hexbuf, sizeof(hexbuf), "%02X%02X%02X", r, g, b);
-                m_matugen_color_hex = hexbuf;
-            }
-        }
-
-        ImGui::Separator();
-        const bool can_generate = selected_kind.has_value();
-        if (!can_generate)
-            ImGui::BeginDisabled();
-        if (ImGui::Button("Generate", ImVec2(120, 0)))
-        {
-            try
-            {
-                if (selected_kind && *selected_kind == generator_kind::hellwal)
-                {
-                    clrsync::core::hellwal_generator gen;
-                    if (!gen.supports_current_system())
-                    {
-                        std::cerr << "Generation failed: hellwal is not supported on "
-                                  << clrsync::core::generator::system_name(
-                                         clrsync::core::generator::current_system())
-                                  << std::endl;
-                        ImGui::CloseCurrentPopup();
-                        if (!can_generate)
-                            ImGui::EndDisabled();
-                        return;
-                    }
-                    clrsync::core::hellwal_generator::options opts;
-                    opts.neon = m_gen_neon;
-                    opts.dark = m_gen_dark;
-                    opts.light = m_gen_light;
-                    opts.color = m_gen_color;
-                    opts.dark_offset = m_gen_dark_offset;
-                    opts.bright_offset = m_gen_bright_offset;
-                    opts.invert = m_gen_invert;
-                    opts.gray_scale = m_gen_gray_scale;
-
-                    auto image_path = m_gen_image_path;
-                    if (image_path.empty())
-                    {
-                        image_path =
-                            file_dialogs::open_file_dialog("Select Image", "",
-                                                           file_dialogs::image_file_filters());
-                    }
-
-                    auto pal = gen.generate_from_image(image_path, opts);
-                    if (pal.name().empty())
-                    {
-                        std::filesystem::path p(image_path);
-                        pal.set_name(std::string("hellwal:") + p.filename().string());
-                    }
-                    m_controller.import_palette(pal);
-                    m_controller.select_palette(pal.name());
-                    apply_themes();
-                }
-                else if (selected_kind && *selected_kind == generator_kind::matugen)
-                {
-                    clrsync::core::matugen_generator gen;
-                    if (!gen.supports_current_system())
-                    {
-                        std::cerr << "Generation failed: matugen is not supported on "
-                                  << clrsync::core::generator::system_name(
-                                         clrsync::core::generator::current_system())
-                                  << std::endl;
-                        ImGui::CloseCurrentPopup();
-                        if (!can_generate)
-                            ImGui::EndDisabled();
-                        return;
-                    }
-                    clrsync::core::matugen_generator::options opts;
-                    opts.mode = m_matugen_mode;
-                    opts.type = m_matugen_type;
-                    opts.contrast = m_matugen_contrast;
-                    opts.source_color_index = m_matugen_source_color_index;
-
-                    auto image_path = m_gen_image_path;
-
-                    clrsync::core::palette pal;
-                    if (m_matugen_use_color)
-                    {
-                        // pass hex without '#' to generator
-                        std::string hex = m_matugen_color_hex;
-                        if (!hex.empty() && hex[0] == '#')
-                            hex = hex.substr(1);
-                        pal = gen.generate_from_color(hex, opts);
-                        if (pal.name().empty())
-                        {
-                            pal.set_name(std::string("matugen:color:") + hex);
-                        }
-                    }
-                    else
-                    {
-                        if (image_path.empty())
-                        {
-                            image_path = file_dialogs::open_file_dialog(
-                                "Select Image", "", file_dialogs::image_file_filters());
-                        }
-                        pal = gen.generate_from_image(image_path, opts);
-                        if (pal.name().empty())
-                        {
-                            std::filesystem::path p(image_path);
-                            pal.set_name(std::string("matugen:") + p.filename().string());
-                        }
-                    }
-                    if (pal.name().empty())
-                    {
-                        std::filesystem::path p(image_path);
-                        pal.set_name(std::string("matugen:") + p.filename().string());
-                    }
-                    m_controller.import_palette(pal);
-                    m_controller.select_palette(pal.name());
-                    apply_themes();
-                }
-            }
-            catch (const std::exception &e)
-            {
-                std::cerr << "Generation failed: " << e.what() << std::endl;
-            }
-            if (!can_generate)
-                ImGui::EndDisabled();
-            ImGui::CloseCurrentPopup();
-        }
-        else if (!can_generate)
-        {
-            ImGui::EndDisabled();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0)))
-        {
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
+    m_generate_palette_dialog.render(m_generate_state, m_available_generators, m_generator_labels,
+                                     current, [this]() { return execute_palette_generation(); });
 
     if (m_show_delete_confirmation)
     {
@@ -452,31 +335,18 @@ void color_scheme_editor::setup_widgets()
     });
 
     m_generate_dialog.set_on_submit([this](const std::string &image_path) {
-        try
+        m_generate_state.image_path = image_path;
+        for (int i = 0; i < static_cast<int>(m_available_generators.size()); ++i)
         {
-            clrsync::core::hellwal_generator gen;
-            if (!gen.supports_current_system())
+            if (m_available_generators[i] ==
+                clrsync::gui::widgets::palette_generator_kind::hellwal)
             {
-                std::cerr << "Failed to generate palette: hellwal is not supported on "
-                          << clrsync::core::generator::system_name(
-                                 clrsync::core::generator::current_system())
-                          << std::endl;
-                return;
+                m_generate_state.generator_idx = i;
+                break;
             }
-            auto pal = gen.generate_from_image(image_path);
-            if (pal.name().empty())
-            {
-                std::filesystem::path p(image_path);
-                pal.set_name(std::string("hellwal:") + p.filename().string());
-            }
-            m_controller.import_palette(pal);
-            m_controller.select_palette(pal.name());
-            apply_themes();
         }
-        catch (const std::exception &e)
-        {
-            std::cerr << "Failed to generate palette: " << e.what() << std::endl;
-        }
+        if (const std::optional<std::string> error = execute_palette_generation())
+            m_generate_palette_dialog.set_error(*error);
     });
     m_generate_dialog.set_path_browse_callback(
         [this](const std::string &current_path) -> std::string {
@@ -491,7 +361,8 @@ void color_scheme_editor::setup_widgets()
                                  [this]() { m_show_delete_confirmation = true; }, true, true});
 
     m_action_buttons.add_button({" Apply Theme ", "Apply current palette to all enabled templates",
-                                 [this]() { m_controller.apply_current_theme(); }});
+                                 [this]() { m_controller.apply_current_theme(); },
+                                 true, false, false, true});
 
-    m_action_buttons.set_spacing(16.0f);
+    m_action_buttons.set_spacing(clrsync::gui::layout::BUTTON_SPACING);
 }

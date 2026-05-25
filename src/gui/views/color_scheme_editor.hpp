@@ -5,10 +5,11 @@
 #include "gui/views/color_table_renderer.hpp"
 #include "gui/views/preview_renderer.hpp"
 #include "gui/widgets/action_buttons.hpp"
+#include "gui/widgets/generate_palette_dialog.hpp"
 #include "gui/widgets/input_dialog.hpp"
 #include "gui/widgets/palette_selector.hpp"
-#include <string>
 #include <optional>
+#include <string>
 #include <vector>
 
 class template_editor;
@@ -17,12 +18,6 @@ class settings_window;
 class color_scheme_editor
 {
   public:
-    enum class generator_kind
-    {
-        hellwal,
-        matugen
-    };
-
     color_scheme_editor();
 
     void render_controls_and_colors();
@@ -46,7 +41,9 @@ class color_scheme_editor
     void notify_palette_changed();
     void setup_widgets();
     void refresh_available_generators();
-    [[nodiscard]] std::optional<generator_kind> selected_generator_kind() const;
+    [[nodiscard]] std::optional<std::string> execute_palette_generation();
+    [[nodiscard]] std::optional<clrsync::gui::widgets::palette_generator_kind>
+    selected_generator_kind() const;
 
     palette_controller m_controller;
     color_table_renderer m_color_table;
@@ -58,28 +55,9 @@ class color_scheme_editor
     clrsync::gui::widgets::palette_selector m_palette_selector;
     clrsync::gui::widgets::input_dialog m_new_palette_dialog;
     clrsync::gui::widgets::input_dialog m_generate_dialog;
-    int m_generator_idx{0};
-    bool m_show_generate_modal{false};
-    // hellwal
-    std::string m_gen_image_path;
-    bool m_gen_neon{false};
-    bool m_gen_dark{true};
-    bool m_gen_light{false};
-    bool m_gen_color{false};
-    float m_gen_dark_offset{0.0f};
-    float m_gen_bright_offset{0.0f};
-    bool m_gen_invert{false};
-    float m_gen_gray_scale{0.0f};
-    // matugen
-    std::string m_matugen_mode{"dark"};
-    std::string m_matugen_type{"scheme-tonal-spot"};
-    float m_matugen_contrast{0.0f};
-    int m_matugen_source_color_index{0};
-    // matugen color option
-    bool m_matugen_use_color{false};
-    float m_matugen_color_vec[3]{1.0f, 0.0f, 0.0f};
-    std::string m_matugen_color_hex{"FF0000"};
-    std::vector<generator_kind> m_available_generators;
+    clrsync::gui::widgets::generate_palette_dialog m_generate_palette_dialog;
+    clrsync::gui::widgets::generate_palette_state m_generate_state;
+    std::vector<clrsync::gui::widgets::palette_generator_kind> m_available_generators;
     std::vector<std::string> m_generator_labels;
     clrsync::gui::widgets::action_buttons m_action_buttons;
 };

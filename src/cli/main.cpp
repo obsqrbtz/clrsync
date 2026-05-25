@@ -11,6 +11,7 @@
 #include "core/io/toml_file.hpp"
 #include "core/palette/hellwal_generator.hpp"
 #include "core/palette/matugen_generator.hpp"
+#include "core/palette/pywal16_generator.hpp"
 #include "core/palette/palette_file.hpp"
 #include "core/palette/palette_manager.hpp"
 #include "core/theme/theme_renderer.hpp"
@@ -139,6 +140,21 @@ void setup_argument_parser(argparse::ArgumentParser &program)
         .default_value(std::string("0.0"))
         .help("hellwal: gray scale factor (float)")
         .metavar("FLOAT");
+
+    program.add_argument("--pywal16-background")
+        .help("pywal16: custom background color (hex)")
+        .metavar("COLOR");
+    program.add_argument("--pywal16-foreground")
+        .help("pywal16: custom foreground color (hex)")
+        .metavar("COLOR");
+    program.add_argument("--pywal16-backend")
+        .help("pywal16: color extraction backend")
+        .metavar("BACKEND");
+    program.add_argument("--pywal16-saturate")
+        .default_value(std::string("-1.0"))
+        .help("pywal16: color saturation from 0.0 to 1.0")
+        .metavar("FLOAT");
+    program.add_argument("--pywal16-light").help("pywal16: generate a light colorscheme").flag();
 }
 
 int main(int argc, char *argv[])
@@ -324,6 +340,49 @@ int main(int argc, char *argv[])
             {
                 pal = gen.generate_from_image(image_path, opts);
             }
+        }
+        else if (generator_name == "pywal16")
+        {
+            clrsync::core::pywal16_generator gen;
+            if (!gen.supports_current_system())
+            {
+                std::cerr << "Error: pywal16 is not supported on "
+                          << clrsync::core::generator::system_name(
+                                 clrsync::core::generator::current_system())
+                          << ". Supported systems: " << gen.supported_systems_description()
+                          << std::endl;
+                return 1;
+            }
+
+            if (program.is_used("--generate-color"))
+            {
+                std::cerr << "Error: --generate-color is only supported with --generator matugen"
+                          << std::endl;
+                return 1;
+            }
+
+            clrsync::core::pywal16_generator::options opts{};
+            if (program.is_used("--pywal16-background"))
+                opts.background = program.get<std::string>("--pywal16-background");
+            if (program.is_used("--pywal16-foreground"))
+                opts.foreground = program.get<std::string>("--pywal16-foreground");
+            if (program.is_used("--pywal16-backend"))
+                opts.backend = program.get<std::string>("--pywal16-backend");
+            if (program.is_used("--pywal16-light"))
+                opts.light = true;
+
+            try
+            {
+                std::string s = program.get<std::string>("--pywal16-saturate");
+                const float saturate = std::stof(s);
+                if (saturate >= 0.0f && saturate <= 1.0f)
+                    opts.saturate = saturate;
+            }
+            catch (...)
+            {
+            }
+
+            pal = gen.generate_from_image(image_path, opts);
         }
         else
         {

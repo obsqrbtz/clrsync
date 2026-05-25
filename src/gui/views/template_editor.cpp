@@ -3,6 +3,7 @@
 #include "core/config/config.hpp"
 #include "core/palette/color_keys.hpp"
 #include "core/theme/theme_template.hpp"
+#include "gui/layout/ui_layout.hpp"
 #include "gui/theme/app_theme.hpp"
 #include "gui/widgets/colors.hpp"
 #include "gui/widgets/dialogs.hpp"
@@ -519,8 +520,11 @@ void template_editor::render()
     ImGui::Separator();
 
     const float panel_width = ImGui::GetContentRegionAvail().x;
-    constexpr float left_panel_width = 200.0f;
-    const float right_panel_width = panel_width - left_panel_width - 10;
+    const float left_panel_width =
+        std::max(clrsync::gui::layout::TEMPLATE_LIST_MIN_WIDTH,
+                 panel_width * clrsync::gui::layout::TEMPLATE_LIST_WIDTH_RATIO);
+    const float panel_gap = clrsync::gui::layout::BUTTON_SPACING;
+    const float right_panel_width = panel_width - left_panel_width - panel_gap;
 
     ImGui::BeginChild("TemplateList", ImVec2(left_panel_width, 0), true);
     render_template_list();
@@ -685,8 +689,14 @@ void template_editor::render_editor()
     }
 
     ImVec2 editor_pos = ImGui::GetCursorScreenPos();
+    const float editor_height = ImGui::GetContentRegionAvail().y;
 
-    m_editor.Render("##TemplateEditor", ImVec2(0, 0), true);
+    ImGui::BeginChild("TemplateEditorScroll", ImVec2(0, editor_height), true,
+                      ImGuiWindowFlags_HorizontalScrollbar);
+    m_editor.SetImGuiChildIgnored(true);
+    m_editor.Render("##TemplateEditor", ImVec2(0, 0), false);
+    m_editor.SetImGuiChildIgnored(false);
+    ImGui::EndChild();
 
     if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editor.HasSelection())
     {
@@ -750,8 +760,14 @@ void template_editor::render_template_list()
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 6));
 
     ImGui::Text("Templates");
-    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);
-    ImGui::TextDisabled("(%d)", (int)m_template_controller.templates().size());
+    char count_label[32];
+    const int template_count = static_cast<int>(m_template_controller.templates().size());
+    snprintf(count_label, sizeof(count_label), "(%d)", template_count);
+    const ImVec2 count_size = ImGui::CalcTextSize(count_label);
+    const float count_x =
+        ImGui::GetWindowContentRegionMax().x - count_size.x - ImGui::GetStyle().ItemInnerSpacing.x;
+    ImGui::SameLine(count_x);
+    ImGui::TextDisabled("%s", count_label);
     ImGui::Separator();
 
     if (!m_control_state.is_editing_existing)

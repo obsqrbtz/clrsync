@@ -1,4 +1,5 @@
 #include "main_layout.hpp"
+#include "ui_layout.hpp"
 #include "imgui.h"
 #include "imgui_internal.h"
 
@@ -10,7 +11,6 @@ namespace
 constexpr float TOPBAR_HEIGHT = 36.0f;
 constexpr float TOPBAR_PADDING_X = 12.0f;
 constexpr float TOPBAR_PADDING_Y = 4.0f;
-constexpr float BUTTON_SPACING = 8.0f;
 }
 
 void main_layout::render_menu_bar()
@@ -93,7 +93,8 @@ void main_layout::setup_dockspace(bool &first_time)
         ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
         ImGuiID center, right;
-        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.40f, &right, &center);
+        ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, DOCK_COLOR_PANEL_RATIO, &right,
+                                    &center);
 
         ImGuiDockNode *center_node = ImGui::DockBuilderGetNode(center);
         if (center_node)
