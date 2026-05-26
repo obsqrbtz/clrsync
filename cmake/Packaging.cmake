@@ -18,12 +18,13 @@ set(CPACK_COMPONENT_CLI_DESCRIPTION "clrsync CLI app")
 set(CPACK_COMPONENT_CLI_DEPENDS Core)
 
 # NSIS
-set(CPACK_NSIS_INSTALLED_NAME "clrsync")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "clrsync")
 set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
 set(CPACK_NSIS_MODIFY_PATH ON)
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-set(CPACK_NSIS_MENU_LINKS "bin/clrsync_gui.exe" "clrsync")
-set(CPACK_NSIS_CREATE_DESKTOP_LINKS "bin/clrsync_gui.exe;clrsync")
+set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\clrsync_gui.exe")
+set(CPACK_PACKAGE_EXECUTABLES "clrsync_gui" "clrsync")
+set(CPACK_CREATE_DESKTOP_LINKS "clrsync_gui")
 
 # Debian
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Daniel Dada <dan@binarygoose.dev>")
