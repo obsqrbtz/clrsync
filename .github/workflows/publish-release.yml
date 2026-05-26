@@ -18,7 +18,7 @@ jobs:
         run: choco install nsis --no-progress -y
 
       - name: Setup MSVC
-        uses: microsoft/setup-msbuild@v2
+        uses: microsoft/setup-msbuild@v3
 
       - name: Configure project
         run: cmake -B build -S . -A x64
