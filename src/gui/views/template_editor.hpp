@@ -18,13 +18,16 @@ class ui_manager;
 class template_editor
 {
   public:
-    template_editor(clrsync::gui::ui_manager* ui_mgr);
+    template_editor(clrsync::gui::ui_manager *ui_mgr);
     void render();
     void apply_current_palette(const clrsync::core::palette &pal);
+
+    void insert_token(const std::string &key);
 
   private:
     void render_controls();
     void render_editor();
+    void render_editor_toolbar();
     void render_template_list();
     void render_autocomplete(const ImVec2 &editor_pos);
     void update_autocomplete_suggestions();
@@ -51,6 +54,8 @@ class template_editor
     bool m_has_unsaved_changes{false};
     bool m_show_delete_confirmation{false};
 
+    char m_var_filter[128] = {0};
+
     bool m_show_autocomplete{false};
     bool m_autocomplete_dismissed{false};
     TextEditor::Coordinates m_dismiss_position;
@@ -69,7 +74,7 @@ class template_editor
     ImVec4 m_autocomplete_dim_text_color;
 
     clrsync::core::palette m_current_palette;
-    clrsync::gui::ui_manager* m_ui_manager;
+    clrsync::gui::ui_manager *m_ui_manager;
 };
 
 #endif // CLRSYNC_GUI_TEMPLATE_EDITOR_HPP

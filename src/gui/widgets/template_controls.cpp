@@ -1,8 +1,8 @@
 #include "template_controls.hpp"
-#include "colors.hpp"
 #include "gui/layout/ui_layout.hpp"
-#include "styled_checkbox.hpp"
 #include "imgui.h"
+#include "styled_checkbox.hpp"
+#include <vector>
 
 namespace clrsync::gui::widgets
 {
@@ -13,10 +13,9 @@ using layout::FORM_LABEL_WIDTH;
 
 template_controls::template_controls() = default;
 
-void template_controls::render(template_control_state& state,
-                               const template_control_callbacks& callbacks,
-                               const core::palette& palette,
-                               validation_message& validation)
+void template_controls::render(template_control_state &state,
+                               const template_control_callbacks &callbacks,
+                               const core::palette &palette, validation_message &validation)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(BUTTON_SPACING, 8));
 
@@ -26,70 +25,61 @@ void template_controls::render(template_control_state& state,
 
     ImGui::Spacing();
 
-    render_fields(state, callbacks);
+    if (ImGui::CollapsingHeader("Template Settings", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        render_fields(state, callbacks);
+    }
 
     validation.render(palette);
 }
 
-void template_controls::render_action_buttons(template_control_state& state,
-                                              const template_control_callbacks& callbacks,
-                                              const core::palette& palette)
+void template_controls::render_action_buttons(template_control_state &state,
+                                              const template_control_callbacks &callbacks,
+                                              const core::palette &palette)
 {
-    if (ImGui::Button(" + New "))
-    {
-        if (callbacks.on_new)
-            callbacks.on_new();
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Create a new template");
+    auto leading = [&]() {
+        bool old_enabled = state.enabled;
+        styled_checkbox checkbox;
+        checkbox.render("Enabled", &state.enabled, palette,
+                        state.enabled ? checkbox_style::success : checkbox_style::error);
 
-    ImGui::SameLine(0, BUTTON_SPACING);
-    if (ImGui::Button(" Save "))
-    {
-        if (callbacks.on_save)
-            callbacks.on_save();
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Save template (Ctrl+S)");
+        if (old_enabled != state.enabled && state.is_editing_existing &&
+            callbacks.on_enabled_changed)
+            callbacks.on_enabled_changed(state.enabled);
+
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Enable/disable this template for theme application");
+    };
+
+    std::vector<toolbar_item> items = {
+        {" Save ", "Save template (Ctrl+S)",
+         [&]() {
+             if (callbacks.on_save)
+                 callbacks.on_save();
+         }},
+        {" New ", "Create a new template",
+         [&]() {
+             if (callbacks.on_new)
+                 callbacks.on_new();
+         }},
+    };
 
     if (state.is_editing_existing)
     {
-        ImGui::SameLine(0, BUTTON_SPACING);
-        auto error = palette_color(palette, "error");
-        auto error_hover = ImVec4(error.x * 1.1f, error.y * 1.1f, error.z * 1.1f, error.w);
-        auto error_active = ImVec4(error.x * 0.8f, error.y * 0.8f, error.z * 0.8f, error.w);
-        auto on_error = palette_color(palette, "on_error");
-        ImGui::PushStyleColor(ImGuiCol_Button, error);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, error_hover);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, error_active);
-        ImGui::PushStyleColor(ImGuiCol_Text, on_error);
-        if (ImGui::Button(" Delete "))
-        {
-            if (callbacks.on_delete)
-                callbacks.on_delete();
-        }
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Delete this template");
-        ImGui::PopStyleColor(4);
+        items.push_back({" Delete ", "Delete this template",
+                         [&]() {
+                             if (callbacks.on_delete)
+                                 callbacks.on_delete();
+                         },
+                         true, button_intent::danger});
     }
 
-    ImGui::SameLine(0, BUTTON_SPACING * 2);
-    bool old_enabled = state.enabled;
-    styled_checkbox checkbox;
-    checkbox.render("Enabled", &state.enabled, palette,
-                    state.enabled ? checkbox_style::success : checkbox_style::error);
-
-    if (old_enabled != state.enabled && state.is_editing_existing)
-    {
-        if (callbacks.on_enabled_changed)
-            callbacks.on_enabled_changed(state.enabled);
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Enable/disable this template for theme application");
+    m_toolbar.set_id("##template_toolbar_overflow");
+    m_toolbar.render(items, leading, BUTTON_SPACING);
 }
 
-void template_controls::render_fields(template_control_state& state,
-                                      const template_control_callbacks& callbacks)
+void template_controls::render_fields(template_control_state &state,
+                                      const template_control_callbacks &callbacks)
 {
     if (!ImGui::BeginTable("##template_fields", 3,
                            ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_PadOuterX))
@@ -99,7 +89,7 @@ void template_controls::render_fields(template_control_state& state,
     ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
     ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed, BROWSE_BUTTON_WIDTH);
 
-    auto label_cell = [](const char* text) {
+    auto label_cell = [](const char *text) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::AlignTextToFramePadding();

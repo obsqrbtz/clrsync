@@ -15,6 +15,7 @@ set(GUI_SOURCES
     widgets/palette_selector.cpp
     widgets/input_dialog.cpp
     widgets/action_buttons.cpp
+    widgets/toolbar.cpp
     widgets/styled_checkbox.cpp
     widgets/autocomplete.cpp
     widgets/form_field.cpp

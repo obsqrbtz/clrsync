@@ -10,13 +10,16 @@ class color_table_renderer
 {
   public:
     using OnColorChangedCallback = std::function<void()>;
+    using OnInsertTokenCallback = std::function<void(const std::string &)>;
 
     void render(const clrsync::core::palette &palette, palette_controller &controller,
-                const OnColorChangedCallback &on_changed);
+                const OnColorChangedCallback &on_changed,
+                const OnInsertTokenCallback &on_insert_token = {});
 
   private:
     void render_color_row(const std::string &name, const clrsync::core::palette &palette,
-                          palette_controller &controller, const OnColorChangedCallback &on_changed);
+                          palette_controller &controller, const OnColorChangedCallback &on_changed,
+                          const OnInsertTokenCallback &on_insert_token);
 
     bool matches_filter(const std::string &name) const;
 

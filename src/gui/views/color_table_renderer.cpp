@@ -25,7 +25,8 @@ bool color_table_renderer::matches_filter(const std::string &name) const
 void color_table_renderer::render_color_row(const std::string &name,
                                             const clrsync::core::palette &current,
                                             palette_controller &controller,
-                                            const OnColorChangedCallback &on_changed)
+                                            const OnColorChangedCallback &on_changed,
+                                            const OnInsertTokenCallback &on_insert_token)
 {
     if (!matches_filter(name))
         return;
@@ -39,15 +40,34 @@ void color_table_renderer::render_color_row(const std::string &name,
 
     ImVec4 text_color = clrsync::gui::widgets::palette_color(current, "info", "accent");
     ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-    const bool copied = ImGui::Selectable(name.c_str(), false, 0, ImVec2(key_col_width, 0.0f));
+    const bool clicked = ImGui::Selectable(name.c_str(), false, 0, ImVec2(key_col_width, 0.0f));
     ImGui::PopStyleColor();
+
+    const bool can_insert = static_cast<bool>(on_insert_token);
 
     if (ImGui::IsItemHovered())
     {
         ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-        ImGui::SetTooltip("Click to copy: {%s.hex}", name.c_str());
+        if (can_insert)
+            ImGui::SetTooltip("Click to insert {%s} into the template  ·  Right-click to copy",
+                              name.c_str());
+        else
+            ImGui::SetTooltip("Click to copy: {%s.hex}", name.c_str());
     }
-    if (copied)
+
+    if (clicked)
+    {
+        if (can_insert)
+        {
+            on_insert_token(name);
+        }
+        else
+        {
+            std::string template_var = "{" + name + ".hex}";
+            ImGui::SetClipboardText(template_var.c_str());
+        }
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
     {
         std::string template_var = "{" + name + ".hex}";
         ImGui::SetClipboardText(template_var.c_str());
@@ -96,7 +116,8 @@ void color_table_renderer::render_color_row(const std::string &name,
     if (ImGui::BeginPopup(popup_id.c_str()))
     {
         if (ImGui::ColorPicker4(("##picker4_" + name).c_str(), c,
-                                ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf |
+                                ImGuiColorEditFlags_AlphaBar |
+                                    ImGuiColorEditFlags_AlphaPreviewHalf |
                                     ImGuiColorEditFlags_DisplayRGB))
         {
             uint32_t r = static_cast<uint32_t>(c[0] * 255.0f);
@@ -116,7 +137,8 @@ void color_table_renderer::render_color_row(const std::string &name,
 
 void color_table_renderer::render(const clrsync::core::palette &current,
                                   palette_controller &controller,
-                                  const OnColorChangedCallback &on_changed)
+                                  const OnColorChangedCallback &on_changed,
+                                  const OnInsertTokenCallback &on_insert_token)
 {
     if (current.colors().empty())
     {
@@ -189,7 +211,7 @@ void color_table_renderer::render(const clrsync::core::palette &current,
                 ImGui::TableHeadersRow();
 
                 for (auto *k : keys)
-                    render_color_row(k, current, controller, on_changed);
+                    render_color_row(k, current, controller, on_changed, on_insert_token);
 
                 ImGui::EndTable();
             }
@@ -218,17 +240,19 @@ void color_table_renderer::render(const clrsync::core::palette &current,
                 "editor_line_number_active"});
 
     draw_table("Editor - Syntax", "##editor_syntax",
-               {"editor_comment", "editor_string", "editor_number", "editor_boolean",
-                "editor_keyword", "editor_operator", "editor_function", "editor_variable",
-                "editor_parameter", "editor_property", "editor_constant", "editor_type",
-                "editor_class", "editor_interface", "editor_enum", "editor_namespace",
-                "editor_attribute", "editor_decorator", "editor_tag", "editor_punctuation",
-                "editor_link", "editor_regex", "editor_escape_character"});
+               {"editor_comment",   "editor_string",          "editor_number",
+                "editor_boolean",   "editor_keyword",         "editor_operator",
+                "editor_function",  "editor_variable",        "editor_parameter",
+                "editor_property",  "editor_constant",        "editor_type",
+                "editor_class",     "editor_interface",       "editor_enum",
+                "editor_namespace", "editor_attribute",       "editor_decorator",
+                "editor_tag",       "editor_punctuation",     "editor_link",
+                "editor_regex",     "editor_escape_character"});
 
     draw_table("Editor - Diagnostics", "##editor_diagnostics",
                {"editor_invalid", "editor_error", "editor_error_background", "editor_warning",
-                "editor_warning_background", "editor_info", "editor_info_background",
-                "editor_hint", "editor_hint_background"});
+                "editor_warning_background", "editor_info", "editor_info_background", "editor_hint",
+                "editor_hint_background"});
 
     draw_table("Editor - UI Elements", "##editor_ui",
                {"editor_active_line_border", "editor_indent_guide", "editor_indent_guide_active",

@@ -3,6 +3,7 @@
 
 #include "core/palette/palette.hpp"
 #include "gui/widgets/form_field.hpp"
+#include "gui/widgets/toolbar.hpp"
 #include "gui/widgets/validation_message.hpp"
 #include <functional>
 #include <string>
@@ -52,6 +53,7 @@ class template_controls
                        const template_control_callbacks& callbacks);
 
     form_field m_form;
+    toolbar m_toolbar;
 };
 
 } // namespace clrsync::gui::widgets

@@ -5,11 +5,12 @@
 #include "core/theme/theme_template.hpp"
 #include "gui/layout/ui_layout.hpp"
 #include "gui/theme/app_theme.hpp"
+#include "gui/ui_manager.hpp"
 #include "gui/widgets/colors.hpp"
 #include "gui/widgets/dialogs.hpp"
-#include "gui/ui_manager.hpp"
 #include "imgui.h"
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -22,8 +23,7 @@ const std::vector<std::string> COLOR_FORMATS = {
     "l",   "hsl",          "hsla"};
 }
 
-template_editor::template_editor(clrsync::gui::ui_manager* ui_mgr)
-    : m_ui_manager(ui_mgr)
+template_editor::template_editor(clrsync::gui::ui_manager *ui_mgr) : m_ui_manager(ui_mgr)
 {
     m_control_state.name = "new_template";
 
@@ -61,21 +61,26 @@ void template_editor::setup_callbacks()
     m_callbacks.on_enabled_changed = [this](bool enabled) {
         m_template_controller.set_template_enabled(m_control_state.name, enabled);
     };
-    m_callbacks.on_browse_input = [this](const std::string& path) -> std::string {
+    m_callbacks.on_browse_input = [this](const std::string &path) -> std::string {
         return m_ui_manager->open_file_dialog("Select Template File", path);
     };
-    m_callbacks.on_browse_output = [this](const std::string& path) -> std::string {
+    m_callbacks.on_browse_output = [this](const std::string &path) -> std::string {
         return m_ui_manager->save_file_dialog("Select Output File", path);
     };
-    m_callbacks.on_input_path_changed = [this](const std::string& path) {
+    m_callbacks.on_input_path_changed = [this](const std::string &path) {
         m_template_controller.set_template_input_path(m_control_state.name, path);
     };
-    m_callbacks.on_output_path_changed = [this](const std::string& path) {
+    m_callbacks.on_output_path_changed = [this](const std::string &path) {
         m_template_controller.set_template_output_path(m_control_state.name, path);
     };
-    m_callbacks.on_reload_command_changed = [this](const std::string& cmd) {
+    m_callbacks.on_reload_command_changed = [this](const std::string &cmd) {
         m_template_controller.set_template_reload_command(m_control_state.name, cmd);
     };
+}
+
+void template_editor::insert_token(const std::string &key)
+{
+    m_editor.InsertText("{" + key + "}");
 }
 
 void template_editor::update_autocomplete_colors()
@@ -109,26 +114,35 @@ void template_editor::apply_current_palette(const clrsync::core::palette &pal)
     palette[int(TextEditor::PaletteIndex::Number)] = get_color_u32("editor_warning", "warning");
     palette[int(TextEditor::PaletteIndex::String)] = get_color_u32("editor_string", "success");
     palette[int(TextEditor::PaletteIndex::CharLiteral)] = get_color_u32("editor_string", "success");
-    palette[int(TextEditor::PaletteIndex::Punctuation)] = get_color_u32("editor_main", "foreground");
-    palette[int(TextEditor::PaletteIndex::Preprocessor)] = get_color_u32("editor_emphasis", "accent");
+    palette[int(TextEditor::PaletteIndex::Punctuation)] =
+        get_color_u32("editor_main", "foreground");
+    palette[int(TextEditor::PaletteIndex::Preprocessor)] =
+        get_color_u32("editor_emphasis", "accent");
     palette[int(TextEditor::PaletteIndex::Identifier)] = get_color_u32("editor_main", "foreground");
     palette[int(TextEditor::PaletteIndex::KnownIdentifier)] = get_color_u32("editor_link", "info");
-    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] = get_color_u32("editor_link", "info");
+    palette[int(TextEditor::PaletteIndex::PreprocIdentifier)] =
+        get_color_u32("editor_link", "info");
 
-    palette[int(TextEditor::PaletteIndex::Comment)] = get_color_u32("editor_comment", "editor_inactive");
-    palette[int(TextEditor::PaletteIndex::MultiLineComment)] = get_color_u32("editor_comment", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::Comment)] =
+        get_color_u32("editor_comment", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::MultiLineComment)] =
+        get_color_u32("editor_comment", "editor_inactive");
 
-    palette[int(TextEditor::PaletteIndex::Background)] = get_color_u32("editor_background", "background");
+    palette[int(TextEditor::PaletteIndex::Background)] =
+        get_color_u32("editor_background", "background");
     palette[int(TextEditor::PaletteIndex::Cursor)] = get_color_u32("cursor", "accent");
 
-    palette[int(TextEditor::PaletteIndex::Selection)] = get_color_u32("editor_selected", "surface_variant");
+    palette[int(TextEditor::PaletteIndex::Selection)] =
+        get_color_u32("editor_selected", "surface_variant");
     palette[int(TextEditor::PaletteIndex::ErrorMarker)] = get_color_u32("editor_error", "error");
     palette[int(TextEditor::PaletteIndex::Breakpoint)] = get_color_u32("editor_error", "error");
 
-    palette[int(TextEditor::PaletteIndex::LineNumber)] = get_color_u32("editor_line_number", "editor_inactive");
+    palette[int(TextEditor::PaletteIndex::LineNumber)] =
+        get_color_u32("editor_line_number", "editor_inactive");
     palette[int(TextEditor::PaletteIndex::CurrentLineFill)] = get_color_u32("surface_variant");
     palette[int(TextEditor::PaletteIndex::CurrentLineFillInactive)] = get_color_u32("surface");
-    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] = get_color_u32("border_focused", "border");
+    palette[int(TextEditor::PaletteIndex::CurrentLineEdge)] =
+        get_color_u32("border_focused", "border");
 
     m_editor.SetPalette(palette);
 
@@ -237,11 +251,11 @@ void template_editor::update_autocomplete_suggestions()
     else
     {
         std::vector<std::pair<std::string, int>> scored_suggestions;
-        
+
         for (size_t i = 0; i < clrsync::core::NUM_COLOR_KEYS; ++i)
         {
             std::string key = clrsync::core::COLOR_KEYS[i];
-            
+
             if (m_autocomplete_prefix.empty())
             {
                 scored_suggestions.push_back({key, 0});
@@ -266,14 +280,14 @@ void template_editor::update_autocomplete_suggestions()
                 }
             }
         }
-        
+
         std::sort(scored_suggestions.begin(), scored_suggestions.end(),
                   [](const auto &a, const auto &b) {
                       if (a.second != b.second)
                           return a.second > b.second;
                       return a.first < b.first;
                   });
-        
+
         for (const auto &[key, score] : scored_suggestions)
         {
             m_autocomplete_suggestions.push_back(key);
@@ -304,7 +318,7 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
     popup_pos.y = editor_pos.y + ((cursor.mLine + 1) * line_height);
 
     ImGui::SetNextWindowPos(popup_pos, ImGuiCond_Always);
-    
+
     float max_width = 350.0f;
     float min_width = 250.0f;
     ImGui::SetNextWindowSize(ImVec2(max_width, 0));
@@ -331,7 +345,7 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
         ImGui::Separator();
 
         int max_visible = std::min((int)m_autocomplete_suggestions.size(), 12);
-        
+
         if (m_autocomplete_selected >= max_visible)
         {
             m_autocomplete_selected = max_visible - 1;
@@ -383,7 +397,7 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
             {
                 auto start = m_autocomplete_start_pos;
                 auto cursor_pos = m_editor.GetCursorPosition();
-                
+
                 TextEditor::Coordinates end;
                 if (m_autocomplete_end_brace_pos >= 0)
                 {
@@ -393,23 +407,23 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
                 {
                     end = cursor_pos;
                 }
-                
+
                 std::string insert_text = suggestion;
                 if (m_autocomplete_end_brace_pos < 0)
                 {
                     insert_text += "}";
                 }
-                
-                const char* old_clipboard = ImGui::GetClipboardText();
+
+                const char *old_clipboard = ImGui::GetClipboardText();
                 std::string saved_clipboard = old_clipboard ? old_clipboard : "";
-                
+
                 ImGui::SetClipboardText(insert_text.c_str());
-                
+
                 m_editor.SetSelection(start, end);
                 m_editor.Paste();
-                
+
                 ImGui::SetClipboardText(saved_clipboard.c_str());
-                
+
                 m_show_autocomplete = false;
                 m_autocomplete_dismissed = false;
             }
@@ -418,71 +432,67 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
             {
                 ImVec2 item_min = ImGui::GetItemRectMin();
                 ImVec2 item_max = ImGui::GetItemRectMax();
-                
+
                 const float preview_size = ImGui::GetTextLineHeight() * 0.7f;
                 const float padding = 4.0f;
-                
+
                 ImVec2 preview_pos;
                 preview_pos.x = item_max.x - preview_size - padding;
                 preview_pos.y = item_min.y + (item_max.y - item_min.y - preview_size) * 0.5f;
-                
-                ImDrawList* draw_list = ImGui::GetWindowDrawList();
-                
+
+                ImDrawList *draw_list = ImGui::GetWindowDrawList();
+
                 auto rgba = palette_color.to_rgba();
                 ImU32 color_u32 = IM_COL32(rgba.r, rgba.g, rgba.b, rgba.a);
-                
+
                 float r = rgba.r / 255.0f;
                 float g = rgba.g / 255.0f;
                 float b = rgba.b / 255.0f;
-                
+
                 r = (r <= 0.03928f) ? r / 12.92f : std::pow((r + 0.055f) / 1.055f, 2.4f);
                 g = (g <= 0.03928f) ? g / 12.92f : std::pow((g + 0.055f) / 1.055f, 2.4f);
                 b = (b <= 0.03928f) ? b / 12.92f : std::pow((b + 0.055f) / 1.055f, 2.4f);
-                
+
                 float luminance = 0.2126f * r + 0.7152f * g + 0.0722f * b;
-                
-                ImVec4 bg_color = is_selected ? m_autocomplete_selected_color : m_autocomplete_bg_color;
+
+                ImVec4 bg_color =
+                    is_selected ? m_autocomplete_selected_color : m_autocomplete_bg_color;
                 float bg_r = bg_color.x;
                 float bg_g = bg_color.y;
                 float bg_b = bg_color.z;
-                
-                bg_r = (bg_r <= 0.03928f) ? bg_r / 12.92f : std::pow((bg_r + 0.055f) / 1.055f, 2.4f);
-                bg_g = (bg_g <= 0.03928f) ? bg_g / 12.92f : std::pow((bg_g + 0.055f) / 1.055f, 2.4f);
-                bg_b = (bg_b <= 0.03928f) ? bg_b / 12.92f : std::pow((bg_b + 0.055f) / 1.055f, 2.4f);
-                
+
+                bg_r =
+                    (bg_r <= 0.03928f) ? bg_r / 12.92f : std::pow((bg_r + 0.055f) / 1.055f, 2.4f);
+                bg_g =
+                    (bg_g <= 0.03928f) ? bg_g / 12.92f : std::pow((bg_g + 0.055f) / 1.055f, 2.4f);
+                bg_b =
+                    (bg_b <= 0.03928f) ? bg_b / 12.92f : std::pow((bg_b + 0.055f) / 1.055f, 2.4f);
+
                 float bg_luminance = 0.2126f * bg_r + 0.7152f * bg_g + 0.0722f * bg_b;
-                
-                float contrast = (std::max(luminance, bg_luminance) + 0.05f) / 
-                                (std::min(luminance, bg_luminance) + 0.05f);
-                
+
+                float contrast = (std::max(luminance, bg_luminance) + 0.05f) /
+                                 (std::min(luminance, bg_luminance) + 0.05f);
+
                 if (contrast < 2.0f)
                 {
-                    ImU32 contrast_bg = (bg_luminance > 0.5f) ? IM_COL32(0, 0, 0, 180) : IM_COL32(255, 255, 255, 180);
+                    ImU32 contrast_bg = (bg_luminance > 0.5f) ? IM_COL32(0, 0, 0, 180)
+                                                              : IM_COL32(255, 255, 255, 180);
                     const float bg_padding = 2.0f;
                     draw_list->AddRectFilled(
                         ImVec2(preview_pos.x - bg_padding, preview_pos.y - bg_padding),
-                        ImVec2(preview_pos.x + preview_size + bg_padding, preview_pos.y + preview_size + bg_padding),
-                        contrast_bg,
-                        2.0f
-                    );
+                        ImVec2(preview_pos.x + preview_size + bg_padding,
+                               preview_pos.y + preview_size + bg_padding),
+                        contrast_bg, 2.0f);
                 }
-                
+
                 draw_list->AddRectFilled(
-                    preview_pos,
-                    ImVec2(preview_pos.x + preview_size, preview_pos.y + preview_size),
-                    color_u32,
-                    2.0f
-                );
-                
+                    preview_pos, ImVec2(preview_pos.x + preview_size, preview_pos.y + preview_size),
+                    color_u32, 2.0f);
+
                 ImU32 border_color = IM_COL32(255, 255, 255, 60);
                 draw_list->AddRect(
-                    preview_pos,
-                    ImVec2(preview_pos.x + preview_size, preview_pos.y + preview_size),
-                    border_color,
-                    2.0f,
-                    0,
-                    1.0f
-                );
+                    preview_pos, ImVec2(preview_pos.x + preview_size, preview_pos.y + preview_size),
+                    border_color, 2.0f, 0, 1.0f);
             }
 
             ImGui::PopStyleColor(3);
@@ -497,7 +507,8 @@ void template_editor::render_autocomplete(const ImVec2 &editor_pos)
         {
             ImGui::Separator();
             ImGui::PushStyleColor(ImGuiCol_Text, m_autocomplete_dim_text_color);
-            ImGui::Text("  +%d more (keep typing to filter)", (int)m_autocomplete_suggestions.size() - 12);
+            ImGui::Text("  +%d more (keep typing to filter)",
+                        (int)m_autocomplete_suggestions.size() - 12);
             ImGui::PopStyleColor();
         }
 
@@ -570,13 +581,54 @@ void template_editor::render_controls()
     m_controls.render(m_control_state, m_callbacks, m_current_palette, m_validation);
 }
 
+void template_editor::render_editor_toolbar()
+{
+    if (ImGui::Button("Insert variable"))
+        ImGui::OpenPopup("##insert_var");
+
+    if (ImGui::BeginPopup("##insert_var"))
+    {
+        ImGui::SetNextItemWidth(240.0f);
+        ImGui::InputTextWithHint("##var_filter", "Filter colors...", m_var_filter,
+                                 sizeof(m_var_filter));
+
+        std::string filter = m_var_filter;
+        std::transform(filter.begin(), filter.end(), filter.begin(),
+                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+        ImGui::BeginChild("##var_list", ImVec2(260, 280), true);
+        for (size_t i = 0; i < clrsync::core::NUM_COLOR_KEYS; ++i)
+        {
+            const char *key = clrsync::core::COLOR_KEYS[i];
+
+            if (!filter.empty())
+            {
+                std::string lower = key;
+                std::transform(lower.begin(), lower.end(), lower.begin(),
+                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                if (lower.find(filter) == std::string::npos)
+                    continue;
+            }
+
+            if (ImGui::Selectable(key))
+            {
+                insert_token(key);
+                ImGui::CloseCurrentPopup();
+            }
+        }
+        ImGui::EndChild();
+        ImGui::EndPopup();
+    }
+}
+
 void template_editor::render_editor()
 {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8, 4));
 
     if (!m_control_state.is_editing_existing)
     {
-        ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
+        ImVec4 success_color =
+            clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
         ImGui::PushStyleColor(ImGuiCol_Text, success_color);
         ImGui::Text("  New Template");
         ImGui::PopStyleColor();
@@ -596,7 +648,8 @@ void template_editor::render_editor()
         if (m_has_unsaved_changes)
         {
             ImGui::SameLine();
-            ImVec4 warning_color = clrsync::gui::widgets::palette_color(m_current_palette, "warning", "accent");
+            ImVec4 warning_color =
+                clrsync::gui::widgets::palette_color(m_current_palette, "warning", "accent");
             ImGui::PushStyleColor(ImGuiCol_Text, warning_color);
             ImGui::Text("(unsaved)");
             ImGui::PopStyleColor();
@@ -604,6 +657,9 @@ void template_editor::render_editor()
     }
 
     ImGui::PopStyleVar();
+
+    render_editor_toolbar();
+
     ImGui::Separator();
 
     bool consume_keys = false;
@@ -645,11 +701,12 @@ void template_editor::render_editor()
         else if (ImGui::IsKeyPressed(ImGuiKey_Tab, false) ||
                  ImGui::IsKeyPressed(ImGuiKey_Enter, false))
         {
-            if (m_autocomplete_selected >= 0 && m_autocomplete_selected < (int)m_autocomplete_suggestions.size())
+            if (m_autocomplete_selected >= 0 &&
+                m_autocomplete_selected < (int)m_autocomplete_suggestions.size())
             {
                 auto start = m_autocomplete_start_pos;
                 auto cursor_pos = m_editor.GetCursorPosition();
-                
+
                 TextEditor::Coordinates end;
                 if (m_autocomplete_end_brace_pos >= 0)
                 {
@@ -659,23 +716,23 @@ void template_editor::render_editor()
                 {
                     end = cursor_pos;
                 }
-                
+
                 std::string insert_text = m_autocomplete_suggestions[m_autocomplete_selected];
                 if (m_autocomplete_end_brace_pos < 0)
                 {
                     insert_text += "}";
                 }
-                
-                const char* old_clipboard = ImGui::GetClipboardText();
+
+                const char *old_clipboard = ImGui::GetClipboardText();
                 std::string saved_clipboard = old_clipboard ? old_clipboard : "";
-                
+
                 ImGui::SetClipboardText(insert_text.c_str());
-                
+
                 m_editor.SetSelection(start, end);
                 m_editor.Paste();
-                
+
                 ImGui::SetClipboardText(saved_clipboard.c_str());
-                
+
                 m_show_autocomplete = false;
                 m_autocomplete_dismissed = false;
             }
@@ -701,20 +758,20 @@ void template_editor::render_editor()
     if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && m_editor.HasSelection())
     {
         std::string selected_text = m_editor.GetSelectedText();
-        
+
         if (!selected_text.empty())
         {
             bool starts_with_brace = selected_text.front() == '{';
             bool ends_with_brace = selected_text.back() == '}';
-            
+
             if (starts_with_brace || ends_with_brace)
             {
                 auto cursor = m_editor.GetCursorPosition();
                 std::string line = m_editor.GetCurrentLineText();
-                
+
                 int brace_start = -1;
                 int brace_end = -1;
-                
+
                 for (int i = cursor.mColumn - 1; i >= 0; --i)
                 {
                     if (i < (int)line.length() && line[i] == '{')
@@ -723,7 +780,7 @@ void template_editor::render_editor()
                         break;
                     }
                 }
-                
+
                 if (brace_start >= 0)
                 {
                     for (int i = brace_start + 1; i < (int)line.length(); ++i)
@@ -735,7 +792,7 @@ void template_editor::render_editor()
                         }
                     }
                 }
-                
+
                 if (brace_start >= 0 && brace_end > brace_start + 1)
                 {
                     TextEditor::Coordinates sel_start(cursor.mLine, brace_start + 1);
@@ -772,11 +829,12 @@ void template_editor::render_template_list()
 
     if (!m_control_state.is_editing_existing)
     {
-        ImVec4 success_color = clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
+        ImVec4 success_color =
+            clrsync::gui::widgets::palette_color(m_current_palette, "success", "accent");
         ImVec4 success_bg = ImVec4(success_color.x, success_color.y, success_color.z, 0.5f);
         ImGui::PushStyleColor(ImGuiCol_Text, success_color);
         ImGui::PushStyleColor(ImGuiCol_Header, success_bg);
-        ImGui::Selectable("+ New Template", true);
+        ImGui::Selectable("New Template", true);
         ImGui::PopStyleColor(2);
         ImGui::Separator();
     }
@@ -902,7 +960,8 @@ void template_editor::save_template()
 
     if (!is_valid_path(trimmed_path))
     {
-        m_validation.set("Error: Output path is invalid! Must be a valid file path with directory.");
+        m_validation.set(
+            "Error: Output path is invalid! Must be a valid file path with directory.");
         return;
     }
 

@@ -1,20 +1,22 @@
 #include "color_scheme_editor.hpp"
-#include "gui/layout/ui_layout.hpp"
 #include "core/palette/hellwal_generator.hpp"
 #include "core/palette/matugen_generator.hpp"
 #include "core/palette/pywal16_generator.hpp"
 #include "gui/controllers/theme_applier.hpp"
+#include "gui/layout/ui_layout.hpp"
 #include "gui/platform/file_browser.hpp"
-#include "gui/widgets/action_buttons.hpp"
 #include "gui/widgets/dialogs.hpp"
 #include "gui/widgets/input_dialog.hpp"
 #include "gui/widgets/palette_selector.hpp"
+#include "gui/widgets/toolbar.hpp"
 #include "imgui.h"
 #include "settings_window.hpp"
 #include "template_editor.hpp"
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <vector>
 
 void color_scheme_editor::refresh_available_generators()
 {
@@ -47,8 +49,8 @@ void color_scheme_editor::refresh_available_generators()
         m_generate_state.generator_idx = 0;
 }
 
-std::optional<clrsync::gui::widgets::palette_generator_kind>
-color_scheme_editor::selected_generator_kind() const
+std::optional<clrsync::gui::widgets::palette_generator_kind> color_scheme_editor::
+    selected_generator_kind() const
 {
     if (m_generate_state.generator_idx < 0 ||
         m_generate_state.generator_idx >= static_cast<int>(m_available_generators.size()))
@@ -143,7 +145,7 @@ std::optional<std::string> color_scheme_editor::execute_palette_generation()
                 if (image_path.empty())
                 {
                     image_path = file_dialogs::open_file_dialog("Select Image", "",
-                                                                  file_dialogs::image_file_filters());
+                                                                file_dialogs::image_file_filters());
                 }
                 pal = gen.generate_from_image(image_path, opts);
                 if (!palette_has_colors(pal))
@@ -249,8 +251,12 @@ void color_scheme_editor::render_controls_and_colors()
     ImGui::Separator();
 
     ImGui::BeginChild("ColorTableContent", ImVec2(0, 0), false);
-    m_color_table.render(m_controller.current_palette(), m_controller,
-                         [this]() { apply_themes(); });
+    m_color_table.render(
+        m_controller.current_palette(), m_controller, [this]() { apply_themes(); },
+        [this](const std::string &key) {
+            if (m_template_editor)
+                m_template_editor->insert_token(key);
+        });
     ImGui::EndChild();
 
     ImGui::End();
@@ -270,36 +276,42 @@ void color_scheme_editor::render_controls()
     const auto &current = m_controller.current_palette();
     const auto &palettes = m_controller.palettes();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
-                        ImVec2(clrsync::gui::layout::BUTTON_SPACING, 8));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(clrsync::gui::layout::BUTTON_SPACING, 8));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 5));
 
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Palette:");
-    ImGui::SameLine();
+    // Combo width shrinks with the panel so it never crowds out the buttons.
+    const float row_avail = ImGui::GetContentRegionAvail().x;
+    const float combo_width = std::clamp(row_avail * 0.35f, 120.0f, 220.0f);
 
-    m_palette_selector.render(m_controller, 200.0f);
+    auto leading = [&]() {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Palette:");
+        ImGui::SameLine();
+        m_palette_selector.render(m_controller, combo_width);
+    };
 
-    ImGui::SameLine(0, clrsync::gui::layout::BUTTON_SPACING);
+    using clrsync::gui::widgets::button_intent;
+    using clrsync::gui::widgets::toolbar_item;
+    std::vector<toolbar_item> items = {
+        {" Apply Theme ", "Apply current palette to all enabled templates",
+         [this]() { m_controller.apply_current_theme(); }, true, button_intent::primary},
+        {" Save ", "Save current palette to file",
+         [this]() { m_controller.save_current_palette(); }},
+        {"New ", "Create a new palette",
+         [this]() {
+             m_new_palette_dialog.open("New Palette",
+                                       "Enter a name for the new palette:", "Palette name...");
+         }},
+        {" Generate ", "Generate a palette from an image or color",
+         [this]() { m_generate_palette_dialog.open(); }},
+        {" Delete ", "Delete current palette", [this]() { m_show_delete_confirmation = true; },
+         true, button_intent::danger},
+    };
 
-    if (ImGui::Button(" + New "))
-    {
-        m_new_palette_dialog.open("New Palette",
-                                  "Enter a name for the new palette:", "Palette name...");
-    }
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Create a new palette");
+    m_toolbar.render(items, leading, clrsync::gui::layout::BUTTON_SPACING);
 
     m_new_palette_dialog.render();
     m_generate_dialog.render();
-
-    ImGui::SameLine(0, clrsync::gui::layout::BUTTON_SPACING);
-    m_action_buttons.render(current);
-
-    ImGui::SameLine(0, clrsync::gui::layout::BUTTON_SPACING);
-    if (ImGui::Button("Generate"))
-        m_generate_palette_dialog.open();
-
     m_generate_palette_dialog.render(m_generate_state, m_available_generators, m_generator_labels,
                                      current, [this]() { return execute_palette_generation(); });
 
@@ -335,8 +347,7 @@ void color_scheme_editor::setup_widgets()
         m_generate_state.image_path = image_path;
         for (int i = 0; i < static_cast<int>(m_available_generators.size()); ++i)
         {
-            if (m_available_generators[i] ==
-                clrsync::gui::widgets::palette_generator_kind::hellwal)
+            if (m_available_generators[i] == clrsync::gui::widgets::palette_generator_kind::hellwal)
             {
                 m_generate_state.generator_idx = i;
                 break;
@@ -351,15 +362,5 @@ void color_scheme_editor::setup_widgets()
                                                   file_dialogs::image_file_filters());
         });
 
-    m_action_buttons.add_button({" Save ", "Save current palette to file",
-                                 [this]() { m_controller.save_current_palette(); }});
-
-    m_action_buttons.add_button({" Delete ", "Delete current palette",
-                                 [this]() { m_show_delete_confirmation = true; }, true, true});
-
-    m_action_buttons.add_button({" Apply Theme ", "Apply current palette to all enabled templates",
-                                 [this]() { m_controller.apply_current_theme(); },
-                                 true, false, false, true});
-
-    m_action_buttons.set_spacing(clrsync::gui::layout::BUTTON_SPACING);
+    m_toolbar.set_id("##palette_toolbar_overflow");
 }

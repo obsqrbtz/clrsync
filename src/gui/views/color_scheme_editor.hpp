@@ -4,10 +4,10 @@
 #include "gui/controllers/palette_controller.hpp"
 #include "gui/views/color_table_renderer.hpp"
 #include "gui/views/preview_renderer.hpp"
-#include "gui/widgets/action_buttons.hpp"
 #include "gui/widgets/generate_palette_dialog.hpp"
 #include "gui/widgets/input_dialog.hpp"
 #include "gui/widgets/palette_selector.hpp"
+#include "gui/widgets/toolbar.hpp"
 #include <optional>
 #include <string>
 #include <vector>
@@ -59,7 +59,7 @@ class color_scheme_editor
     clrsync::gui::widgets::generate_palette_state m_generate_state;
     std::vector<clrsync::gui::widgets::palette_generator_kind> m_available_generators;
     std::vector<std::string> m_generator_labels;
-    clrsync::gui::widgets::action_buttons m_action_buttons;
+    clrsync::gui::widgets::toolbar m_toolbar;
 };
 
 #endif // CLRSYNC_GUI_COLOR_SCHEME_EDITOR_HPP
