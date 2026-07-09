@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <filesystem>
 #include <string>
 
 namespace clrsync::core
@@ -74,8 +73,7 @@ palette hellwal_generator::generate_from_image(const std::string &image_path, co
 
     palette pal;
 
-    std::filesystem::path p(image_path);
-    pal.set_name("hellwal:" + p.filename().string());
+    pal.set_name("hellwal");
     pal.set_file_path(image_path);
 
     std::vector<std::string> args = {"hellwal", "-i", image_path, "--json", "--skip-term-colors"};

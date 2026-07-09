@@ -120,7 +120,7 @@ palette pywal16_generator::generate_from_image(const std::string &image_path, co
     ensure_supported("pywal16");
 
     std::filesystem::path p(image_path);
-    const std::string pal_name = std::string("pywal16:") + p.filename().string();
+    const std::string pal_name = "pywal16";
 
     std::vector<std::string> args = {"wal", "-i", image_path, "-n", "-s", "-e", "-t"};
     if (opts.light)

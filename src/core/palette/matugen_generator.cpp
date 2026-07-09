@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
-#include <filesystem>
 #include <string>
 
 namespace clrsync::core
@@ -80,7 +79,6 @@ palette matugen_generator::generate_from_image(const std::string &image_path, co
 {
     ensure_supported("matugen");
 
-    std::filesystem::path p(image_path);
     std::vector<std::string> args = {"matugen", "image", image_path};
     if (!opts.type.empty())
     {
@@ -109,8 +107,7 @@ palette matugen_generator::generate_from_image(const std::string &image_path, co
     std::string out = run_process_capture_output(args);
     if (out.empty())
         return {};
-    return parse_matugen_output(out, opts, std::string("matugen:") + p.filename().string(),
-                                image_path);
+    return parse_matugen_output(out, opts, "matugen", image_path);
 }
 
 palette matugen_generator::generate_from_color(const std::string &color_hex)
@@ -150,6 +147,6 @@ palette matugen_generator::generate_from_color(const std::string &color_hex, con
     if (out.empty())
         return {};
 
-    return parse_matugen_output(out, opts, std::string("matugen:color:") + color_hex, color_hex);
+    return parse_matugen_output(out, opts, "matugen", color_hex);
 }
 } // namespace clrsync::core
