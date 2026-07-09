@@ -35,6 +35,11 @@ template <typename FileType> class theme_renderer
         return apply_palette_to_all_templates(palette);
     }
 
+    Result<void> apply_palette(const palette &pal)
+    {
+        return apply_palette_to_all_templates(pal);
+    }
+
   private:
     palette_manager<FileType> m_pal_manager;
     template_manager<FileType> m_template_manager;

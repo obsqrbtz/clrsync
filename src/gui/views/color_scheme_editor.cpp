@@ -107,8 +107,7 @@ std::optional<std::string> color_scheme_editor::execute_palette_generation()
                 std::filesystem::path p(image_path);
                 pal.set_name(std::string("hellwal:") + p.filename().string());
             }
-            m_controller.import_palette(pal);
-            m_controller.select_palette(pal.name());
+            m_controller.set_current_palette(pal);
             apply_themes();
         }
         else if (*selected_kind == clrsync::gui::widgets::palette_generator_kind::matugen)
@@ -155,8 +154,7 @@ std::optional<std::string> color_scheme_editor::execute_palette_generation()
                     pal.set_name(std::string("matugen:") + p.filename().string());
                 }
             }
-            m_controller.import_palette(pal);
-            m_controller.select_palette(pal.name());
+            m_controller.set_current_palette(pal);
             apply_themes();
         }
         else if (*selected_kind == clrsync::gui::widgets::palette_generator_kind::pywal16)
@@ -193,8 +191,7 @@ std::optional<std::string> color_scheme_editor::execute_palette_generation()
                 std::filesystem::path p(image_path);
                 pal.set_name(std::string("pywal16:") + p.filename().string());
             }
-            m_controller.import_palette(pal);
-            m_controller.select_palette(pal.name());
+            m_controller.set_current_palette(pal);
             apply_themes();
         }
     }

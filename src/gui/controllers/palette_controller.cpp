@@ -61,18 +61,15 @@ void palette_controller::delete_current_palette()
     reload_palettes();
 }
 
-void palette_controller::import_palette(const clrsync::core::palette &pal)
+void palette_controller::set_current_palette(const clrsync::core::palette &pal)
 {
-    auto dir = clrsync::core::config::instance().palettes_path();
-    m_palette_manager.save_palette_to_file(pal, dir);
-    reload_palettes();
     m_current_palette = pal;
 }
 
 void palette_controller::apply_current_theme() const
 {
     clrsync::core::theme_renderer<clrsync::core::io::toml_file> theme_renderer;
-    (void)theme_renderer.apply_theme(m_current_palette.name());
+    (void)theme_renderer.apply_palette(m_current_palette);
 }
 
 void palette_controller::set_color(const std::string &key, const clrsync::core::color &color)
