@@ -5,6 +5,8 @@
 #include "core/palette/json_utils.hpp"
 #include "core/palette/matugen_mappings.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <filesystem>
 #include <string>
@@ -35,6 +37,8 @@ static palette parse_matugen_output(const std::string &out, const matugen_genera
         if (matu_key.rfind("base16.", 0) == 0)
         {
             std::string base_key = matu_key.substr(7);
+            std::transform(base_key.begin(), base_key.end(), base_key.begin(),
+                           [](unsigned char c) { return std::tolower(c); });
             if (doc.contains("base16") && doc["base16"].contains(base_key) &&
                 doc["base16"][base_key].contains(opts.mode) &&
                 doc["base16"][base_key][opts.mode].contains("color"))
@@ -102,7 +106,6 @@ palette matugen_generator::generate_from_image(const std::string &image_path, co
         args.push_back(std::to_string(opts.source_color_index));
     }
 
-
     std::string out = run_process_capture_output(args);
     if (out.empty())
         return {};
@@ -142,7 +145,6 @@ palette matugen_generator::generate_from_color(const std::string &color_hex, con
     args.push_back("--json");
     args.push_back("hex");
     args.push_back("--dry-run");
-
 
     std::string out = run_process_capture_output(args);
     if (out.empty())
