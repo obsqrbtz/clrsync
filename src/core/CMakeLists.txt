@@ -1,5 +1,7 @@
 set(CORE_SOURCES
     palette/color.cpp
+    palette/color_ops.cpp
+    palette/palette_normalizer.cpp
     palette/hellwal_generator.cpp
     palette/matugen_generator.cpp
     palette/pywal16_generator.cpp

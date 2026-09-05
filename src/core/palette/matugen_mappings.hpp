@@ -1,10 +1,14 @@
 #ifndef CLRSYNC_CORE_PALETTE_MATUGEN_MAPPINGS_HPP
 #define CLRSYNC_CORE_PALETTE_MATUGEN_MAPPINGS_HPP
 
-#include "core/palette/generator_mappings.hpp"
-
 namespace clrsync::core
 {
+
+struct key_color_mapping
+{
+    const char *palette_key;
+    const char *source_key;
+};
 
 inline constexpr key_color_mapping MATUGEN_COLOR_MAPPINGS[] = {
     {"accent", "primary"},
@@ -12,10 +16,12 @@ inline constexpr key_color_mapping MATUGEN_COLOR_MAPPINGS[] = {
     {"background", "background"},
     {"foreground", "on_surface"},
     {"on_background", "on_background"},
-    {"surface", "surface_container"},
+    {"surface", "surface_container_low"},
     {"on_surface", "on_surface"},
-    {"surface_variant", "surface_variant"},
+    {"surface_variant", "surface_container"},
     {"on_surface_variant", "on_surface_variant"},
+    {"surface_container", "surface_container_high"},
+    {"surface_high", "surface_container_highest"},
     {"border", "outline_variant"},
     {"border_focused", "outline"},
     {"cursor", "on_surface"},
@@ -89,21 +95,6 @@ inline constexpr key_color_mapping MATUGEN_COLOR_MAPPINGS[] = {
     {"editor_ignored", "outline_variant"},
     {"editor_folded_background", "surface_container"},
     {"base00", "background"},
-    {"base01", "base16.base01"},
-    {"base02", "base16.base02"},
-    {"base03", "base16.base03"},
-    {"base04", "base16.base04"},
-    {"base05", "base16.base05"},
-    {"base06", "base16.base06"},
-    {"base07", "base16.base07"},
-    {"base08", "base16.base08"},
-    {"base09", "base16.base09"},
-    {"base0A", "base16.base0A"},
-    {"base0B", "base16.base0B"},
-    {"base0C", "base16.base0C"},
-    {"base0D", "base16.base0D"},
-    {"base0E", "base16.base0E"},
-    {"base0F", "base16.base0F"},
 };
 
 inline constexpr std::size_t MATUGEN_COLOR_MAPPINGS_COUNT =

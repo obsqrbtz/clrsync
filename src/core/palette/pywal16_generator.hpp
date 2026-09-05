@@ -2,6 +2,7 @@
 #define CLRSYNC_CORE_PALETTE_PYWAL16_GENERATOR_HPP
 
 #include "core/palette/palette.hpp"
+#include "core/palette/palette_normalizer.hpp"
 #include "generator.hpp"
 
 namespace clrsync::core
@@ -9,8 +10,7 @@ namespace clrsync::core
 class pywal16_generator : public generator
 {
   public:
-    pywal16_generator()
-        : generator({generator::system::linux_os})
+    pywal16_generator() : generator({generator::system::linux_os})
     {
     }
     ~pywal16_generator() override = default;
@@ -22,6 +22,8 @@ class pywal16_generator : public generator
         std::string backend;
         float saturate = -1.0f;
         bool light = false;
+
+        normalize_options normalize{};
     };
 
     palette generate_from_image(const std::string &image_path) override;

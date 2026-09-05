@@ -43,7 +43,10 @@ std::map<std::string, value_type> toml_file::get_table(const std::string &sectio
 
     for (const auto &part : parts)
     {
-        if (auto subtbl = tbl->at(part).as_table())
+        const toml::node *node = tbl->get(part);
+        if (node == nullptr)
+            return {};
+        if (auto subtbl = node->as_table())
             tbl = subtbl;
         else
             return {};

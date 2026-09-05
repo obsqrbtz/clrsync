@@ -2,6 +2,7 @@
 #define CLRSYNC_CORE_PALETTE_MATUGEN_GENERATOR_HPP
 
 #include "core/palette/palette.hpp"
+#include "core/palette/palette_normalizer.hpp"
 #include "generator.hpp"
 
 namespace clrsync::core
@@ -10,8 +11,8 @@ class matugen_generator : public generator
 {
   public:
     matugen_generator()
-        : generator({generator::system::windows, generator::system::linux_os,
-                     generator::system::macos})
+        : generator(
+              {generator::system::windows, generator::system::linux_os, generator::system::macos})
     {
     }
     ~matugen_generator() override = default;
@@ -20,8 +21,10 @@ class matugen_generator : public generator
     {
         std::string type = "scheme-tonal-spot";
         std::string mode = "dark";
-        float contrast = 0.0f; // -1..1
-      int source_color_index = 0; // 0..3
+        float contrast = 0.0f;      // -1..1
+        int source_color_index = 0; // 0..3
+
+        normalize_options normalize{};
     };
 
     palette generate_from_image(const std::string &image_path) override;

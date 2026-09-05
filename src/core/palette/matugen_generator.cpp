@@ -4,11 +4,13 @@
 #include "core/palette/color.hpp"
 #include "core/palette/json_utils.hpp"
 #include "core/palette/matugen_mappings.hpp"
+#include "core/palette/palette_normalizer.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <cstddef>
 #include <string>
+#include <vector>
 
 namespace clrsync::core
 {
@@ -66,6 +68,31 @@ static palette parse_matugen_output(const std::string &out, const matugen_genera
         }
     }
 
+    std::vector<color> sources;
+    if (doc.contains("base16"))
+    {
+        for (const auto &entry : doc["base16"].items())
+        {
+            const json &node = entry.value();
+            if (!node.contains(opts.mode) || !node[opts.mode].contains("color"))
+                continue;
+            const std::string hex =
+                json_utils::normalize_hex_string(node[opts.mode]["color"].get<std::string>());
+            if (hex.empty())
+                continue;
+            try
+            {
+                color col;
+                col.from_hex_string(hex);
+                sources.push_back(col);
+            }
+            catch (...)
+            {
+            }
+        }
+    }
+
+    normalize_palette(pal, sources, opts.normalize);
     return pal;
 }
 

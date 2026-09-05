@@ -2,6 +2,7 @@
 #define CLRSYNC_CORE_PALETTE_HELLWAL_GENERATOR_HPP
 
 #include "core/palette/palette.hpp"
+#include "core/palette/palette_normalizer.hpp"
 #include "generator.hpp"
 
 namespace clrsync::core
@@ -9,8 +10,7 @@ namespace clrsync::core
 class hellwal_generator : public generator
 {
   public:
-    hellwal_generator()
-        : generator({generator::system::linux_os, generator::system::macos})
+    hellwal_generator() : generator({generator::system::linux_os, generator::system::macos})
     {
     }
     ~hellwal_generator() override = default;
@@ -25,6 +25,8 @@ class hellwal_generator : public generator
         float bright_offset = 0.0f;
         bool invert = false;
         float gray_scale = 0.0f;
+
+        normalize_options normalize{};
     };
 
     palette generate_from_image(const std::string &image_path) override;

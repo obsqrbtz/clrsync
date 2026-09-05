@@ -2,12 +2,13 @@
 
 #include "core/common/process.hpp"
 #include "core/palette/color.hpp"
-#include "core/palette/hellwal_mappings.hpp"
 #include "core/palette/json_utils.hpp"
+#include "core/palette/palette_normalizer.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <string>
+#include <vector>
 
 namespace clrsync::core
 {
@@ -30,11 +31,9 @@ static void collect_palette_colors(const json &node, palette &pal)
                     const bool is_special_key = key == "background" || key == "foreground" ||
                                                 key == "cursor" || key == "border";
                     const bool is_color_key =
-                        key.size() >= 6 && key.rfind("color", 0) == 0 &&
-                        key.size() <= 7 &&
-                        std::all_of(key.begin() + 5, key.end(), [](unsigned char c) {
-                            return std::isdigit(c) != 0;
-                        });
+                        key.size() >= 6 && key.rfind("color", 0) == 0 && key.size() <= 7 &&
+                        std::all_of(key.begin() + 5, key.end(),
+                                    [](unsigned char c) { return std::isdigit(c) != 0; });
 
                     if (is_special_key || is_color_key)
                     {
@@ -111,12 +110,15 @@ palette hellwal_generator::generate_from_image(const std::string &image_path, co
     if (json_utils::parse_json_output(out, doc))
         collect_palette_colors(doc, pal);
 
-    auto get_color_by_index = [&](int idx) -> const color & {
-        std::string key = "color" + std::to_string(idx);
-        return pal.get_color(key);
-    };
-    apply_index_mappings(pal, HELLWAL_COLOR_MAPPINGS, HELLWAL_COLOR_MAPPINGS_COUNT,
-                         get_color_by_index);
+    std::vector<color> sources;
+    for (int i = 0; i < 16; ++i)
+    {
+        const std::string key = "color" + std::to_string(i);
+        if (pal.colors().find(key) != pal.colors().end())
+            sources.push_back(pal.get_color(key));
+    }
+
+    normalize_palette(pal, sources, opts.normalize);
     return pal;
 }
 

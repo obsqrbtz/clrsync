@@ -35,21 +35,22 @@ Result<void> config::initialize(std::unique_ptr<clrsync::core::io::file> file)
 
     std::filesystem::path config_path = get_user_config_dir() / "config.toml";
     std::filesystem::path temp_config_path = get_user_config_dir() / "config-temp.toml";
-    
+
     if (std::filesystem::exists(config_path))
     {
         std::error_code ec;
         auto perms = std::filesystem::status(config_path, ec).permissions();
-        
+
         if (ec || (perms & std::filesystem::perms::owner_write) == std::filesystem::perms::none)
         {
             m_temp_config_path = temp_config_path.string();
-            
+
             if (std::filesystem::exists(temp_config_path))
             {
                 try
                 {
-                    auto temp_conf = std::make_unique<clrsync::core::io::toml_file>(temp_config_path.string());
+                    auto temp_conf =
+                        std::make_unique<clrsync::core::io::toml_file>(temp_config_path.string());
                     auto temp_parse = temp_conf->parse();
                     if (temp_parse)
                     {
@@ -85,18 +86,18 @@ std::filesystem::path config::get_user_state_dir()
 std::filesystem::path config::get_writable_config_path()
 {
     std::filesystem::path config_path = get_user_config_dir() / "config.toml";
-    
+
     if (std::filesystem::exists(config_path))
     {
         std::error_code ec;
         auto perms = std::filesystem::status(config_path, ec).permissions();
-        
+
         if (ec || (perms & std::filesystem::perms::owner_write) == std::filesystem::perms::none)
         {
             return get_user_config_dir() / "config-temp.toml";
         }
     }
-    
+
     return config_path;
 }
 
@@ -195,7 +196,8 @@ void config::copy_default_configs()
     }
 }
 
-Result<void> config::save_config_value(const std::string &section, const std::string &key, const value_type &value)
+Result<void> config::save_config_value(const std::string &section, const std::string &key,
+                                       const value_type &value)
 {
     if (!m_temp_config_path.empty())
     {
@@ -204,11 +206,11 @@ Result<void> config::save_config_value(const std::string &section, const std::st
             m_temp_file = std::make_unique<clrsync::core::io::toml_file>(m_temp_config_path);
             (void)m_temp_file->parse();
         }
-        
+
         m_temp_file->set_value(section, key, value);
         return m_temp_file->save_file();
     }
-    
+
     m_file->set_value(section, key, value);
     return m_file->save_file();
 }
@@ -308,16 +310,21 @@ Result<void> config::update_template(const std::string &key,
         return Err<void>(error_code::config_missing, "Configuration not initialized");
 
     m_themes[key] = theme_template;
-    
-    auto result1 = save_config_value("templates." + key, "input_path", theme_template.template_path());
-    if (!result1) return result1;
-    
-    auto result2 = save_config_value("templates." + key, "output_path", theme_template.output_path());
-    if (!result2) return result2;
-    
+
+    auto result1 =
+        save_config_value("templates." + key, "input_path", theme_template.template_path());
+    if (!result1)
+        return result1;
+
+    auto result2 =
+        save_config_value("templates." + key, "output_path", theme_template.output_path());
+    if (!result2)
+        return result2;
+
     auto result3 = save_config_value("templates." + key, "enabled", theme_template.enabled());
-    if (!result3) return result3;
-    
+    if (!result3)
+        return result3;
+
     return save_config_value("templates." + key, "reload_cmd", theme_template.reload_command());
 }
 
@@ -356,7 +363,7 @@ Result<void> config::remove_template(const std::string &key)
         m_temp_file->remove_section("templates." + key);
         return m_temp_file->save_file();
     }
-    
+
     m_file->remove_section("templates." + key);
     return m_file->save_file();
 }
@@ -369,18 +376,25 @@ const std::unordered_map<std::string, clrsync::core::theme_template> config::tem
         for (const auto &t : themes)
         {
             auto current = m_file->get_table("templates." + t.first);
-            clrsync::core::theme_template theme(t.first,
-                                                std::get<std::string>(current["input_path"]),
-                                                std::get<std::string>(current["output_path"]));
-            if (std::holds_alternative<bool>(current["enabled"]))
-            {
-                theme.set_enabled(std::get<bool>(current["enabled"]));
-            }
-            else
-            {
-                theme.set_enabled(false);
-            }
-            theme.set_reload_command(std::get<std::string>(current["reload_cmd"]));
+
+            auto text_field = [&current](const char *key) -> std::string {
+                auto it = current.find(key);
+                if (it == current.end() || !std::holds_alternative<std::string>(it->second))
+                    return {};
+                return std::get<std::string>(it->second);
+            };
+
+            const std::string input_path = text_field("input_path");
+            const std::string output_path = text_field("output_path");
+            if (input_path.empty() || output_path.empty())
+                continue;
+
+            clrsync::core::theme_template theme(t.first, input_path, output_path);
+            auto enabled_it = current.find("enabled");
+            theme.set_enabled(enabled_it != current.end() &&
+                              std::holds_alternative<bool>(enabled_it->second) &&
+                              std::get<bool>(enabled_it->second));
+            theme.set_reload_command(text_field("reload_cmd"));
             (void)theme.load_template();
             m_themes.insert({theme.name(), theme});
         }

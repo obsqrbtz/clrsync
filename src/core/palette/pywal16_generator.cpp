@@ -4,9 +4,10 @@
 #include "core/common/utils.hpp"
 #include "core/palette/color.hpp"
 #include "core/palette/json_utils.hpp"
-#include "core/palette/pywal16_mappings.hpp"
+#include "core/palette/palette_normalizer.hpp"
 
 #include <fstream>
+#include <vector>
 #include <filesystem>
 #include <stdexcept>
 #include <string>
@@ -62,7 +63,8 @@ static bool wallpaper_matches_image(const json &doc, const std::filesystem::path
 
 static palette parse_pywal_colors_json(const std::string &content,
                                        const std::filesystem::path &image_path,
-                                       const std::string &pal_name)
+                                       const std::string &pal_name,
+                                       const normalize_options &norm)
 {
     if (content.empty())
         return {};
@@ -100,11 +102,15 @@ static palette parse_pywal_colors_json(const std::string &content,
         }
     }
 
-    auto get_color_by_index = [&](int idx) -> const color & {
-        return pal.get_color("color" + std::to_string(idx));
-    };
-    apply_index_mappings(pal, PYWAL16_COLOR_MAPPINGS, PYWAL16_COLOR_MAPPINGS_COUNT,
-                         get_color_by_index);
+    std::vector<color> sources;
+    for (int i = 0; i < 16; ++i)
+    {
+        const std::string key = "color" + std::to_string(i);
+        if (pal.colors().find(key) != pal.colors().end())
+            sources.push_back(pal.get_color(key));
+    }
+
+    normalize_palette(pal, sources, norm);
     return pal;
 }
 } // namespace
@@ -153,7 +159,7 @@ palette pywal16_generator::generate_from_image(const std::string &image_path, co
 
     const std::filesystem::path colors_path = normalize_path(COLORS_JSON_PATH);
     const std::string colors_json = read_text_file(colors_path);
-    palette pal = parse_pywal_colors_json(colors_json, p, pal_name);
+    palette pal = parse_pywal_colors_json(colors_json, p, pal_name, opts.normalize);
     if (pal.name().empty())
         throw std::runtime_error("wal did not produce a colorscheme");
     return pal;

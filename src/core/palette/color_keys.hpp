@@ -19,6 +19,9 @@ constexpr const char *COLOR_KEYS[] = {
     "surface_variant",
     "on_surface_variant",
 
+    "surface_container",
+    "surface_high",
+
     "border_focused",
     "border",
 
@@ -27,6 +30,9 @@ constexpr const char *COLOR_KEYS[] = {
     "cursor",
     "accent",
     "accent_secondary",
+
+    "on_accent",
+    "on_accent_secondary",
 
     // Semantic
     "success",
@@ -106,7 +112,7 @@ constexpr const char *COLOR_KEYS[] = {
     "editor_ignored",
     "editor_folded_background",
 
-    // Terminal
+    // Terminal base16
     "base00",
     "base01",
     "base02",
@@ -123,6 +129,24 @@ constexpr const char *COLOR_KEYS[] = {
     "base0D",
     "base0E",
     "base0F",
+
+    // Terminal ANSI
+    "term0",
+    "term1",
+    "term2",
+    "term3",
+    "term4",
+    "term5",
+    "term6",
+    "term7",
+    "term8",
+    "term9",
+    "term10",
+    "term11",
+    "term12",
+    "term13",
+    "term14",
+    "term15",
 };
 
 constexpr size_t NUM_COLOR_KEYS = std::size(COLOR_KEYS);
@@ -131,11 +155,14 @@ inline const std::unordered_map<std::string, uint32_t> DEFAULT_COLORS = {
     {"background", 0x111111ff},
     {"on_background", 0xd4d4d4ff},
 
-    {"surface", 0x111111ff},
+    {"surface", 0x191919ff},
     {"on_surface", 0xd4d4d4ff},
 
-    {"surface_variant", 0x191919ff},
+    {"surface_variant", 0x1f1f1fff},
     {"on_surface_variant", 0xd4d4d4ff},
+
+    {"surface_container", 0x242424ff},
+    {"surface_high", 0x333333ff},
 
     {"border_focused", 0x2e2e2eff},
     {"border", 0x242424ff},
@@ -145,6 +172,9 @@ inline const std::unordered_map<std::string, uint32_t> DEFAULT_COLORS = {
     {"cursor", 0xd2d2d2ff},
     {"accent", 0x9a8652ff},
     {"accent_secondary", 0x9a8652ff},
+
+    {"on_accent", 0x111111ff},
+    {"on_accent_secondary", 0x111111ff},
 
     {"success", 0x668a51ff},
     {"info", 0x3a898cff},
@@ -224,21 +254,39 @@ inline const std::unordered_map<std::string, uint32_t> DEFAULT_COLORS = {
     {"editor_folded_background", 0x191919ff},
 
     {"base00", 0x111111ff},
-    {"base01", 0x668a51ff},
-    {"base02", 0x9a8652ff},
-    {"base03", 0xb47837ff},
-    {"base04", 0x9a5552ff},
-    {"base05", 0xaa477bff},
-    {"base06", 0x3a898cff},
-    {"base07", 0xb5b5b5ff},
-    {"base08", 0xaa4e4aff},
-    {"base09", 0xa9dc86ff},
-    {"base0A", 0xb6ab82ff},
-    {"base0B", 0xc5916bff},
-    {"base0C", 0xac7676ff},
-    {"base0D", 0xb0779eff},
-    {"base0E", 0x849899ff},
-    {"base0F", 0xd2d2d2ff},
+    {"base01", 0x191919ff},
+    {"base02", 0x242424ff},
+    {"base03", 0x849899ff},
+    {"base04", 0xa8a8a8ff},
+    {"base05", 0xd2d2d2ff},
+    {"base06", 0xe4e4e4ff},
+    {"base07", 0xf4f4f4ff},
+    {"base08", 0xaa4e4aff}, // red
+    {"base09", 0xb47837ff}, // orange
+    {"base0A", 0x9a8652ff}, // yellow
+    {"base0B", 0x668a51ff}, // green
+    {"base0C", 0x3a898cff}, // cyan
+    {"base0D", 0x5a7ca8ff}, // blue
+    {"base0E", 0xaa477bff}, // magenta
+    {"base0F", 0x8a6a4aff}, // brown
+
+    // ANSI
+    {"term0", 0x111111ff},
+    {"term1", 0xaa4e4aff},
+    {"term2", 0x668a51ff},
+    {"term3", 0x9a8652ff},
+    {"term4", 0x5a7ca8ff},
+    {"term5", 0xaa477bff},
+    {"term6", 0x3a898cff},
+    {"term7", 0xb5b5b5ff},
+    {"term8", 0x4a4a4aff},
+    {"term9", 0xc46a66ff},
+    {"term10", 0x86ab6eff},
+    {"term11", 0xbba46bff},
+    {"term12", 0x7c9cc8ff},
+    {"term13", 0xc66a99ff},
+    {"term14", 0x59a9acff},
+    {"term15", 0xf4f4f4ff},
 };
 } // namespace clrsync::core
 #endif

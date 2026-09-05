@@ -105,33 +105,33 @@ void preview_renderer::render_terminal_preview(const clrsync::core::palette &cur
         const auto &col = current.get_color(key);
         return hex_to_imvec4(col.hex());
     };
-    const ImVec4 bg = get_color("base00");
-    const ImVec4 fg = get_color("base07");
+    const ImVec4 bg = get_color("background");
+    const ImVec4 fg = get_color("foreground");
     const ImVec4 cursor_col = get_color("cursor");
     const ImVec4 border_col = get_color("border");
 
-    const ImVec4 black = get_color("base00");
-    const ImVec4 red = get_color("base01");
-    const ImVec4 green = get_color("base02");
-    const ImVec4 yellow = get_color("base03");
-    const ImVec4 blue = get_color("base04");
-    const ImVec4 magenta = get_color("base05");
-    const ImVec4 cyan = get_color("base06");
-    const ImVec4 white = get_color("base07");
+    const ImVec4 black = get_color("term0");
+    const ImVec4 red = get_color("term1");
+    const ImVec4 green = get_color("term2");
+    const ImVec4 yellow = get_color("term3");
+    const ImVec4 blue = get_color("term4");
+    const ImVec4 magenta = get_color("term5");
+    const ImVec4 cyan = get_color("term6");
+    const ImVec4 white = get_color("term7");
 
-    const ImVec4 bright_black = get_color("base08");
-    const ImVec4 bright_red = get_color("base09");
-    const ImVec4 bright_green = get_color("base0A");
-    const ImVec4 bright_yellow = get_color("base0B");
-    const ImVec4 bright_blue = get_color("base0C");
-    const ImVec4 bright_magenta = get_color("base0D");
-    const ImVec4 bright_cyan = get_color("base0E");
-    const ImVec4 bright_white = get_color("base0F");
+    const ImVec4 bright_black = get_color("term8");
+    const ImVec4 bright_red = get_color("term9");
+    const ImVec4 bright_green = get_color("term10");
+    const ImVec4 bright_yellow = get_color("term11");
+    const ImVec4 bright_blue = get_color("term12");
+    const ImVec4 bright_magenta = get_color("term13");
+    const ImVec4 bright_cyan = get_color("term14");
+    const ImVec4 bright_white = get_color("term15");
 
     ImGui::Spacing();
     ImGui::Text("Terminal Preview:");
     ImGui::SameLine();
-    ImGui::TextDisabled("(base00-base0F colors)");
+    ImGui::TextDisabled("(ANSI term0-term15)");
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, bg);
     ImGui::PushStyleColor(ImGuiCol_Border, border_col);
